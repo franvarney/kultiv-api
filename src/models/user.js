@@ -1,3 +1,5 @@
+var User;
+
 const BaseModel = require('hapi-mongo-models').BaseModel;
 const Bcrypt = require('bcrypt');
 // const Debug = require('debug')('chillchat_api:lib_model_user');
@@ -10,7 +12,7 @@ const ShortId32 = require('shortid32');
 const SALT_WORK_FACTOR = 10;
 ShortId32.characters('23456789abcdefghjklmnpqrstuvwxyz');
 
-var User = BaseModel.extend({
+User = BaseModel.extend({
   constructor: function (attrs) {
     ObjectAssign(this, attrs);
   }
@@ -93,10 +95,11 @@ User.isExisting = function (email, username, done) {
   }
 
   if (email) tasks.push(User.findByEmail.bind(this, email));
-  if (username) tasks.push(User.findByUsername.bind(this, username));
+  tasks.push(User.findByUsername.bind(this, username));
 
   Parallel(tasks, function (err, results) {
     if (err) return done(err);
+    console.log(results);
     if (results[0] || results[1]) return done(null, results[0] || results[1]);
     done(null, false);
   });

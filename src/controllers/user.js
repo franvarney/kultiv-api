@@ -92,7 +92,6 @@ exports.update = function (request, reply) {
         return callback({ message: 'User not found' });
       }
       user = existingUser;
-      console.log(user);
       callback(null, existingUser);
     },
     function (existingUser, callback) {
