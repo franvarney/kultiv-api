@@ -5,8 +5,10 @@ const Joi = require('joi');
 const ObjectAssign = require('object-assign');
 const Parallel = require('run-parallel');
 const ShortId = require('shortid');
+const ShortId32 = require('shortid32');
 
 const SALT_WORK_FACTOR = 10;
+ShortId32.characters('23456789abcdefghjklmnpqrstuvwxyz');
 
 var User = BaseModel.extend({
   constructor: function (attrs) {
@@ -21,12 +23,13 @@ function toLower(string) {
 }
 
 User.schema = Joi.object().keys({
-  _id: Joi.string().default(ShortId.generate, 'Generate short id'),
+  _id: Joi.string().default(ShortId32.generate, 'Generate short id 32'),
   email: Joi.string().required().email().trim().default(toLower, 'Make lower case'),
   username: Joi.string().required().alphanum().min(2).max(20).trim().default(toLower, 'Make lower case'),
   password: Joi.string().required().regex(/[a-zA-Z0-9]{3,30}/),
-  location: Joi.string().trim(),
+  location: Joi.string().optional().allow('').trim(),
   isAdmin: Joi.boolean().default(false),
+  authToken: Joi.string().default(ShortId.generate, 'Generate short id'),
   resetPassword: Joi.object().keys({
     token: Joi.string().required(),
     expires: Joi.date().required()
@@ -39,6 +42,7 @@ User.schema = Joi.object().keys({
 User.indexes = [
   [{ email: 1 }, { unique: true }],
   [{ username: 1 }, { unique: true }],
+  [{ authToke: 1 }, { unique: true }],
   [{ created: 1}, { unique: false }]
 ];
 
@@ -59,6 +63,11 @@ User.findByEmail = function (email, done) {
   User.findOne(query, done);
 };
 
+User.findByToken = function (token, done) {
+  var query = { authToken: token };
+  User.findOne(query, done);
+};
+
 User.findByUsername = function (username, done) {
   var query = { username: username.toLowerCase() };
   User.findOne(query, done);
@@ -76,16 +85,17 @@ User.hashPassword = function (password, done) {
 };
 
 User.isExisting = function (email, username, done) {
+  var tasks = [];
   if (email.indexOf('@') === -1) {
     done = username;
     username = email;
     email = null;
   }
 
-  Parallel([
-    User.findByEmail.bind(this, email),
-    User.findByUsername.bind(this, username)
-  ], function (err, results) {
+  if (email) tasks.push(User.findByEmail.bind(this, email));
+  if (username) tasks.push(User.findByUsername.bind(this, username));
+
+  Parallel(tasks, function (err, results) {
     if (err) return done(err);
     if (results[0] || results[1]) return done(null, results[0] || results[1]);
     done(null, false);

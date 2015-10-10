@@ -25,7 +25,7 @@ module.exports = [
 
   // User routes
   { method: 'GET', path: '/user/{username}', handler: User.find },
-  { method: 'POST', path: '/user/create', handler: User.create },
-  { method: 'PUT', path: '/user/username', handler: User.update },
+  { method: 'POST', path: '/user/create', handler: User.create, config: { auth: false } },
+  { method: 'PUT', path: '/user/{username}', handler: User.update },
   { method: 'DELETE', path: '/user/{username}', handler: User.delete }
 ];

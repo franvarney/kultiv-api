@@ -39,7 +39,7 @@ exports.delete = function (request, reply) {
   const User = request.server.plugins['hapi-mongo-models'].User;
 
   Waterfall([
-    User.isExisting.bind(null, null, request.params.username),
+    User.isExisting.bind(null, request.params.username),
     function (user, callback) {
       if (!user) return callback({ message: 'User not found' });
       User.deleteOne(
@@ -59,7 +59,7 @@ exports.find = function (request, reply) {
   const User = request.server.plugins['hapi-mongo-models'].User;
 
   Waterfall([
-    User.isExisting.bind(null, null, request.params.username),
+    User.isExisting.bind(null, request.params.username),
     function (user, callback) {
       if (!user) return callback({ message: 'User not found' });
       User.findOne(
@@ -72,6 +72,7 @@ exports.find = function (request, reply) {
   ], function (err, foundUser) {
     if (err) return reply(Boom.notFound(err.message));
     delete foundUser.password;
+    // delete foundUser.authToken; // TODO figure out if this should be returned
     reply(foundUser);
   });
 };
@@ -84,12 +85,14 @@ exports.update = function (request, reply) {
     User.isExisting.bind(
       null,
       request.payload.email,
-      request.payload.username
+      request.params.username
     ),
     function (existingUser, callback) {
       if (!existingUser) {
         return callback({ message: 'User not found' });
       }
+      user = existingUser;
+      console.log(user);
       callback(null, existingUser);
     },
     function (existingUser, callback) {
@@ -118,11 +121,9 @@ exports.update = function (request, reply) {
       }
     },
     function (hashedPassword, callback) {
-      user = {
-        email: request.payload.email,
-        location: request.payload.location,
-        updated: Date.now()
-      };
+      user.email = request.payload.email;
+      user.location = request.payload.location;
+      user.updated = Date.now();
 
       if (hashedPassword) user.password = hashedPassword;
 
@@ -133,7 +134,7 @@ exports.update = function (request, reply) {
     },
     function (validatedUser, callback) {
       User.updateOne(
-        { username: request.payload.username },
+        { username: request.params.username },
         validatedUser,
         function (err) {
         if (err) return callback(err);
