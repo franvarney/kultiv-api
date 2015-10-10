@@ -2,7 +2,7 @@ var User;
 
 const BaseModel = require('hapi-mongo-models').BaseModel;
 const Bcrypt = require('bcrypt');
-// const Debug = require('debug')('chillchat_api:lib_model_user');
+// const Debug = require('debug')('cookbook/src/model/user');
 const Joi = require('joi');
 const ObjectAssign = require('object-assign');
 const Parallel = require('run-parallel');
@@ -36,7 +36,7 @@ User.schema = Joi.object().keys({
     token: Joi.string().required(),
     expires: Joi.date().required()
   }),
-  created: Joi.date().default(Date.now, 'Registered'),
+  created: Joi.date().raw().default(Date.now, 'Registered'),
   updated: Joi.date().raw(),
   deleted: Joi.date().raw()
 });
@@ -44,7 +44,7 @@ User.schema = Joi.object().keys({
 User.indexes = [
   [{ email: 1 }, { unique: true }],
   [{ username: 1 }, { unique: true }],
-  [{ authToke: 1 }, { unique: true }],
+  [{ authToken: 1 }, { unique: false }],
   [{ created: 1}, { unique: false }]
 ];
 
