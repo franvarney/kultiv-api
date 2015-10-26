@@ -7,7 +7,13 @@ exports.validate = function (token, callback) {
     if (err) return callback(err);
 
     if (user) {
-      callback(null, true, { token: token });
+      callback(null, true, {
+        token: token ,
+        user: {
+          id: user._id, // eslint-disable-line no-underscore-dangle
+          username: user.username
+        }
+      });
     } else {
       callback(null, false, { token: token });
     }
