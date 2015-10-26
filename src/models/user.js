@@ -99,7 +99,6 @@ User.isExisting = function (email, username, done) {
 
   Parallel(tasks, function (err, results) {
     if (err) return done(err);
-    console.log(results);
     if (results[0] || results[1]) return done(null, results[0] || results[1]);
     done(null, false);
   });
