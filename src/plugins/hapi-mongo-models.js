@@ -14,6 +14,7 @@ module.exports = {
     },
     autoIndex: false,
     models: {
+      Cookbook: Path.join(modelBasePath, 'cookbook'),
       User: Path.join(modelBasePath, 'user')
     }
   }
