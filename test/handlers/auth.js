@@ -48,8 +48,8 @@ describe('handlers/auth', function () {
     server = new Hapi.Server();
 
     server.connection({
-      host: Config.host,
-      port: Number(Config.port)
+      host: Config.env !== 'production' ? Config.host : null,
+      port: parseInt(Config.port)
     });
 
     server.register([HapiAuthBearerToken, models], function (err) {
