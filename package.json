@@ -17,6 +17,7 @@
     "hapi": "10.1.0",
     "hapi-auth-bearer-token": "3.1.1",
     "hapi-mongo-models": "2.2.1",
+    "knock-knock": "0.1.0",
     "mongodb": "2.0.45",
     "object-assign": "4.0.1",
     "run-parallel": "1.1.4",
