@@ -14,8 +14,8 @@ const afterEach = lab.afterEach;
 const expect = Code.expect;
 
 const Config = require('../../config');
-const Cookbook = require('../../src/handlers/cookbook');
-const CookbookModel = require('../../src/models/cookbook');
+const Cookbook = require('../../server/handlers/cookbook');
+const CookbookModel = require('../../server/models/cookbook');
 
 var cookbook, cookbooks, request, server;
 
@@ -28,7 +28,7 @@ describe('handlers/cookbook', function () {
     };
 
     proxy = {
-      '../../../src/models/cookbook': stub.Cookbook
+      '../../server/models/cookbook': stub.Cookbook
     };
 
     models = {
@@ -39,7 +39,7 @@ describe('handlers/cookbook', function () {
           options: {}
         },
         models: {
-          Cookbook: process.cwd() + '/src/models/cookbook'
+          Cookbook: process.cwd() + '/server/models/cookbook'
         }
       }
     };
@@ -48,7 +48,7 @@ describe('handlers/cookbook', function () {
 
     server.connection({
       host: Config.env !== 'production' ? Config.host : null,
-      port: parseInt(Config.port)
+      port: parseInt(Config.port, 10)
     });
 
     server.register([models], function (err) {

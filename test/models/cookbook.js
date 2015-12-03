@@ -11,7 +11,7 @@ const beforeEach = lab.beforeEach;
 const afterEach = lab.afterEach;
 const expect = Code.expect;
 
-const CookbookModel = require('../../src/models/cookbook');
+const CookbookModel = require('../../server/models/cookbook');
 
 describe('models/cookbook', function () {
   beforeEach(function (done) {

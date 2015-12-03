@@ -1,4 +1,4 @@
-const Debug = require('debug')('cookbook/src/server');
+const Debug = require('debug')('cookbook/server/server');
 const Hapi = require('hapi');
 
 const Auth = require('./handlers/auth');
@@ -11,7 +11,7 @@ var server = module.exports = new Hapi.Server();
 
 server.connection({
   host: Config.env !== 'production' ? Config.host : null,
-  port: parseInt(Config.port)
+  port: parseInt(Config.port, 10)
 });
 
 server.route(Routes);

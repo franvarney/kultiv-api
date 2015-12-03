@@ -3,7 +3,7 @@ const Path = require('path');
 
 const Config = require('../../config');
 
-var modelBasePath = './src/models/';
+var modelBasePath = './server/models/';
 
 module.exports = {
   register: HapiMongoModels,

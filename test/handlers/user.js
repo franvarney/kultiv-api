@@ -14,8 +14,8 @@ const afterEach = lab.afterEach;
 const expect = Code.expect;
 
 const Config = require('../../config');
-const User = require('../../src/handlers/user');
-const UserModel = require('../../src/models/user');
+const User = require('../../server/handlers/user');
+const UserModel = require('../../server/models/user');
 
 var hashed, request, server, user;
 
@@ -28,7 +28,7 @@ describe('handlers/user', function () {
     };
 
     proxy = {
-      '../../../src/models/user': stub.User
+      '../../server/models/user': stub.User
     };
 
     models = {
@@ -39,7 +39,7 @@ describe('handlers/user', function () {
           options: {}
         },
         models: {
-          User: process.cwd() + '/src/models/user'
+          User: process.cwd() + '/server/models/user'
         }
       }
     };
@@ -48,7 +48,7 @@ describe('handlers/user', function () {
 
     server.connection({
       host: Config.env !== 'production' ? Config.host : null,
-      port: parseInt(Config.port)
+      port: parseInt(Config.port, 10)
     });
 
     server.register([models], function (err) {

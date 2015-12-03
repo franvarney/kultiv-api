@@ -14,9 +14,9 @@ const beforeEach = lab.beforeEach;
 const afterEach = lab.afterEach;
 const expect = Code.expect;
 
-const Auth = require('../../src/handlers/auth');
+const Auth = require('../../server/handlers/auth');
 const Config = require('../../config');
-const UserModel = require('../../src/models/user');
+const UserModel = require('../../server/models/user');
 
 var server;
 
@@ -29,7 +29,7 @@ describe('handlers/auth', function () {
     };
 
     proxy = {
-      '../../../src/models/user': stub.User
+      '../../server/models/user': stub.User
     };
 
     models = {
@@ -40,7 +40,7 @@ describe('handlers/auth', function () {
           options: {}
         },
         models: {
-          User: process.cwd() + '/src/models/user'
+          User: process.cwd() + '/server/models/user'
         }
       }
     };
@@ -49,7 +49,7 @@ describe('handlers/auth', function () {
 
     server.connection({
       host: Config.env !== 'production' ? Config.host : null,
-      port: parseInt(Config.port)
+      port: parseInt(Config.port, 10)
     });
 
     server.register([HapiAuthBearerToken, models], function (err) {
