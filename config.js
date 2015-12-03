@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 module.exports = {
   admin_token: process.env.ADMIN_TOKEN || 'C00kbook',
+  env: process.env.NODE_ENV,
   host: process.env.HOST || 'localhost',
   mongo: {
     uri: process.env.MONGO_URI || 'mongodb://localhost:27017/Cookbook'
