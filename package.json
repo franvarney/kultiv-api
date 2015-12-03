@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "DEBUG=* npm start",
     "lint": "mod-standard",
     "posttest": "mod-standard",
-    "start": "DEBUG=* node index",
+    "start": "node index",
     "test": "lab --coverage --verbose"
   },
   "author": "Fran Varney <franvarn@gmail.com>",
