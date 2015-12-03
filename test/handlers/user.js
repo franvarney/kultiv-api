@@ -14,12 +14,12 @@ const afterEach = lab.afterEach;
 const expect = Code.expect;
 
 const Config = require('../../config');
-const User = require('../../src/controllers/user');
+const User = require('../../src/handlers/user');
 const UserModel = require('../../src/models/user');
 
 var hashed, request, server, user;
 
-describe('controllers/user', function () {
+describe('handlers/user', function () {
   before(function (done) {
     var models, proxy, stub;
 

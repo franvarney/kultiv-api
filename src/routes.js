@@ -1,8 +1,8 @@
 const Child = require('child_process');
 
-const Cookbook = require('./controllers/cookbook');
+const Cookbook = require('./handlers/cookbook');
 const Package = require('../package.json');
-const User = require('./controllers/user');
+const User = require('./handlers/user');
 
 var out;
 

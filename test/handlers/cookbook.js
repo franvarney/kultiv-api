@@ -14,12 +14,12 @@ const afterEach = lab.afterEach;
 const expect = Code.expect;
 
 const Config = require('../../config');
-const Cookbook = require('../../src/controllers/cookbook');
+const Cookbook = require('../../src/handlers/cookbook');
 const CookbookModel = require('../../src/models/cookbook');
 
 var cookbook, cookbooks, request, server;
 
-describe('controllers/cookbook', function () {
+describe('handlers/cookbook', function () {
   before(function (done) {
     var models, proxy, stub;
 

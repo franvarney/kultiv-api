@@ -1,7 +1,7 @@
 const Debug = require('debug')('cookbook/src/server');
 const Hapi = require('hapi');
 
-const Auth = require('./controllers/auth');
+const Auth = require('./handlers/auth');
 const Config = require('../config');
 const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const HapiMongoModels = require('./plugins/hapi-mongo-models');
