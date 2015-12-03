@@ -22,7 +22,7 @@ function ping(req, reply) {
 
 module.exports = [
   // Test route
-  { method: 'GET', path: '/ping', handler: ping },
+  { method: 'GET', path: '/ping', handler: ping, config: { auth: false } },
 
   // User routes
   { method: 'GET', path: '/user/{username}', handler: User.find },
