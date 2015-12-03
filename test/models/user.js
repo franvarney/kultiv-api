@@ -12,11 +12,11 @@ const beforeEach = lab.beforeEach;
 const afterEach = lab.afterEach;
 const expect = Code.expect;
 
-const UserModel = require('../../../src/models/user');
+const UserModel = require('../../src/models/user');
 
 var hashed, user;
 
-describe('src/models/user', function () {
+describe('models/user', function () {
   beforeEach(function (done) {
     user = {
       username: 'test',
