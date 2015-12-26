@@ -13,6 +13,7 @@
   "author": "Fran Varney <franvarn@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "babel-register": "6.3.13",
     "bcrypt": "0.8.5",
     "boom": "2.9.0",
     "hapi": "10.1.0",
