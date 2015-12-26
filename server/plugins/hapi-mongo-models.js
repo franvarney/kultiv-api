@@ -1,11 +1,11 @@
-const HapiMongoModels = require('hapi-mongo-models');
-const Path = require('path');
+import HapiMongoModels from 'hapi-mongo-models';
+import Path from 'path';
 
-const Config = require('../../config');
+import Config from '../../config')
 
-var modelBasePath = './server/models/';
+let modelBasePath = './server/models/';
 
-module.exports = {
+export default {
   register: HapiMongoModels,
   options: {
     mongodb: {

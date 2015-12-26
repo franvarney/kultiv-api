@@ -1,28 +1,22 @@
-const Code = require('code');
-const Lab = require('lab');
-const Hapi = require('hapi');
-const HapiAuthBearerToken = require('hapi-auth-bearer-token');
-const Proxyquire = require('proxyquire');
-const Sinon = require('sinon');
+import {expect} from 'code';
+import Lab from 'lab';
+import {Server} from 'hapi';
+import HapiAuthBearerToken from 'hapi-auth-bearer-token';
+import Proxyquire from 'proxyquire';
+import Sinon from 'sinon';
 
 const lab = exports.lab = Lab.script();
-const describe = lab.describe;
-const it = lab.it;
-const before = lab.before;
-const after = lab.after;
-const beforeEach = lab.beforeEach;
-const afterEach = lab.afterEach;
-const expect = Code.expect;
+const {describe, it, before, after, beforeEach, afterEach} = lab;
 
-const Auth = require('../../server/handlers/auth');
-const Config = require('../../config');
-const UserModel = require('../../server/models/user');
+import Auth from '../../server/handlers/auth';
+import Config from '../../config';
+import UserModel from '../../server/models/user';
 
-var server;
+let server;
 
-describe('handlers/auth', function () {
-  before(function (done) {
-    var models, proxy, stub;
+describe('handlers/auth', () => {
+  before((done) => {
+    let models, proxy, stub;
 
     stub = {
       User: {}
@@ -45,14 +39,14 @@ describe('handlers/auth', function () {
       }
     };
 
-    server = new Hapi.Server();
+    server = new Server();
 
     server.connection({
       host: Config.env !== 'production' ? Config.host : null,
       port: parseInt(Config.port, 10)
     });
 
-    server.register([HapiAuthBearerToken, models], function (err) {
+    server.register([HapiAuthBearerToken, models], (err) => {
       if (err) return done(err);
 
       server.auth.strategy('simple', 'bearer-access-token', {
@@ -70,32 +64,32 @@ describe('handlers/auth', function () {
     });
   });
 
-  beforeEach(function (done) {
+  beforeEach((done) => {
     Sinon.stub(UserModel, 'findByToken').yields(new Error('find by token failed'));
     done();
   });
 
-  afterEach(function (done) {
+  afterEach((done) => {
     UserModel.findByToken.restore();
     done();
   });
 
-  after(function (done) {
+  after((done) => {
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
     done();
   });
 
-  describe('validate', function () {
-    describe('when a token is found', function () {
-      beforeEach(function (done) {
+  describe('validate', () => {
+    describe('when a token is found', () => {
+      beforeEach((done) => {
         UserModel.findByToken.yields(null, true, { token: 'someToken' });
         done();
       });
 
-      it('returns valid with the token', function (done) {
-        var auth = Auth.validate.bind({ server });
+      it('returns valid with the token', (done) => {
+        let auth = Auth.validate.bind({ server });
 
-        auth('someToken', function (err, isValid, token) {
+        auth('someToken', (err, isValid, token) => {
           expect(err).to.be.null();
           expect(isValid).to.be.true();
           expect(token.token).to.equal('someToken');
@@ -105,16 +99,16 @@ describe('handlers/auth', function () {
       });
     });
 
-    describe('when a token is not found', function () {
-      beforeEach(function (done) {
+    describe('when a token is not found', () => {
+      beforeEach((done) => {
         UserModel.findByToken.yields(null, false, { token: 'someToken' });
         done();
       });
 
-      it('returns valid with the token', function (done) {
-        var auth = Auth.validate.bind({ server });
+      it('returns valid with the token', (done) => {
+        let auth = Auth.validate.bind({ server });
 
-        auth('someToken', function (err, isValid, token) {
+        auth('someToken', (err, isValid, token) => {
           expect(err).to.be.null();
           expect(isValid).to.be.false();
           expect(token.token).to.equal('someToken');
@@ -124,11 +118,11 @@ describe('handlers/auth', function () {
       });
     });
 
-    describe('when finding a token fails', function () {
-      it('returns valid with the token', function (done) {
-        var auth = Auth.validate.bind({ server });
+    describe('when finding a token fails', () => {
+      it('returns valid with the token', (done) => {
+        let auth = Auth.validate.bind({ server });
 
-        auth('someToken', function (err) {
+        auth('someToken', (err) => {
           expect(err.message).to.equal('find by token failed');
           done();
         });

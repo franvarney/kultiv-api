@@ -1,29 +1,28 @@
-const Boom = require('boom');
-// const Debug = require('debug')('cookbook/src/controllers/cookbook');
-const Waterfall = require('run-waterfall');
+import {badRequest, notFound} from 'boom';
+import Waterfall from 'run-waterfall';
 
-exports.allByUser = function (request, reply) {
+function allByUser(request, reply) {
   const Cookbook = request.server.plugins['hapi-mongo-models'].Cookbook;
 
   Cookbook.find(
     { userId: request.params.username },
-    function (err, cookbooks) {
-      if (err) return reply(Boom.badRequest(err.message));
-      if (cookbooks.length < 1) return reply(Boom.notFound('No Cookbooks Found'));
+    (err, cookbooks) => {
+      if (err) return reply(badRequest(err.message));
+      if (cookbooks.length < 1) return reply(notFound('No Cookbooks Found'));
 
       reply(cookbooks);
     });
 };
 
-exports.create = function (request, reply) {
-  var cookbook;
-  const Cookbook = request.server.plugins['hapi-mongo-models'].Cookbook;
+function create(request, reply) {
+  let cookbook, {auth, payload, server} = request;
+  const {Cookbook} = server.plugins['hapi-mongo-models'];
 
   cookbook = {
-    title: request.payload.title,
-    description: request.payload.description || '',
-    userId: request.auth.credentials.user.id,
-    isPrivate: request.payload.private || false,
+    title: payload.title,
+    description: payload.description || '',
+    userId: auth.credentials.user.id,
+    isPrivate: payload.private || false,
     recipeIds: [],
     contributorIds: []
   };
@@ -37,19 +36,20 @@ exports.create = function (request, reply) {
       Cookbook.insertOne(validatedCookbook, callback);
     }
   ], function (err, newCookbook) {
-    if (err) return reply(Boom.badRequest(err.message));
+    if (err) return reply(badRequest(err.message));
     reply(newCookbook._id); // eslint-disable-line
   });
-};
+}
 
-exports.delete = function (request, reply) {
-  const Cookbook = request.server.plugins['hapi-mongo-models'].Cookbook;
+function remove(request, reply) {
+  let {params, server} = request;
+  const {Cookbook} = server.plugins['hapi-mongo-models'];
 
   Waterfall([
     function (callback) {
       Cookbook.findOne(
-        { _id: request.params.id },
-        function (err, foundCookbook) {
+       { _id: params.id },
+       (err, foundCookbook) => {
           if (err) return callback(err);
           if (!foundCookbook) return callback(null, false);
           callback(null, foundCookbook);
@@ -59,42 +59,44 @@ exports.delete = function (request, reply) {
       if (!foundCookbook) {
         callback(null, foundCookbook);
       } else {
-        Cookbook.deleteOne({ _id: request.params.id }, function (err) {
+        Cookbook.deleteOne({ _id: params.id }, (err) => {
           if (err) return callback(err);
           callback(null, foundCookbook);
         });
       }
     }
   ], function (err, foundCookbook) {
-    if (err) return reply(Boom.badRequest(err.message));
-    if (!foundCookbook) return reply(Boom.notFound('Cookbook Not Found'));
+    if (err) return reply(badRequest(err.message));
+    if (!foundCookbook) return reply(notFound('Cookbook Not Found'));
 
     reply({ message: 'success' });
   });
-};
+}
 
-exports.find = function (request, reply) {
-  const Cookbook = request.server.plugins['hapi-mongo-models'].Cookbook;
+function find(request, reply) {
+  let {params, server} = request;
+  const {Cookbook} = server.plugins['hapi-mongo-models'];
 
   Cookbook.findOne(
-    { _id: request.params.id },
-    function (err, foundCookbook) {
-    if (err) return reply(Boom.badRequest(err.message));
-    if (!foundCookbook) return reply(Boom.notFound('Cookbook Not Found'));
+    { _id: params.id },
+    (err, foundCookbook) => {
+    if (err) return reply(badRequest(err.message));
+    if (!foundCookbook) return reply(notFound('Cookbook Not Found'));
 
     if (foundCookbook.password) delete foundCookbook.password;
     reply(foundCookbook);
   });
 };
 
-exports.update = function (request, reply) {
-  const Cookbook = request.server.plugins['hapi-mongo-models'].Cookbook;
+function update(request, reply) {
+  let {params, payload, server} = request;
+  const {Cookbook} = server.plugins['hapi-mongo-models'];
 
   Waterfall([
     function (callback) {
       Cookbook.findOne(
-        { _id: request.params.id },
-        function (err, foundCookbook) {
+        { _id: params.id },
+        (err, foundCookbook) => {
           if (err) return callback(err);
           if (!foundCookbook) return callback(null, false);
 
@@ -105,13 +107,13 @@ exports.update = function (request, reply) {
       if (!foundCookbook) {
         callback(null, false);
       } else {
-        foundCookbook.title = request.payload.title || foundCookbook.title;
-        foundCookbook.description = request.payload.description || foundCookbook.description;
-        foundCookbook.isPrivate = request.payload.private || foundCookbook.isPrivate;
+        foundCookbook.title = payload.title || foundCookbook.title;
+        foundCookbook.description = payload.description || foundCookbook.description;
+        foundCookbook.isPrivate = payload.private || foundCookbook.isPrivate;
         foundCookbook.updated = Date.now();
         // TODO add password
 
-        Cookbook.validate(foundCookbook, function (err, validatedCookbook) {
+        Cookbook.validate(foundCookbook, (err, validatedCookbook) => {
           if (err) return callback(err);
           callback(null, validatedCookbook);
         });
@@ -121,13 +123,21 @@ exports.update = function (request, reply) {
       if (!validatedCookbook) {
         callback(null, false)
       } else {
-        Cookbook.updateOne({ _id: request.params.id }, validatedCookbook, callback);
+        Cookbook.updateOne({ _id: params.id }, validatedCookbook, callback);
       }
     }
   ], function (err, cookbook) {
-    if (err) return reply(Boom.badRequest(err.message));
-    if (!cookbook) return reply(Boom.notFound('Cookbook Not Found'));
+    if (err) return reply(badRequest(err.message));
+    if (!cookbook) return reply(notFound('Cookbook Not Found'));
 
-    reply(request.params.id);
+    reply(params.id);
   });
+};
+
+export default {
+  allByUser: allByUser,
+  create: create,
+  find: find,
+  remove: remove,
+  update: update
 };
