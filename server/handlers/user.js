@@ -1,16 +1,16 @@
-const Boom = require('boom');
-// const Debug = require('debug')('cookbook/src/controllers/user');
-const Waterfall = require('run-waterfall');
+import {badRequest, notFound} from 'boom';
+import Waterfall from 'run-waterfall';
 
-exports.create = function (request, reply) {
-  const User = request.server.plugins['hapi-mongo-models'].User;
+function create(request, reply) {
+  let {payload, server} = request;
+  const {User} = server.plugins['hapi-mongo-models'];
 
   Waterfall([
     function (callback) {
       User.isExisting(
-        request.payload.email,
-        request.payload.username,
-        function (err, isExisting) {
+        payload.email,
+        payload.username,
+        (err, isExisting) => {
           if (err) return callback(err);
           if (isExisting) {
             return callback({ message: 'User already exists' });
@@ -18,11 +18,11 @@ exports.create = function (request, reply) {
           callback();
         });
     },
-    User.hashPassword.bind(null, request.payload.password),
+    User.hashPassword.bind(null, payload.password),
     function (hashedPassword, callback) {
       User.validate({
-        email: request.payload.email,
-        username: request.payload.username,
+        email: payload.email,
+        username: payload.username,
         password: hashedPassword
       }, callback);
     },
@@ -30,62 +30,64 @@ exports.create = function (request, reply) {
       User.insertOne(validatedUser, callback);
     }
   ], function (err, user) {
-    if (err) return reply(Boom.badRequest(err.message));
+    if (err) return reply(badRequest(err.message));
     reply(user[0].username);
   });
-};
+}
 
-exports.delete = function (request, reply) {
-  const User = request.server.plugins['hapi-mongo-models'].User;
+function remove(request, reply) {
+  let {params, server} = request;
+  const {User} = server.plugins['hapi-mongo-models'];
 
   Waterfall([
-    User.isExisting.bind(null, request.params.username),
+    User.isExisting.bind(null, params.username),
     function (user, callback) {
       if (!user) return callback({ message: 'User not found' });
       User.deleteOne(
-        { username: request.params.username },
-        function (err) {
+        { username: params.username },
+        (err) => {
         if (err) return callback(err);
         callback();
       });
     }
   ], function (err) {
-    if (err) return reply(Boom.notFound(err.message));
+    if (err) return reply(notFound(err.message));
     reply({ success: true });
   });
-};
+}
 
-exports.find = function (request, reply) {
-  const User = request.server.plugins['hapi-mongo-models'].User;
+function find(request, reply) {
+  let {params, server} = request;
+  const {User} = server.plugins['hapi-mongo-models'];
 
   Waterfall([
-    User.isExisting.bind(null, request.params.username),
+    User.isExisting.bind(null, params.username),
     function (user, callback) {
       if (!user) return callback({ message: 'User not found' });
       User.findOne(
-        { username: request.params.username },
-        function (err, foundUser) {
+        { username: params.username },
+        (err, foundUser) => {
         if (err) return callback(err);
         callback(null, foundUser);
       });
     }
   ], function (err, foundUser) {
-    if (err) return reply(Boom.notFound(err.message));
+    if (err) return reply(notFound(err.message));
     delete foundUser.password;
     // delete foundUser.authToken; // TODO figure out if this should be returned
     reply(foundUser);
   });
-};
+}
 
-exports.update = function (request, reply) {
-  var user;
-  const User = request.server.plugins['hapi-mongo-models'].User;
+function update(request, reply) {
+  let user, {params, payload, server} = request;
+  const {User} = server.plugins['hapi-mongo-models'];
 
   Waterfall([
     User.isExisting.bind(
       null,
-      request.payload.email,
-      request.params.username
+      payload.email,
+      params.username
     ),
     function (existingUser, callback) {
       if (!existingUser) {
@@ -95,11 +97,11 @@ exports.update = function (request, reply) {
       callback(null, existingUser);
     },
     function (existingUser, callback) {
-      if (request.payload.password) {
+      if (payload.password) {
         User.isPasswordMatch(
-          request.payload.password,
+          payload.password,
           existingUser.password,
-          function (err, isMatch) {
+          (err, isMatch) => {
             if (err) return callback(err);
             callback(null, isMatch);
           });
@@ -110,8 +112,8 @@ exports.update = function (request, reply) {
     function (isMatch, callback) {
       if (!isMatch) {
         User.hashPassword(
-          request.payload.password,
-          function (err, hashedPassword) {
+          payload.password,
+          (err, hashedPassword) => {
           if (err) return callback(err);
           callback(null, hashedPassword);
         });
@@ -120,28 +122,35 @@ exports.update = function (request, reply) {
       }
     },
     function (hashedPassword, callback) {
-      user.email = request.payload.email;
-      user.location = request.payload.location;
+      user.email = payload.email;
+      user.location = payload.location;
       user.updated = Date.now();
 
       if (hashedPassword) user.password = hashedPassword;
 
-      User.validate(user, function (err, validatedUser) {
+      User.validate(user, (err, validatedUser) => {
         if (err) return callback(err);
         callback(null, validatedUser);
       });
     },
     function (validatedUser, callback) {
       User.updateOne(
-        { username: request.params.username },
+        { username: params.username },
         validatedUser,
-        function (err) {
+        (err) => {
         if (err) return callback(err);
         callback();
       });
     }
   ], function (err) {
-    if (err) return reply(Boom.badRequest(err.message));
-    reply(request.params.username);
+    if (err) return reply(badRequest(err.message));
+    reply(params.username);
   });
+}
+
+export default {
+  create: create,
+  find: find,
+  remove: remove,
+  update: update
 };
