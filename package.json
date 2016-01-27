@@ -11,7 +11,11 @@
     "test": "lab --coverage --verbose"
   },
   "author": "Fran Varney <franvarn@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
+  "engines": {
+    "node": "4.2",
+    "npm": "3"
+  },
   "dependencies": {
     "bcrypt": "0.8.5",
     "boom": "2.9.0",
