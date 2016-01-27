@@ -1,7 +1,9 @@
-function validate(token, callback) {
+// const Debug = require('debug')('cookbook/src/controllers/auth');
+
+exports.validate = function (token, callback) {
   const User = this.server.plugins['hapi-mongo-models'].User;
 
-  User.findByToken(token, (err, user) => {
+  User.findByToken(token, function (err, user) {
     if (err) return callback(err);
 
     if (user) {
@@ -16,8 +18,4 @@ function validate(token, callback) {
       callback(null, false, { token: token });
     }
   });
-};
-
-export default {
-  validate: validate
 };

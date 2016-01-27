@@ -1,6 +1,6 @@
-require('babel-register')
+const Debug = require('debug')('cookbook/index');
 
 require('./config');
 require('./server/server');
 
-console.log('Cookbook starting...');
+Debug('Cookbook starting...');

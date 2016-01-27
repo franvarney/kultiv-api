@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-export default {
+module.exports = {
   admin_token: process.env.ADMIN_TOKEN || 'C00kbook',
   env: process.env.NODE_ENV,
   host: process.env.HOST || 'localhost',

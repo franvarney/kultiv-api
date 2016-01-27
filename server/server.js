@@ -1,12 +1,13 @@
-import {Server} from 'hapi';
+const Debug = require('debug')('cookbook/server/server');
+const Hapi = require('hapi');
 
-import Auth from './handlers/auth';
-import Config from '../config';
-import HapiAuthBearerToken from 'hapi-auth-bearer-token';
-import HapiMongoModels from './plugins/hapi-mongo-models';
-import Routes from './routes';
+const Auth = require('./handlers/auth');
+const Config = require('../config');
+const HapiAuthBearerToken = require('hapi-auth-bearer-token');
+const HapiMongoModels = require('./plugins/hapi-mongo-models');
+const Routes = require('./routes');
 
-let server = new Server();
+var server = module.exports = new Hapi.Server();
 
 server.connection({
   host: Config.env !== 'production' ? Config.host : null,
@@ -15,10 +16,10 @@ server.connection({
 
 server.route(Routes);
 
-server.register([HapiAuthBearerToken, HapiMongoModels], (err) => {
-  if (err) console.log(`Plugin error: ${err}`);
+server.register([HapiAuthBearerToken, HapiMongoModels], function (err) {
+  if (err) Debug('Plugin error :' + err);
 
-  console.log(`Connected to Mongo at ${Config.mongo.uri}`);
+  Debug('Connected to Mongo at %s', Config.mongo.uri);
 
   server.auth.strategy('simple', 'bearer-access-token', {
     allowQueryToken: true,
@@ -31,10 +32,8 @@ server.register([HapiAuthBearerToken, HapiMongoModels], (err) => {
     strategy: 'simple'
   });
 
-  server.start((err) => {
+  server.start(function (err) {
     if (err) throw err;
-    console.log(`Server starting at ${server.info.uri}`);
+    Debug('Server starting at %s', server.info.uri);
   });
 });
-
-export default server;
