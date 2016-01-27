@@ -1,14 +1,16 @@
-let Cookbook;
+var Cookbook;
 
-import {BaseModel} from 'hapi-mongo-models';
-import Joi from 'joi';
-import ShortId32 from 'shortid32';
+const BaseModel = require('hapi-mongo-models').BaseModel;
+// const Debug = require('debug')('cookbook/src/models/cookbook');
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
+const ShortId32 = require('shortid32');
 
 ShortId32.characters('23456789abcdefghjklmnpqrstuvwxyz');
 
 Cookbook = BaseModel.extend({
   constructor: function (attrs) {
-    Object.assign(this, attrs);
+    ObjectAssign(this, attrs);
   }
 });
 
@@ -35,4 +37,4 @@ Cookbook.indexes = [
   [{ created: 1}, { unique: false }]
 ];
 
-export default Cookbook;
+module.exports = Cookbook;

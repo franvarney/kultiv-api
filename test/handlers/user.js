@@ -1,21 +1,27 @@
-import {expect} from 'code';
-import Lab from 'lab';
-import {Server} from 'hapi';
-import Proxyquire from 'proxyquire';
-import Sinon from 'sinon';
+const Code = require('code');
+const Lab = require('lab');
+const Hapi = require('hapi');
+const Proxyquire = require('proxyquire');
+const Sinon = require('sinon');
 
 const lab = exports.lab = Lab.script();
-const {describe, it, before, after, beforeEach, afterEach} = lab;
+const describe = lab.describe;
+const it = lab.it;
+const before = lab.before;
+const after = lab.after;
+const beforeEach = lab.beforeEach;
+const afterEach = lab.afterEach;
+const expect = Code.expect;
 
-import Config from '../../config';
-import User from '../../server/handlers/user';
-import UserModel from '../../server/models/user';
+const Config = require('../../config');
+const User = require('../../server/handlers/user');
+const UserModel = require('../../server/models/user');
 
-let hashed, request, server, user;
+var hashed, request, server, user;
 
-describe('handlers/user', () => {
-  before((done) => {
-    let models, proxy, stub;
+describe('handlers/user', function () {
+  before(function (done) {
+    var models, proxy, stub;
 
     stub = {
       User: {}
@@ -38,14 +44,14 @@ describe('handlers/user', () => {
       }
     };
 
-    server = new Server();
+    server = new Hapi.Server();
 
     server.connection({
       host: Config.env !== 'production' ? Config.host : null,
       port: parseInt(Config.port, 10)
     });
 
-    server.register([models], (err) => {
+    server.register([models], function (err) {
       if (err) return done(err);
 
       request = {
@@ -60,14 +66,14 @@ describe('handlers/user', () => {
         server: {
           plugins: server.plugins
         },
-        code: () => {}
+        code: function () {}
       };
 
       server.initialize(done);
     });
   });
 
-  beforeEach((done) => {
+  beforeEach(function (done) {
     user = {
       email: 'test@test.com',
       username: 'test2',
@@ -88,7 +94,7 @@ describe('handlers/user', () => {
     done();
   });
 
-  afterEach((done) => {
+  afterEach(function (done) {
     UserModel.deleteOne.restore();
     UserModel.findOne.restore();
     UserModel.hashPassword.restore();
@@ -101,14 +107,14 @@ describe('handlers/user', () => {
     done();
   });
 
-  after((done) => {
+  after(function (done) {
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
     done();
   });
 
-  describe('create', () => {
-    describe('when a user is created', () => {
-      beforeEach((done) => {
+  describe('create', function () {
+    describe('when a user is created', function () {
+      beforeEach(function (done) {
         UserModel.hashPassword.yields(null, hashed);
         UserModel.insertOne.yields(null, [user]);
         UserModel.isExisting.yields(null, false);
@@ -119,8 +125,8 @@ describe('handlers/user', () => {
       });
     });
 
-    describe('when a user isn\'t created', () => {
-      beforeEach((done) => {
+    describe('when a user isn\'t created', function () {
+      beforeEach(function (done) {
         UserModel.hashPassword.yields(null, hashed);
         UserModel.isExisting.yields(null, false);
         user.password = hashed;
@@ -129,22 +135,22 @@ describe('handlers/user', () => {
         done();
       });
 
-      it('returns an error', (done) => {
-        User.create(request, (err) => {
+      it('returns an error', function (done) {
+        User.create(request, function (err) {
           expect(err.message).to.equal('insert failed');
           done();
         });
       });
     });
 
-    describe('when the user already exists', () => {
-      beforeEach((done) => {
+    describe('when the user already exists', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         done();
       });
 
-      it('returns an error', (done) => {
-        User.create(request, (err) => {
+      it('returns an error', function (done) {
+        User.create(request, function (err) {
           expect(UserModel.isExisting.called).to.be.true();
           expect(UserModel.insertOne.called).to.be.false();
           expect(err.message).to.equal('User already exists');
@@ -155,17 +161,17 @@ describe('handlers/user', () => {
     });
   });
 
-  describe('delete', () => {
-    describe('when a user is deleted', () => {
-      beforeEach((done) => {
+  describe('delete', function () {
+    describe('when a user is deleted', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         UserModel.deleteOne.yields(null, 5);
 
         done();
       });
 
-      it('returns a success message', (done) => {
-        User.remove(request, (message) => {
+      it('returns a success message', function (done) {
+        User.delete(request, function (message) {
           expect(UserModel.isExisting.called).to.be.true();
           expect(message.success).to.true();
 
@@ -174,28 +180,28 @@ describe('handlers/user', () => {
       });
     });
 
-    describe('when delete fails', () => {
-      beforeEach((done) => {
+    describe('when delete fails', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         done();
       });
 
-      it('returns an error', (done) => {
-        User.remove(request, (err) => {
+      it('returns an error', function (done) {
+        User.delete(request, function (err) {
           expect(err.message).to.equal('delete one failed');
           done();
         });
       });
     });
 
-    describe('when a user isn\'t found', () => {
-      beforeEach((done) => {
+    describe('when a user isn\'t found', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, false);
         done();
       });
 
-      it('returns an error', (done) => {
-        User.remove(request, (err) => {
+      it('returns an error', function (done) {
+        User.delete(request, function (err) {
           expect(err.message).to.equal('User not found');
           done();
         });
@@ -203,17 +209,17 @@ describe('handlers/user', () => {
     });
   });
 
-  describe('find', () => {
-    describe('when a user is found', () => {
-      beforeEach((done) => {
+  describe('find', function () {
+    describe('when a user is found', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         UserModel.findOne.yields(null, user);
 
         done();
       });
 
-      it('returns a success message', (done) => {
-        User.find(request, (found) => {
+      it('returns a success message', function (done) {
+        User.find(request, function (found) {
           expect(UserModel.isExisting.called).to.be.true();
           expect(found).to.equal(user);
 
@@ -222,28 +228,28 @@ describe('handlers/user', () => {
       });
     });
 
-    describe('when find fails', () => {
-      beforeEach((done) => {
+    describe('when find fails', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         done();
       });
 
-      it('returns an error', (done) => {
-        User.find(request, (err) => {
+      it('returns an error', function (done) {
+        User.find(request, function (err) {
           expect(err.message).to.equal('find one failed');
           done();
         });
       });
     });
 
-    describe('when a user isn\'t found', () => {
-      beforeEach((done) => {
+    describe('when a user isn\'t found', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, false);
         done();
       });
 
-      it('returns an error', (done) => {
-        User.find(request, (err) => {
+      it('returns an error', function (done) {
+        User.find(request, function (err) {
           expect(err.message).to.equal('User not found');
           done();
         });
@@ -251,9 +257,9 @@ describe('handlers/user', () => {
     });
   });
 
-  describe('update', () => {
-    describe('when a user is updated', () => {
-      beforeEach((done) => {
+  describe('update', function () {
+    describe('when a user is updated', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         UserModel.validate.yields(null, user);
         UserModel.updateOne.yields(null);
@@ -261,9 +267,9 @@ describe('handlers/user', () => {
         done();
       });
 
-      it('returns the updated user\'s username', (done) => {
+      it('returns the updated user\'s username', function (done) {
         delete request.payload.password;
-        User.update(request, (username) => {
+        User.update(request, function (username) {
           expect(UserModel.isPasswordMatch.called).to.be.false();
           expect(UserModel.hashPassword.called).to.be.false();
           expect(username).to.equal('test');
@@ -273,31 +279,31 @@ describe('handlers/user', () => {
       });
     });
 
-    describe('when the user isn\'t found', () => {
-      beforeEach((done) => {
+    describe('when the user isn\'t found', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, false);
         done();
       });
 
-      it('returns an error', (done) => {
-        User.update(request, (err) => {
+      it('returns an error', function (done) {
+        User.update(request, function (err) {
           expect(err.message).to.equal('User not found');
           done();
         });
       });
     });
 
-    describe('when a user isn\'t updated', () => {
-      beforeEach((done) => {
+    describe('when a user isn\'t updated', function () {
+      beforeEach(function (done) {
         UserModel.isExisting.yields(null, user);
         UserModel.validate.yields(null, user);
 
         done();
       });
 
-      it('returns an error', (done) => {
+      it('returns an error', function (done) {
         delete request.payload.password;
-        User.update(request, (err) => {
+        User.update(request, function (err) {
           expect(err.message).to.equal('update one failed');
           done();
         });

@@ -1,21 +1,27 @@
-import {expect} from 'code';
-import Lab from 'lab';
-import {Server} from 'hapi';
-import Proxyquire from 'proxyquire';
-import Sinon from 'sinon';
+const Code = require('code');
+const Lab = require('lab');
+const Hapi = require('hapi');
+const Proxyquire = require('proxyquire');
+const Sinon = require('sinon');
 
 const lab = exports.lab = Lab.script();
-const {describe, it, before, after, beforeEach, afterEach} = lab;
+const describe = lab.describe;
+const it = lab.it;
+const before = lab.before;
+const after = lab.after;
+const beforeEach = lab.beforeEach;
+const afterEach = lab.afterEach;
+const expect = Code.expect;
 
-import Config from '../../config';
-import Cookbook from '../../server/handlers/cookbook';
-import CookbookModel from '../../server/models/cookbook';
+const Config = require('../../config');
+const Cookbook = require('../../server/handlers/cookbook');
+const CookbookModel = require('../../server/models/cookbook');
 
-let cookbook, cookbooks, request, server;
+var cookbook, cookbooks, request, server;
 
-describe('handlers/cookbook', () => {
-  before((done) => {
-    let models, proxy, stub;
+describe('handlers/cookbook', function () {
+  before(function (done) {
+    var models, proxy, stub;
 
     stub = {
       Cookbook: {}
@@ -38,14 +44,14 @@ describe('handlers/cookbook', () => {
       }
     };
 
-    server = new Server();
+    server = new Hapi.Server();
 
     server.connection({
       host: Config.env !== 'production' ? Config.host : null,
       port: parseInt(Config.port, 10)
     });
 
-    server.register([models], (err) => {
+    server.register([models], function (err) {
       if (err) return done(err);
 
       request = {
@@ -66,14 +72,14 @@ describe('handlers/cookbook', () => {
         server: {
           plugins: server.plugins
         },
-        code: () => {}
+        code: function () {}
       };
 
       server.initialize(done);
     });
   });
 
-  beforeEach((done) => {
+  beforeEach(function (done) {
     cookbook = {
       _id: 'abc23',
       title: 'Test Book',
@@ -98,7 +104,7 @@ describe('handlers/cookbook', () => {
     done();
   });
 
-  afterEach((done) => {
+  afterEach(function (done) {
     CookbookModel.deleteOne.restore();
     CookbookModel.find.restore();
     CookbookModel.findOne.restore();
@@ -109,20 +115,20 @@ describe('handlers/cookbook', () => {
     done();
   });
 
-  after((done) => {
+  after(function (done) {
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
     done();
   });
 
-  describe('allByUser', () => {
-    describe('when there are cookbooks', () => {
-      beforeEach((done) => {
+  describe('allByUser', function () {
+    describe('when there are cookbooks', function () {
+      beforeEach(function (done) {
         CookbookModel.find.yields(null, cookbooks);
         done();
       });
 
-      it('returns the cookbooks', (done) => {
-        Cookbook.allByUser(request, (foundCookbooks) => {
+      it('returns the cookbooks', function (done) {
+        Cookbook.allByUser(request, function (foundCookbooks) {
           expect(foundCookbooks.length).to.equal(2);
           expect(foundCookbooks).to.equal(cookbooks);
 
@@ -131,23 +137,23 @@ describe('handlers/cookbook', () => {
       });
     });
 
-    describe('when there are no cookbooks', () => {
-      beforeEach((done) => {
+    describe('when there are no cookbooks', function () {
+      beforeEach(function (done) {
         CookbookModel.find.yields(null, []);
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.allByUser(request, (foundCookbooks) => {
+      it('returns an error', function (done) {
+        Cookbook.allByUser(request, function (foundCookbooks) {
           expect(foundCookbooks.length).to.be.undefined();
           done();
         });
       });
     });
 
-    describe('when finding cookbooks fails', () => {
-      it('returns an error', (done) => {
-        Cookbook.allByUser(request, (err) => {
+    describe('when finding cookbooks fails', function () {
+      it('returns an error', function (done) {
+        Cookbook.allByUser(request, function (err) {
           expect(err.message).to.equal('find failed');
           done();
         });
@@ -155,26 +161,26 @@ describe('handlers/cookbook', () => {
     });
   });
 
-  describe('create', () => {
-    describe('when a cookbook is created', () => {
-      beforeEach((done) => {
+  describe('create', function () {
+    describe('when a cookbook is created', function () {
+      beforeEach(function (done) {
         CookbookModel.validate.yields(null, cookbook);
         CookbookModel.insertOne.yields(null, cookbook);
 
         done();
       });
 
-      it('returns the cookbook id', (done) => {
-        Cookbook.create(request, (cookbookId) => {
+      it('returns the cookbook id', function (done) {
+        Cookbook.create(request, function (cookbookId) {
           expect(cookbookId).to.equal('abc23');
           done();
         });
       });
     });
 
-    describe('when validating a new cookbook fails', () => {
-      it('returns an error', (done) => {
-        Cookbook.create(request, (err) => {
+    describe('when validating a new cookbook fails', function () {
+      it('returns an error', function (done) {
+        Cookbook.create(request, function (err) {
           expect(err).to.be.instanceOf(Error);
           expect(err.message).to.equal('validate failed');
 
@@ -183,14 +189,14 @@ describe('handlers/cookbook', () => {
       });
     });
 
-    describe('when saving a new cookbook fails', () => {
-      beforeEach((done) => {
+    describe('when saving a new cookbook fails', function () {
+      beforeEach(function (done) {
         CookbookModel.validate.yields(null, cookbook);
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.create(request, (err) => {
+      it('returns an error', function (done) {
+        Cookbook.create(request, function (err) {
           expect(err).to.be.instanceOf(Error);
           expect(err.message).to.equal('insert one failed');
 
@@ -200,54 +206,54 @@ describe('handlers/cookbook', () => {
     });
   });
 
-  describe('delete', () => {
-    describe('when a cookbook is deleted', () => {
-      beforeEach((done) => {
+  describe('delete', function () {
+    describe('when a cookbook is deleted', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null, cookbook);
         CookbookModel.deleteOne.yields(null, 1);
 
         done();
       });
 
-      it('returns a success message', (done) => {
-        Cookbook.remove(request, (result) => {
+      it('returns a success message', function (done) {
+        Cookbook.delete(request, function (result) {
           expect(result.message).to.equal('success');
           done();
         });
       });
     });
 
-    describe('when finding a cookbook to delete fails', () => {
-      it('returns an error', (done) => {
-        Cookbook.remove(request, (err) => {
+    describe('when finding a cookbook to delete fails', function () {
+      it('returns an error', function (done) {
+        Cookbook.delete(request, function (err) {
           expect(err.message).to.equal('find one failed');
           done();
         });
       });
     });
 
-    describe('when finding a cookbook to delete returns nothing', () => {
-      beforeEach((done) => {
+    describe('when finding a cookbook to delete returns nothing', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null);
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.remove(request, (err) => {
+      it('returns an error', function (done) {
+        Cookbook.delete(request, function (err) {
           expect(err.message).to.equal('Cookbook Not Found');
           done();
         });
       });
     });
 
-    describe('when delete fails', () => {
-      beforeEach((done) => {
+    describe('when delete fails', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null, cookbook);
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.remove(request, (err) => {
+      it('returns an error', function (done) {
+        Cookbook.delete(request, function (err) {
           expect(err.message).to.equal('delete one failed');
           done();
         });
@@ -255,17 +261,17 @@ describe('handlers/cookbook', () => {
     });
   });
 
-  describe('find', () => {
-    describe('when a cookbook is found', () => {
-      beforeEach((done) => {
+  describe('find', function () {
+    describe('when a cookbook is found', function () {
+      beforeEach(function (done) {
         cookbook.password = 'test';
         CookbookModel.findOne.yields(null, cookbook);
 
         done();
       });
 
-      it('returns a cookbook', (done) => {
-        Cookbook.find(request, (foundCookbook) => {
+      it('returns a cookbook', function (done) {
+        Cookbook.find(request, function (foundCookbook) {
           expect(foundCookbook).to.equal(cookbook);
           expect(foundCookbook.password).to.be.undefined();
 
@@ -274,9 +280,9 @@ describe('handlers/cookbook', () => {
       });
     });
 
-    describe('when a cookbook is not found', () => {
-      it('returns an error', (done) => {
-        Cookbook.find(request, (err) => {
+    describe('when a cookbook is not found', function () {
+      it('returns an error', function (done) {
+        Cookbook.find(request, function (err) {
           expect(err.message).to.equal('find one failed');
           done();
         });
@@ -284,9 +290,9 @@ describe('handlers/cookbook', () => {
     });
   });
 
-  describe('update', () => {
-    describe('when the cookbook is updated', () => {
-      beforeEach((done) => {
+  describe('update', function () {
+    describe('when the cookbook is updated', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null, cookbook);
         CookbookModel.validate.yields(null, cookbook);
         CookbookModel.updateOne.yields(null, 1);
@@ -294,61 +300,61 @@ describe('handlers/cookbook', () => {
         done();
       });
 
-      it('returns the cookbook id', (done) => {
-        Cookbook.update(request, (cookbookId) => {
+      it('returns the cookbook id', function (done) {
+        Cookbook.update(request, function (cookbookId) {
           expect(cookbookId).to.equal('abc23');
           done();
         });
       });
     });
 
-    describe('when finding the cookbook fails', () => {
-      it('returns an error', (done) => {
-        Cookbook.update(request, (err) => {
+    describe('when finding the cookbook fails', function () {
+      it('returns an error', function (done) {
+        Cookbook.update(request, function (err) {
           expect(err.message).to.equal('find one failed');
           done();
         });
       });
     });
 
-    describe('when no cookbook is found', () => {
-      beforeEach((done) => {
+    describe('when no cookbook is found', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null, null);
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.update(request, (err) => {
+      it('returns an error', function (done) {
+        Cookbook.update(request, function (err) {
           expect(err.message).to.equal('Cookbook Not Found');
           done();
         });
       });
     });
 
-    describe('when validating the cookbook fails', () => {
-      beforeEach((done) => {
+    describe('when validating the cookbook fails', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null, cookbook);
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.update(request, (err) => {
+      it('returns an error', function (done) {
+        Cookbook.update(request, function (err) {
           expect(err.message).to.equal('validate failed');
           done();
         });
       });
     });
 
-    describe('when updating the cookbook fails', () => {
-      beforeEach((done) => {
+    describe('when updating the cookbook fails', function () {
+      beforeEach(function (done) {
         CookbookModel.findOne.yields(null, cookbook);
         CookbookModel.validate.yields(null, cookbook);
 
         done();
       });
 
-      it('returns an error', (done) => {
-        Cookbook.update(request, (err) => {
+      it('returns an error', function (done) {
+        Cookbook.update(request, function (err) {
           expect(err.message).to.equal('update one failed');
           done();
         });

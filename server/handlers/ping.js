@@ -1,5 +1,5 @@
-import KnockKnock from 'knock-knock';
+const KnockKnock = require('knock-knock');
 
-export default function (request, reply) {
+module.exports = function (request, reply) {
   KnockKnock(reply);
 };

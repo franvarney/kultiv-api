@@ -1,22 +1,29 @@
-import {expect} from 'code';
-import Lab from 'lab';
+const Code = require('code');
+const Lab = require('lab');
+// const Sinon = require('sinon');
 
 const lab = exports.lab = Lab.script();
-const {describe, it, before, after, beforeEach, afterEach} = lab;
+const describe = lab.describe;
+const it = lab.it;
+// const before = lab.before;
+// const after = lab.after;
+const beforeEach = lab.beforeEach;
+const afterEach = lab.afterEach;
+const expect = Code.expect;
 
-import CookbookModel from '../../server/models/cookbook';
+const CookbookModel = require('../../server/models/cookbook');
 
-describe('models/cookbook', () => {
-  beforeEach((done) => {
+describe('models/cookbook', function () {
+  beforeEach(function (done) {
     done();
   });
 
-  afterEach((done) => {
+  afterEach(function (done) {
     done();
   });
 
-  describe('when the collection name is assigned', () => {
-    it('the collection name is set', (done) => {
+  describe('when the collection name is assigned', function () {
+    it('the collection name is set', function (done) {
       expect(CookbookModel._collection).to.equal('cookbooks'); // eslint-disable-line
       done();
     });

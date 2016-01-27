@@ -1,16 +1,16 @@
-import {badRequest, notFound} from 'boom';
-import Waterfall from 'run-waterfall';
+const Boom = require('boom');
+// const Debug = require('debug')('cookbook/src/controllers/user');
+const Waterfall = require('run-waterfall');
 
-function create(request, reply) {
-  let {payload, server} = request;
-  const {User} = server.plugins['hapi-mongo-models'];
+exports.create = function (request, reply) {
+  const User = request.server.plugins['hapi-mongo-models'].User;
 
   Waterfall([
     function (callback) {
       User.isExisting(
-        payload.email,
-        payload.username,
-        (err, isExisting) => {
+        request.payload.email,
+        request.payload.username,
+        function (err, isExisting) {
           if (err) return callback(err);
           if (isExisting) {
             return callback({ message: 'User already exists' });
@@ -18,11 +18,11 @@ function create(request, reply) {
           callback();
         });
     },
-    User.hashPassword.bind(null, payload.password),
+    User.hashPassword.bind(null, request.payload.password),
     function (hashedPassword, callback) {
       User.validate({
-        email: payload.email,
-        username: payload.username,
+        email: request.payload.email,
+        username: request.payload.username,
         password: hashedPassword
       }, callback);
     },
@@ -30,64 +30,62 @@ function create(request, reply) {
       User.insertOne(validatedUser, callback);
     }
   ], function (err, user) {
-    if (err) return reply(badRequest(err.message));
+    if (err) return reply(Boom.badRequest(err.message));
     reply(user[0].username);
   });
-}
+};
 
-function remove(request, reply) {
-  let {params, server} = request;
-  const {User} = server.plugins['hapi-mongo-models'];
+exports.delete = function (request, reply) {
+  const User = request.server.plugins['hapi-mongo-models'].User;
 
   Waterfall([
-    User.isExisting.bind(null, params.username),
+    User.isExisting.bind(null, request.params.username),
     function (user, callback) {
       if (!user) return callback({ message: 'User not found' });
       User.deleteOne(
-        { username: params.username },
-        (err) => {
+        { username: request.params.username },
+        function (err) {
         if (err) return callback(err);
         callback();
       });
     }
   ], function (err) {
-    if (err) return reply(notFound(err.message));
+    if (err) return reply(Boom.notFound(err.message));
     reply({ success: true });
   });
-}
+};
 
-function find(request, reply) {
-  let {params, server} = request;
-  const {User} = server.plugins['hapi-mongo-models'];
+exports.find = function (request, reply) {
+  const User = request.server.plugins['hapi-mongo-models'].User;
 
   Waterfall([
-    User.isExisting.bind(null, params.username),
+    User.isExisting.bind(null, request.params.username),
     function (user, callback) {
       if (!user) return callback({ message: 'User not found' });
       User.findOne(
-        { username: params.username },
-        (err, foundUser) => {
+        { username: request.params.username },
+        function (err, foundUser) {
         if (err) return callback(err);
         callback(null, foundUser);
       });
     }
   ], function (err, foundUser) {
-    if (err) return reply(notFound(err.message));
+    if (err) return reply(Boom.notFound(err.message));
     delete foundUser.password;
     // delete foundUser.authToken; // TODO figure out if this should be returned
     reply(foundUser);
   });
-}
+};
 
-function update(request, reply) {
-  let user, {params, payload, server} = request;
-  const {User} = server.plugins['hapi-mongo-models'];
+exports.update = function (request, reply) {
+  var user;
+  const User = request.server.plugins['hapi-mongo-models'].User;
 
   Waterfall([
     User.isExisting.bind(
       null,
-      payload.email,
-      params.username
+      request.payload.email,
+      request.params.username
     ),
     function (existingUser, callback) {
       if (!existingUser) {
@@ -97,11 +95,11 @@ function update(request, reply) {
       callback(null, existingUser);
     },
     function (existingUser, callback) {
-      if (payload.password) {
+      if (request.payload.password) {
         User.isPasswordMatch(
-          payload.password,
+          request.payload.password,
           existingUser.password,
-          (err, isMatch) => {
+          function (err, isMatch) {
             if (err) return callback(err);
             callback(null, isMatch);
           });
@@ -112,8 +110,8 @@ function update(request, reply) {
     function (isMatch, callback) {
       if (!isMatch) {
         User.hashPassword(
-          payload.password,
-          (err, hashedPassword) => {
+          request.payload.password,
+          function (err, hashedPassword) {
           if (err) return callback(err);
           callback(null, hashedPassword);
         });
@@ -122,35 +120,28 @@ function update(request, reply) {
       }
     },
     function (hashedPassword, callback) {
-      user.email = payload.email;
-      user.location = payload.location;
+      user.email = request.payload.email;
+      user.location = request.payload.location;
       user.updated = Date.now();
 
       if (hashedPassword) user.password = hashedPassword;
 
-      User.validate(user, (err, validatedUser) => {
+      User.validate(user, function (err, validatedUser) {
         if (err) return callback(err);
         callback(null, validatedUser);
       });
     },
     function (validatedUser, callback) {
       User.updateOne(
-        { username: params.username },
+        { username: request.params.username },
         validatedUser,
-        (err) => {
+        function (err) {
         if (err) return callback(err);
         callback();
       });
     }
   ], function (err) {
-    if (err) return reply(badRequest(err.message));
-    reply(params.username);
+    if (err) return reply(Boom.badRequest(err.message));
+    reply(request.params.username);
   });
-}
-
-export default {
-  create: create,
-  find: find,
-  remove: remove,
-  update: update
 };

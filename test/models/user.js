@@ -1,17 +1,23 @@
-import Bcrypt from 'bcrypt';
-import {expect} from 'code';
-import Lab from 'lab';
-import Sinon from 'sinon';
+const Bcrypt = require('bcrypt');
+const Code = require('code');
+const Lab = require('lab');
+const Sinon = require('sinon');
 
 const lab = exports.lab = Lab.script();
-const {describe, it, before, after, beforeEach, afterEach} = lab;
+const describe = lab.describe;
+const it = lab.it;
+// const before = lab.before;
+// const after = lab.after;
+const beforeEach = lab.beforeEach;
+const afterEach = lab.afterEach;
+const expect = Code.expect;
 
-import UserModel from '../../server/models/user';
+const UserModel = require('../../server/models/user');
 
-let hashed, user;
+var hashed, user;
 
-describe('models/user', () => {
-  beforeEach((done) => {
+describe('models/user', function () {
+  beforeEach(function (done) {
     user = {
       username: 'test',
       email: 'test@test.com',
@@ -27,7 +33,7 @@ describe('models/user', () => {
     done();
   });
 
-  afterEach((done) => {
+  afterEach(function (done) {
     Bcrypt.compare.restore();
     Bcrypt.genSalt.restore();
     Bcrypt.hash.restore();
@@ -35,22 +41,22 @@ describe('models/user', () => {
     done();
   });
 
-  describe('when the collection name is assigned', () => {
-    it('the collection name is set', (done) => {
+  describe('when the collection name is assigned', function () {
+    it('the collection name is set', function (done) {
       expect(UserModel._collection).to.equal('users'); // eslint-disable-line
       done();
     });
   });
 
-  describe('findByCredentials', () => {
-    describe('when the user is found by the username credentials', () => {
-      beforeEach((done) => {
+  describe('findByCredentials', function () {
+    describe('when the user is found by the username credentials', function () {
+      beforeEach(function (done) {
         UserModel.findOne.yields(null, user);
         done();
       });
 
-      it('returns the user', (done) => {
-        UserModel.findByCredentials('test', 'password', (err, foundUser) => {
+      it('returns the user', function (done) {
+        UserModel.findByCredentials('test', 'password', function (err, foundUser) {
           expect(err).to.be.null();
           expect(foundUser).to.equal(user);
           done();
@@ -58,14 +64,14 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the user is found by the email credentials', () => {
-      beforeEach((done) => {
+    describe('when the user is found by the email credentials', function () {
+      beforeEach(function (done) {
         UserModel.findOne.yields(null, user);
         done();
       });
 
-      it('returns the user', (done) => {
-        UserModel.findByCredentials('test@test.com', 'password', (err, foundUser) => {
+      it('returns the user', function (done) {
+        UserModel.findByCredentials('test@test.com', 'password', function (err, foundUser) {
           expect(err).to.be.null();
           expect(foundUser).to.equal(user);
           done();
@@ -73,9 +79,9 @@ describe('models/user', () => {
       });
     });
 
-    describe('when find by credentials fails', () => {
-      it('returns the user', (done) => {
-        UserModel.findByCredentials('test', 'password', (err) => {
+    describe('when find by credentials fails', function () {
+      it('returns the user', function (done) {
+        UserModel.findByCredentials('test', 'password', function (err) {
           expect(err.message).to.equals('find one failed');
           done();
         });
@@ -83,15 +89,15 @@ describe('models/user', () => {
     });
   });
 
-  describe('findByToken', () => {
-    describe('when the user is found by token', () => {
-      beforeEach((done) => {
+  describe('findByToken', function () {
+    describe('when the user is found by token', function () {
+      beforeEach(function (done) {
         UserModel.findOne.yields(null, user);
         done();
       });
 
-      it('returns the user', (done) => {
-        UserModel.findByToken('someToken', (err, foundUser) => {
+      it('returns the user', function (done) {
+        UserModel.findByToken('someToken', function (err, foundUser) {
           expect(err).to.be.null();
           expect(foundUser).to.equal(user);
           done();
@@ -99,9 +105,9 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the user isn\'t found by token', () => {
-      it('returns an error', (done) => {
-        UserModel.findByToken('someToken', (err) => {
+    describe('when the user isn\'t found by token', function () {
+      it('returns an error', function (done) {
+        UserModel.findByToken('someToken', function (err) {
           expect(err.message).to.equal('find one failed');
           done();
         });
@@ -109,15 +115,15 @@ describe('models/user', () => {
     });
   });
 
-  describe('findByEmail', () => {
-    describe('when the user is found by email', () => {
-      beforeEach((done) => {
+  describe('findByEmail', function () {
+    describe('when the user is found by email', function () {
+      beforeEach(function (done) {
         UserModel.findOne.yields(null, user);
         done();
       });
 
-      it('returns the user', (done) => {
-        UserModel.findByEmail('test@test.com', (err, foundUser) => {
+      it('returns the user', function (done) {
+        UserModel.findByEmail('test@test.com', function (err, foundUser) {
           expect(err).to.be.null();
           expect(foundUser).to.equal(user);
           done();
@@ -125,9 +131,9 @@ describe('models/user', () => {
       });
     });
 
-    describe('when find by email fails', () => {
-      it('returns the user', (done) => {
-        UserModel.findByEmail('test@test.com', (err) => {
+    describe('when find by email fails', function () {
+      it('returns the user', function (done) {
+        UserModel.findByEmail('test@test.com', function (err) {
           expect(err.message).to.equals('find one failed');
           done();
         });
@@ -135,15 +141,15 @@ describe('models/user', () => {
     });
   });
 
-  describe('findByUsername', () => {
-    describe('when the user is found by username', () => {
-      beforeEach((done) => {
+  describe('findByUsername', function () {
+    describe('when the user is found by username', function () {
+      beforeEach(function (done) {
         UserModel.findOne.yields(null, user);
         done();
       });
 
-      it('returns the user', (done) => {
-        UserModel.findByUsername('test', (err, foundUser) => {
+      it('returns the user', function (done) {
+        UserModel.findByUsername('test', function (err, foundUser) {
           expect(err).to.be.null();
           expect(foundUser).to.equal(user);
           done();
@@ -151,9 +157,9 @@ describe('models/user', () => {
       });
     });
 
-    describe('when find by username fails', () => {
-      it('returns the user', (done) => {
-        UserModel.findByUsername('test', (err) => {
+    describe('when find by username fails', function () {
+      it('returns the user', function (done) {
+        UserModel.findByUsername('test', function (err) {
           expect(err.message).to.equals('find one failed');
           done();
         });
@@ -161,16 +167,16 @@ describe('models/user', () => {
     });
   });
 
-  describe('hashPassword', () => {
-    describe('when the password is hashed', () => {
-      beforeEach((done) => {
+  describe('hashPassword', function () {
+    describe('when the password is hashed', function () {
+      beforeEach(function (done) {
         Bcrypt.genSalt.yields(null, 'salty');
         Bcrypt.hash.yields(null, hashed);
         done();
       });
 
-      it('returns the hashed password', (done) => {
-        UserModel.hashPassword('password', (err, hashedPassword) => {
+      it('returns the hashed password', function (done) {
+        UserModel.hashPassword('password', function (err, hashedPassword) {
           expect(err).to.be.null();
           expect(hashedPassword).to.equal(hashed);
           done();
@@ -178,9 +184,9 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the salt generation fails', () => {
-      it('returns an error', (done) => {
-        UserModel.hashPassword('password', (err) => {
+    describe('when the salt generation fails', function () {
+      it('returns an error', function (done) {
+        UserModel.hashPassword('password', function (err) {
           expect(Bcrypt.hash.called).to.be.false();
           expect(err.message).to.equal('generating salt failed');
           done();
@@ -188,14 +194,14 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the hash fails', () => {
-      beforeEach((done) => {
+    describe('when the hash fails', function () {
+      beforeEach(function (done) {
         Bcrypt.genSalt.yields(null, 'salty');
         done();
       });
 
-      it('returns an error', (done) => {
-        UserModel.hashPassword('password', (err) => {
+      it('returns an error', function (done) {
+        UserModel.hashPassword('password', function (err) {
           expect(Bcrypt.genSalt.called).to.be.true();
           expect(err.message).to.equal('hash failed');
           done();
@@ -204,23 +210,23 @@ describe('models/user', () => {
     });
   });
 
-  describe('isExisting', () => {
-    describe('when the user is existing', () => {
-      describe('when the user is found', () => {
-        beforeEach((done) => {
+  describe('isExisting', function () {
+    describe('when the user is existing', function () {
+      describe('when the user is found', function () {
+        beforeEach(function (done) {
           Sinon.stub(UserModel, 'findByEmail').yields(null, null);
           Sinon.stub(UserModel, 'findByUsername').yields(null, user);
           done();
         });
 
-        afterEach((done) => {
+        afterEach(function (done) {
           UserModel.findByEmail.restore();
           UserModel.findByUsername.restore();
           done();
         });
 
-        it('returns the user', (done) => {
-          UserModel.isExisting('test@test.com', 'test', (err, results) => {
+        it('returns the user', function (done) {
+          UserModel.isExisting('test@test.com', 'test', function (err, results) {
             expect(UserModel.findByEmail.called).to.be.true();
             expect(UserModel.findByUsername.called).to.be.true();
             expect(err).to.be.null();
@@ -230,21 +236,21 @@ describe('models/user', () => {
         });
       });
 
-      describe('when the user is found by email', () => {
-        beforeEach((done) => {
+      describe('when the user is found by email', function () {
+        beforeEach(function (done) {
           Sinon.stub(UserModel, 'findByEmail').yields(null, user);
           Sinon.stub(UserModel, 'findByUsername').yields(null, null);
           done();
         });
 
-        afterEach((done) => {
+        afterEach(function (done) {
           UserModel.findByEmail.restore();
           UserModel.findByUsername.restore();
           done();
         });
 
-        it('returns the user', (done) => {
-          UserModel.isExisting('test@test.com', 'test', (err, results) => {
+        it('returns the user', function (done) {
+          UserModel.isExisting('test@test.com', 'test', function (err, results) {
             expect(UserModel.findByEmail.called).to.be.true();
             expect(UserModel.findByUsername.called).to.be.true();
             expect(err).to.be.null();
@@ -254,21 +260,21 @@ describe('models/user', () => {
         });
       });
 
-      describe('when the user is found by username', () => {
-        beforeEach((done) => {
+      describe('when the user is found by username', function () {
+        beforeEach(function (done) {
           Sinon.stub(UserModel, 'findByEmail').yields(null, null);
           Sinon.stub(UserModel, 'findByUsername').yields(null, user);
           done();
         });
 
-        afterEach((done) => {
+        afterEach(function (done) {
           UserModel.findByEmail.restore();
           UserModel.findByUsername.restore();
           done();
         });
 
-        it('returns the user', (done) => {
-          UserModel.isExisting('test', (err, results) => {
+        it('returns the user', function (done) {
+          UserModel.isExisting('test', function (err, results) {
             expect(err).to.be.null();
             expect(UserModel.findByEmail.called).to.be.false();
             expect(results).to.equal(user);
@@ -278,21 +284,21 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the user isn\'t existing', () => {
-      beforeEach((done) => {
+    describe('when the user isn\'t existing', function () {
+      beforeEach(function (done) {
         Sinon.stub(UserModel, 'findByEmail').yields(null, null);
         Sinon.stub(UserModel, 'findByUsername').yields(null, null);
         done();
       });
 
-      afterEach((done) => {
+      afterEach(function (done) {
         UserModel.findByEmail.restore();
         UserModel.findByUsername.restore();
         done();
       })
 
-      it('returns the user', (done) => {
-        UserModel.isExisting('test@test.com', 'test', (err, results) => {
+      it('returns the user', function (done) {
+        UserModel.isExisting('test@test.com', 'test', function (err, results) {
           expect(err).to.be.null();
           expect(results).to.be.false();
           done();
@@ -300,9 +306,9 @@ describe('models/user', () => {
       });
     });
 
-    describe('when checking is user exists fails', () => {
-      it('returns an error', (done) => {
-        UserModel.isExisting('test@test.com', 'test', (err) => {
+    describe('when checking is user exists fails', function () {
+      it('returns an error', function (done) {
+        UserModel.isExisting('test@test.com', 'test', function (err) {
           expect(err.message).to.equal('find one failed');
           done();
         });
@@ -310,10 +316,10 @@ describe('models/user', () => {
     });
   });
 
-  describe('isPasswordMatch', () => {
-    describe('when the password compare fails', () => {
-      it('returns an error', (done) => {
-        UserModel.isPasswordMatch('test', hashed, (err) => {
+  describe('isPasswordMatch', function () {
+    describe('when the password compare fails', function () {
+      it('returns an error', function (done) {
+        UserModel.isPasswordMatch('test', hashed, function (err) {
           expect(Bcrypt.compare.called).to.be.true();
           expect(err.message).to.equal('compare failed');
           done();
@@ -321,14 +327,14 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the passwords match', () => {
-      beforeEach((done) => {
+    describe('when the passwords match', function () {
+      beforeEach(function (done) {
         Bcrypt.compare.yields(null, true);
         done();
       });
 
-      it('returns true', (done) => {
-        UserModel.isPasswordMatch('test', hashed, (err, isMatch) => {
+      it('returns true', function (done) {
+        UserModel.isPasswordMatch('test', hashed, function (err, isMatch) {
           expect(Bcrypt.compare.called).to.be.true();
           expect(err).to.be.null();
           expect(isMatch).to.be.true();
@@ -337,14 +343,14 @@ describe('models/user', () => {
       });
     });
 
-    describe('when the passwords don\'t match', () => {
-      beforeEach((done) => {
+    describe('when the passwords don\'t match', function () {
+      beforeEach(function (done) {
         Bcrypt.compare.yields(null, false);
         done();
       });
 
-      it('returns false', (done) => {
-        UserModel.isPasswordMatch('test', hashed, (err, isMatch) => {
+      it('returns false', function (done) {
+        UserModel.isPasswordMatch('test', hashed, function (err, isMatch) {
           expect(Bcrypt.compare.called).to.be.true();
           expect(err).to.be.null();
           expect(isMatch).to.be.false();

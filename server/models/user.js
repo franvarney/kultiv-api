@@ -1,18 +1,20 @@
-let User;
+var User;
 
-import {BaseModel} from 'hapi-mongo-models';
-import Bcrypt from 'bcrypt';
-import Joi from 'joi';
-import Parallel from 'run-parallel';
-import ShortId from 'shortid';
-import ShortId32 from 'shortid32';
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const Bcrypt = require('bcrypt');
+// const Debug = require('debug')('cookbook/src/model/user');
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
+const Parallel = require('run-parallel');
+const ShortId = require('shortid');
+const ShortId32 = require('shortid32');
 
 const SALT_WORK_FACTOR = 10;
 ShortId32.characters('23456789abcdefghjklmnpqrstuvwxyz');
 
 User = BaseModel.extend({
   constructor: function (attrs) {
-    Object.assign(this, attrs);
+    ObjectAssign(this, attrs);
   }
 });
 
@@ -47,7 +49,7 @@ User.indexes = [
 ];
 
 User.findByCredentials = function (username, password, done) {
-  let query = {};
+  var query = {};
 
   if (username.indexOf('@') > -1) {
     query.email = username.toLowerCase();
@@ -59,25 +61,25 @@ User.findByCredentials = function (username, password, done) {
 };
 
 User.findByEmail = function (email, done) {
-  let query = { email: email.toLowerCase() };
+  var query = { email: email.toLowerCase() };
   User.findOne(query, done);
 };
 
 User.findByToken = function (token, done) {
-  let query = { authToken: token };
+  var query = { authToken: token };
   User.findOne(query, done);
 };
 
 User.findByUsername = function (username, done) {
-  let query = { username: username.toLowerCase() };
+  var query = { username: username.toLowerCase() };
   User.findOne(query, done);
 };
 
 User.hashPassword = function (password, done) {
-  Bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
+  Bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
     if (err) return done(err);
 
-    Bcrypt.hash(password, salt, (err, hashedPassword) => {
+    Bcrypt.hash(password, salt, function (err, hashedPassword) {
       if (err) return done(err);
       done(null, hashedPassword);
     });
@@ -85,7 +87,7 @@ User.hashPassword = function (password, done) {
 };
 
 User.isExisting = function (email, username, done) {
-  let tasks = [];
+  var tasks = [];
   if (email.indexOf('@') === -1) {
     done = username;
     username = email;
@@ -95,7 +97,7 @@ User.isExisting = function (email, username, done) {
   if (email) tasks.push(User.findByEmail.bind(this, email));
   tasks.push(User.findByUsername.bind(this, username));
 
-  Parallel(tasks, (err, results) => {
+  Parallel(tasks, function (err, results) {
     if (err) return done(err);
     if (results[0] || results[1]) return done(null, results[0] || results[1]);
     done(null, false);
