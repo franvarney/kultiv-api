@@ -3,15 +3,9 @@ module.exports = {
   admin_token: process.env.ADMIN_TOKEN || 'C00kbook',
   env: process.env.NODE_ENV,
   host: process.env.HOST || 'localhost',
-  mongo: {
-    uri: process.env.MONGO_URI || 'mongodb://localhost:27017/Cookbook'
+  postgres: {
+    uri: process.env.POSTGRES_URI || 'postgres://user:pass@port:5432/databaseName?ssl=true'
   },
-  port: process.env.PORT || 3000,
-  redis: {
-    auth: {
-      host: process.env.REDIS_AUTH_HOST,
-      port: process.env.REDIS_AUTH_PORT
-    }
-  }
+  port: process.env.PORT || 3000
 };
 /* eslint-enable no-process-env */
