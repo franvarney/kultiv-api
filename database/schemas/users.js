@@ -1,6 +1,6 @@
 const uuid = require('uuid4');
 
-const Units = {
+const Users = {
   tableName: 'users',
   build: function (table) {
     table.increments('id').primary();
@@ -34,4 +34,4 @@ const Units = {
   }
 };
 
-module.exports = Units;
+module.exports = Users;
