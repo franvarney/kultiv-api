@@ -1,14 +1,8 @@
-const Manager = require('knex-schema');
-
-const DB = require('../../server/connections/postgres');
-
-const manager = new Manager(DB);
-
 const Units = {
   tableName: 'units',
   build: function (table) {
-    table.increments('id').primary();
-    table.string('name');
+    table.increments('id').primary().index();
+    table.string('name', 50).isNotNullable().index().unique();
   },
   populate: function (database) {
     return database.knex('units').insert([
