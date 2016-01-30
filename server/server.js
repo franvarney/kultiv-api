@@ -5,6 +5,7 @@ const Auth = require('./handlers/auth');
 const Config = require('../config');
 const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const Routes = require('./routes');
+require('./connections/postgres');
 
 var server = new Hapi.Server();
 
