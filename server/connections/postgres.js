@@ -1,3 +1,4 @@
+const BookShelf = require('bookshelf');
 const Debug = require('debug')('connections:postgres');
 const Knex = require('knex');
 
@@ -20,4 +21,4 @@ knex.raw('SELECT 1 + 1 as result')
       Debug(`knex connected unsuccessfully: ${err.message}`);
     });
 
-module.exports = knex;
+module.exports = BookShelf(knex);
