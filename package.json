@@ -22,6 +22,7 @@
     "boom": "2.9.0",
     "hapi": "10.1.0",
     "hapi-auth-bearer-token": "3.1.1",
+    "knex": "0.9.0",
     "knock-knock": "0.1.0",
     "pg": "4.4.3",
     "run-parallel": "1.1.4",
