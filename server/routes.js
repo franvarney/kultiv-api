@@ -5,6 +5,14 @@ const Package = require('../package.json');
 const Ping = require('./handlers/ping');
 const User = require('./handlers/user');
 
+
+const Manager = require('knex-schema');
+const DB = require('./connections/postgres');
+const manager = new Manager(DB);
+const Users = require('../database/schemas/users.js');
+const Units = require('../database/schemas/units.js');
+const Recipes = require('../database/schemas/recipes.js');
+
 module.exports = [
   // Test route
   { method: 'GET', path: '/ping', handler: Ping, config: { auth: false } },
@@ -23,25 +31,14 @@ module.exports = [
   { method: 'DELETE', path: '/cookbook/{id}', handler: Cookbook.delete },
 
   { method:  'GET', path: '/admin/users/migrate', handler:function(req, res){
-    const Manager = require('knex-schema');
-    const DB = require('./connections/postgres');
-    const manager = new Manager(DB);
-    const User = require('../database/schemas/users.js');
-    manager.sync([User]);
+    manager.sync([Units,Users,Recipes]);
   }},
 
   { method:  'GET', path: '/admin/users/seed', handler:function(req, res){
-    const Manager = require('knex-schema');
-    const DB = require('./connections/postgres');
-    const manager = new Manager(DB);
-    const User = require('../database/schemas/users.js');
-    manager.populate([User]);
+    manager.populate([Units,Users,Recipes]);
   }},
+
   { method:  'GET', path: '/admin/users/drop', handler:function(req, res){
-    const Manager = require('knex-schema');
-    const DB = require('./connections/postgres');
-    const manager = new Manager(DB);
-    const User = require('../database/schemas/users.js');
-    manager.drop([User]);
+    manager.drop([Units,Users,Recipes]);
   }}
 ];

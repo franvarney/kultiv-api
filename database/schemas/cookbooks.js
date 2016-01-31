@@ -1,16 +1,19 @@
+const DB = require('../../server/connections/postgres');
+
 const Cookbooks = {
   tableName: 'cookbooks',
+  timestamps:true,
+  timestampFn: DB.fn.now(),
   build: function (table) {
     table.increments('id').primary().index();
     table.integer('user_id').unsigned().references('id').inTable('users');
-    table.string('name').isNotNullable().index();
+    table.string('name').notNullable().index();
     table.string('description').nullable();
     table.boolean('is_private').defaultTo(false);
-    table.timestamps();
     table.timestamp('deleted_at').nullable();
   },
   populate: function (database) {
-    return database.knex('cookbooks').insert([
+    return database('cookbooks').insert([
       {
         user_id: 1,
         name: 'Cookbook 11',

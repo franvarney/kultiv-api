@@ -1,11 +1,12 @@
 const Units = {
   tableName: 'units',
+  timestamps: false,
   build: function (table) {
-    table.increments('id').primary().index();
-    table.string('name', 50).isNotNullable().index().unique();
+    table.increments('id').primary();
+    table.string('name', 50).notNullable().index().unique();
   },
   populate: function (database) {
-    return database.knex('units').insert([
+    return database('units').insert([
       { name: 'servings' },
       { name: 'cups' },
       { name: 'teaspoons' }
