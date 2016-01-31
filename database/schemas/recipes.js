@@ -28,8 +28,28 @@ const Recipes = {
         description: "Too darn good",
         is_private: true,
         deleted_at: new Date().toLocaleString()
-    }
-  ]);
+      },
+      {
+        user_id: 2,
+        title: "Edgar's awesome chilli",
+        prep_time: 1234,
+        cook_time: 2345,
+        yield_amount: 3,
+        yield_unit_id:1,
+        description: "just aight",
+        is_private: false
+      },
+      {
+        user_id: 3,
+        title: "Fran's crappy cookies",
+        prep_time: 1232,
+        cook_time: 4323,
+        yield_amount: 1,
+        yield_unit_id:1,
+        description: "pure shit",
+        is_private: false
+      }
+    ]);
   }
 };
 

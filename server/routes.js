@@ -12,6 +12,7 @@ const manager = new Manager(DB);
 const Users = require('../database/schemas/users.js');
 const Units = require('../database/schemas/units.js');
 const Recipes = require('../database/schemas/recipes.js');
+const Cookbooks = require('../database/schemas/cookbooks.js');
 
 module.exports = [
   // Test route
@@ -31,14 +32,17 @@ module.exports = [
   { method: 'DELETE', path: '/cookbook/{id}', handler: Cookbook.delete },
 
   { method:  'GET', path: '/admin/users/migrate', handler:function(req, res){
-    manager.sync([Units,Users,Recipes]);
+    manager.sync([Units,Users,Recipes,Cookbooks]);
+    return res("Move bitch....");
   }},
 
   { method:  'GET', path: '/admin/users/seed', handler:function(req, res){
-    manager.populate([Units,Users,Recipes]);
+    manager.populate([Units,Users,Recipes,Cookbooks]);
+    return res("Fran says to test your seed");
   }},
 
   { method:  'GET', path: '/admin/users/drop', handler:function(req, res){
-    manager.drop([Units,Users,Recipes]);
+    manager.drop([Units,Users,Recipes,Cookbooks]);
+    return res("Drop it like it's hot");
   }}
 ];
