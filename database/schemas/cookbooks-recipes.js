@@ -31,3 +31,5 @@ const CookbooksRecipes = {
     ]);
   }
 };
+
+module.exports = CookbooksRecipes;

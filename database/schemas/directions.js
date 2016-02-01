@@ -12,23 +12,25 @@ const Directions = {
   populate: function (database) {
     return database('directions').insert([
       {
-        direction: 'Some directions go here.',
+        direction: 'Some directions go here.'
       },
       {
-        direction: 'More directions...blah blah blah.',
+        direction: 'More directions...blah blah blah.'
       },
       {
-        direction: 'There really needs to be more directions here than just one line.',
+        direction: 'There really needs to be more directions here than just one line.'
       },
       {
-        direction: 'Some directions go here.',
+        direction: 'Some directions go here.'
       },
       {
-        direction: 'More directions...blah blah blah.',
+        direction: 'More directions...blah blah blah.'
       },
       {
-        direction: 'There really needs to be more directions here than just one line.',
+        direction: 'There really needs to be more directions here than just one line.'
       }
     ]);
   }
 };
+
+module.exports = Directions;

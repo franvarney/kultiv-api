@@ -10,29 +10,31 @@ const Foods = {
   populate: function (database) {
     return database('foods').insert([
       {
-        name: 'apples',
+        name: 'apples'
       },
       {
-        name: 'mandarins',
+        name: 'mandarins'
       },
       {
-        name: 'chicken breasts',
+        name: 'chicken breasts'
       },
       {
-        name: 'spaghetti',
+        name: 'spaghetti'
       },
       {
-        name: 'ground beef',
+        name: 'ground beef'
       },
       {
-        name: 'sugar',
+        name: 'sugar'
       },
       {
-        name: 'flour',
+        name: 'flour'
       },
       {
-        name: 'sharp cheddar cheese',
+        name: 'sharp cheddar cheese'
       }
     ]);
   }
 };
+
+module.exports = Foods;
