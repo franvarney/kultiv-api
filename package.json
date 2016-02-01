@@ -18,8 +18,6 @@
   },
   "dependencies": {
     "bcrypt": "0.8.5",
-    "bookshelf": "0.9.1",
-    "bookshelf-schema": "0.2.1",
     "boom": "2.9.0",
     "hapi": "10.1.0",
     "hapi-auth-bearer-token": "3.1.1",
@@ -35,7 +33,7 @@
     "winston": "1.1.1"
   },
   "devDependencies": {
-    "@modulus/standard": "0.1.1",
+    "@modulus/standard": "*",
     "code": "1.5.0",
     "lab": "6.1.0",
     "proxyquire": "1.7.3",
