@@ -27,4 +27,5 @@ const CookbooksCollaborators = {
     ]);
   }
 };
+
 module.exports = CookbooksCollaborators;

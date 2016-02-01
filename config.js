@@ -6,6 +6,6 @@ module.exports = {
   postgres: {
     uri: process.env.POSTGRES_URI || 'postgres://user:pass@port:5432/databaseName?ssl=true'
   },
-  port: process.env.PORT || 3000
+  port: process.env.PORT || '3000'
 };
 /* eslint-enable no-process-env */

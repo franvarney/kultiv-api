@@ -1,5 +1,3 @@
-const DB = require('../../server/connections/postgres');
-
 const Foods = {
   tableName: 'foods',
   timestamps: false,

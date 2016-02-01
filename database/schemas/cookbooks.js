@@ -2,7 +2,7 @@ const DB = require('../../server/connections/postgres');
 
 const Cookbooks = {
   tableName: 'cookbooks',
-  timestamps:true,
+  timestamps: true,
   timestampFn: DB.fn.now(),
   build: function (table) {
     table.increments('id').primary();

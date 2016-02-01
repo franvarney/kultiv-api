@@ -18,32 +18,32 @@ const Ingredients = {
         amount: 1,
         unit_id: 3,
         food_id: 6,
-        optional true
+        optional: true
       },
       {
         amount: 4.6,
         unit_id: 2,
         food_id: 3,
-        optional false
+        optional: false
       },
       {
         amount: 2,
         unit_id: 1,
         food_id: 3,
-        optional false
+        optional: false
       },
       {
         amount: 6.25,
         unit_id: 2,
         food_id: 6,
-        optional true
+        optional: true
       },
       {
         amount: 1.5,
         unit_id: 1,
         food_id: 1,
-        optional false
-      },
+        optional: false
+      }
     ]);
   }
 };
