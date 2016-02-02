@@ -4,6 +4,7 @@ const Cookbooks = require('../../database/schemas/cookbooks');
 const DB = require('../connections/postgres');
 const Recipes = require('../../database/schemas/recipes');
 const Units = require('../../database/schemas/units');
+const User = require('../models/user');
 const Users = require('../../database/schemas/users');
 
 const manager = new Manager(DB);
@@ -26,4 +27,10 @@ exports.seed = function (request, reply) {
 exports.drop = function (request, reply) {
   manager.drop([Units, Users, Recipes, Cookbooks]);
   reply('Drop it like it\'s hot.');
+};
+
+exports.users = function (request, reply) {
+  DB('users')
+  .then((users) => reply(users))
+  .catch((err) => reply(err));
 };

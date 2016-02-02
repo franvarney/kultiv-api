@@ -4,38 +4,13 @@ const Waterfall = require('run-waterfall');
 
 const User = require('../models/user');
 
-// exports.create = function (request, reply) {
-//   const User = request.server.plugins['hapi-mongo-models'].User;
-
-//   Waterfall([
-//     function (callback) {
-//       User.isExisting(
-//         request.payload.email,
-//         request.payload.username,
-//         function (err, isExisting) {
-//           if (err) return callback(err);
-//           if (isExisting) {
-//             return callback({ message: 'User already exists' });
-//           }
-//           callback();
-//         });
-//     },
-//     User.hashPassword.bind(null, request.payload.password),
-//     function (hashedPassword, callback) {
-//       User.validate({
-//         email: request.payload.email,
-//         username: request.payload.username,
-//         password: hashedPassword
-//       }, callback);
-//     },
-//     function (validatedUser, callback) {
-//       User.insertOne(validatedUser, callback);
-//     }
-//   ], function (err, user) {
-//     if (err) return reply(Boom.badRequest(err.message));
-//     reply(user[0].username);
-//   });
-// };
+exports.create = function (request, reply) {
+  User.create(request.payload, (err, exists, user) => {
+    if (err) return reply(Boom.badRequest(err));
+    if (exists) return reply(Boom.badRequest('User already exists'));
+    return reply(user).code(201);
+  });
+};
 
 exports.delete = function (request, reply) {
   User.deleteById(request.params.id, (err, user) => {
@@ -45,7 +20,7 @@ exports.delete = function (request, reply) {
   });
 };
 
-exports.find = function (request, reply) {
+exports.get = function (request, reply) {
   User.findById(request.params.id, (err, user) => {
     if (err) return reply(Boom.badRequest(err));
     if (!user) return reply(Boom.notFound('User not found'));
