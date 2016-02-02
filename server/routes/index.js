@@ -10,7 +10,7 @@ module.exports = [
 
   // Admin routes
   { method: 'GET', path: '/admin/migrate', handler: Admin.migrate },
-  { method: 'GET', path: '/admin/seed', handler: Admin.reset },
+  { method: 'GET', path: '/admin/reset', handler: Admin.reset },
   { method: 'GET', path: '/admin/seed', handler: Admin.seed },
   { method: 'GET', path: '/admin/drop', handler: Admin.drop },
 
@@ -22,8 +22,8 @@ module.exports = [
   { method: 'DELETE', path: '/cookbook/{id}', handler: Cookbook.delete },
 
   // User routes
-  { method: 'GET', path: '/user/{username}', handler: User.find },
-  { method: 'POST', path: '/user/create', handler: User.create, config: { auth: false } },
-  { method: 'PUT', path: '/user/{username}', handler: User.update },
-  { method: 'DELETE', path: '/user/{username}', handler: User.delete }
+  { method: 'GET', path: '/users/{id}', handler: User.find },
+  // { method: 'POST', path: '/user/create', handler: User.create, config: { auth: false } },
+  // { method: 'PUT', path: '/user/{username}', handler: User.update },
+  // { method: 'DELETE', path: '/user/{username}', handler: User.delete }
 ];

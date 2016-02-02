@@ -1,4 +1,4 @@
-const Uuid = require('Uuid4');
+const Uuid = require('uuid4');
 
 const DB = require('../../server/connections/postgres');
 

@@ -1,7 +1,6 @@
-const BookShelf = require('bookshelf');
 const Debug = require('debug')('connections:postgres');
 const Knex = require('knex');
-const Schema = require('bookshelf-schema');
+const Schema = require('knex-schema');
 
 const Config = require('../../config');
 
@@ -19,10 +18,4 @@ knex.raw('SELECT 1 + 1 as result')
       Debug(`knex connected unsuccessfully: ${err.message}`);
     });
 
-const DB = BookShelf(knex);
-
-DB.plugin(Schema({
-  validation: true
-}));
-
-module.exports = DB;
+module.exports = knex;

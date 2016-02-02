@@ -8,7 +8,7 @@ const Users = require('../../database/schemas/users');
 
 const manager = new Manager(DB);
 
-exports.migrat = function (request, reply) {
+exports.migrate = function (request, reply) {
   manager.sync([Units, Users, Recipes, Cookbooks]);
   reply('Move bitch, get out the way!');
 };
@@ -19,7 +19,7 @@ exports.reset = function (request, reply) {
 };
 
 exports.seed = function (request, reply) {
-  manager.seed([Units, Users, Recipes, Cookbooks]);
+  manager.populate([Units, Users, Recipes, Cookbooks]);
   reply('Put your seeds in me.');
 };
 
