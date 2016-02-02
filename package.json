@@ -21,6 +21,7 @@
     "boom": "2.9.0",
     "hapi": "10.1.0",
     "hapi-auth-bearer-token": "3.1.1",
+    "joi": "7.2.3",
     "knex": "0.9.0",
     "knex-schema": "2.1.1",
     "knock-knock": "0.1.0",
