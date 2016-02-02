@@ -37,25 +37,13 @@ const User = require('../models/user');
 //   });
 // };
 
-// exports.delete = function (request, reply) {
-//   const User = request.server.plugins['hapi-mongo-models'].User;
-
-//   Waterfall([
-//     User.isExisting.bind(null, request.params.username),
-//     function (user, callback) {
-//       if (!user) return callback({ message: 'User not found' });
-//       User.deleteOne(
-//         { username: request.params.username },
-//         function (err) {
-//         if (err) return callback(err);
-//         callback();
-//       });
-//     }
-//   ], function (err) {
-//     if (err) return reply(Boom.notFound(err.message));
-//     reply({ success: true });
-//   });
-// };
+exports.delete = function (request, reply) {
+  User.deleteById(request.params.id, (err, user) => {
+    if (err) return reply(Boom.badRequest(err));
+    if (!user) return reply(Boom.notFound('User not found'));
+    return reply().code(204);
+  });
+};
 
 exports.find = function (request, reply) {
   User.findById(request.params.id, (err, user) => {

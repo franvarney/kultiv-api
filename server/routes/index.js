@@ -25,5 +25,5 @@ module.exports = [
   { method: 'GET', path: '/users/{id}', handler: User.find },
   // { method: 'POST', path: '/user/create', handler: User.create, config: { auth: false } },
   // { method: 'PUT', path: '/user/{username}', handler: User.update },
-  // { method: 'DELETE', path: '/user/{username}', handler: User.delete }
+  { method: 'DELETE', path: '/users/{id}', handler: User.delete }
 ];
