@@ -30,7 +30,7 @@ function hashPassword(password, done) {
       done(null, hashed);
     });
   });
-};
+}
 
 class User {
   create(payload, done) {

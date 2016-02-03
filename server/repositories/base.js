@@ -1,23 +1,27 @@
-'use strict'
+'use strict';
+
+const Joi = require('joi');
+
+const DB = require('../connections/postgres');
 
 class Base {
-
   constructor(type, schema) {
     this.type = type;
+    this.schema = schema;
   }
 
-  findById(id,  done) {
-    Knex(this.type)
-    .where({
-      id: id,
-      deleted_at: null
-    })
-    .limit(1)
-    .then((result) => {
-      if (result.length < 1) return done(null, false);
-      return done(null, result);
-    })
-    .catch((err) => done(err));
+  findById(id, done) {
+    DB(this.type)
+      .where({
+        id: id,
+        deleted_at: null
+      })
+      .limit(1)
+      .then((result) => {
+        if (result.length < 1) return done(null, false);
+        return done(null, result);
+      })
+      .catch((err) => done(err));
   }
 
   deleteById(id, done) {
@@ -25,14 +29,14 @@ class Base {
       if (err) return done(err);
       if (!result) return done(null, false);
 
-      Knex(this.type)
-      .where({
-        id: id,
-        deleted_at: null
-      })
-      .update('deleted_at', 'now()')
-      .then((count) => done(null, count))
-      .catch((err) => done(err));
+      DB(this.type)
+        .where({
+          id: id,
+          deleted_at: null
+        })
+        .update('deleted_at', 'now()')
+        .then((count) => done(null, count))
+        .catch((err) => done(err));
     });
   }
 
