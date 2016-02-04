@@ -10,7 +10,8 @@ class Base {
     this.schema = schema;
   }
 
-  findById(id, done) {
+  //GET
+  findById(id, done){
     DB(this.type)
       .where({
         id: id,
@@ -24,6 +25,7 @@ class Base {
       .catch((err) => done(err));
   }
 
+  //DELETE
   deleteById(id, done) {
     this.findById(id, (err, result) => {
       if (err) return done(err);
@@ -40,12 +42,14 @@ class Base {
     });
   }
 
+  //GET
   validate(payload, done) {
     Joi.validate(payload, this.schema, (err, validated) => {
       if (err) return done(err);
       done(null, validated);
     });
   }
+
 }
 
-module.exports = new Base();
+module.exports = Base;
