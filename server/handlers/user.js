@@ -2,7 +2,7 @@ const Boom = require('boom');
 // const Debug = require('debug')('cookbook/src/controllers/user');
 const Waterfall = require('run-waterfall');
 
-const User = require('../models/user');
+const User = require('../repositories/user');
 
 exports.create = function (request, reply) {
   User.create(request.payload, (err, exists, user) => {
