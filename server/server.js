@@ -26,9 +26,10 @@ server.register(HapiAuthBearerToken, function (err) {
     validateFunc: Auth.validate
   });
 
-  server.auth.default({
-    strategy: 'simple'
-  });
+  // TODO add this back in later
+  // server.auth.default({
+  //   strategy: 'simple'
+  // });
 
   server.start(function (err) {
     if (err) throw err;
