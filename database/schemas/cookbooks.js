@@ -6,7 +6,7 @@ const Cookbooks = {
   timestampFn: DB.fn.now(),
   build: function (table) {
     table.increments('id').primary();
-    table.integer('user_id').unsigned().references('id').inTable('users');
+    table.integer('owner_id').unsigned().references('id').inTable('users');
     table.string('name').notNullable().index();
     table.string('description').nullable();
     table.boolean('is_private').defaultTo(false);
