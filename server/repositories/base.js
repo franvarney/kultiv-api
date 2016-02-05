@@ -8,11 +8,11 @@ class Base {
   constructor(type, schema) {
     this.type = type;
     this.schema = schema;
+    this.db = DB(this.type);
   }
 
-  //GET
   findById(id, done){
-    DB(this.type)
+    this.db
       .where({
         id: id,
         deleted_at: null
@@ -25,13 +25,12 @@ class Base {
       .catch((err) => done(err));
   }
 
-  //DELETE
   deleteById(id, done) {
     this.findById(id, (err, result) => {
       if (err) return done(err);
       if (!result) return done(null, false);
 
-      DB(this.type)
+      this.db
         .where({
           id: id,
           deleted_at: null
@@ -42,14 +41,19 @@ class Base {
     });
   }
 
-  //GET
-  validate(payload, done) {
-    Joi.validate(payload, this.schema, (err, validated) => {
-      if (err) return done(err);
-      done(null, validated);
+  add(payload, done) {
+    this.validate(payload, (err, validated) => {
+      this.db
+        .insert(validated)
+        .returning('id')
+        .then((id) => done(null, id))
+        .catch((err) => done(err));
     });
   }
 
+  validate(payload, done) {
+    Joi.validate(payload, this.schema, done);
+  }
 }
 
 module.exports = Base;
