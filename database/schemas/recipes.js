@@ -19,7 +19,7 @@ const Recipes = {
   populate: function (database) {
     return database('recipes').insert([
       {
-        user_id: 1,
+        user_id: 2,
         title: 'Edgar\'s awesome cookies',
         prep_time: 2200,
         cook_time: 1200,
@@ -27,7 +27,7 @@ const Recipes = {
         yield_unit_id: 1,
         description: 'Too darn good',
         is_private: true,
-        deleted_at: new Date().toLocaleString()
+        deleted_at: false
       },
       {
         user_id: 2,
