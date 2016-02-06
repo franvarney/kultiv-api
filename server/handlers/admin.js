@@ -14,33 +14,31 @@ const Recipes = require('../../database/schemas/recipes');
 const Units = require('../../database/schemas/units');
 const Users = require('../../database/schemas/users');
 
+const models = [
+  Foods, Units, Users, Cookbooks, Recipes, Friends,
+  Directions, Ingredients, CookbooksCollaborators, CookbooksRecipes,
+  RecipesIngredients, RecipesDirections
+];
+
 const manager = new Manager(DB);
 
 exports.migrate = function (request, reply) {
-  manager.sync([Foods, Units, Users, Cookbooks, Recipes,
-                Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
-                RecipesIngredients, RecipesDirections,Friends]);
+  manager.sync(models);
   reply('Move bitch, get out the way!');
 };
 
 exports.reset = function (request, reply) {
-  manager.reset([Foods, Units, Users, Cookbooks, Friends, Recipes,
-    Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
-    RecipesIngredients, RecipesDirections]);
+  manager.reset(models);
   reply('Resetedededed');
 };
 
 exports.seed = function (request, reply) {
-  manager.populate([Foods, Units, Users, Cookbooks, Friends, Recipes,
-    Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
-    RecipesIngredients, RecipesDirections]);
+  manager.populate(models);
   reply('Put your seeds in me.');
 };
 
 exports.drop = function (request, reply) {
-  manager.drop([Foods, Units, Users, Cookbooks, Friends, Recipes,
-    Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
-    RecipesIngredients, RecipesDirections]);
+  manager.drop(models);
   reply('Drop it like it\'s hot.');
 };
 
