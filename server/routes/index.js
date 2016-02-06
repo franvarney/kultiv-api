@@ -2,6 +2,7 @@ const Admin = require('../handlers/admin');
 const Cookbook = require('../handlers/cookbook');
 const Package = require('../../package.json');
 const Ping = require('../handlers/ping');
+const Recipe = require('../handlers/recipe');
 const User = require('../handlers/user');
 
 module.exports = [
@@ -21,6 +22,9 @@ module.exports = [
   { method: 'POST', path: '/cookbook/create', handler: Cookbook.create },
   { method: 'PUT', path: '/cookbook/{id}', handler: Cookbook.update },
   { method: 'DELETE', path: '/cookbook/{id}', handler: Cookbook.delete },
+
+  // Recipe routes
+  { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
 
   // User routes
   { method: 'GET', path: '/users/{id}', handler: User.get },
