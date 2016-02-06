@@ -10,12 +10,13 @@ const knex = Knex({
   debug: Config.env !== 'production'
 });
 
-knex.raw('SELECT 1 + 1 as result')
-    .then(() => {
-      Debug(`knex connected successfully!`);
-    })
-    .catch((err) => {
-      Debug(`knex connected unsuccessfully: ${err.message}`);
-    });
+knex
+  .raw('SELECT 1 + 1 as result')
+  .then(() => {
+    Debug(`knex connected successfully!`);
+  })
+  .catch((err) => {
+    Debug(`knex connected unsuccessfully: ${err.message}`);
+  });
 
 module.exports = knex;
