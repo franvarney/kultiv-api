@@ -19,7 +19,7 @@ class Cookbook extends Base {
 
   findByCollaborator(collaboratorUserId, done) {
     this.db
-      .innerJoin('cookbooks-collaborators AS CC', 'id', 'CC.collaborator_id')
+      .innerJoin('cookbooks-collaborators AS CC', 'cookbooks.id', 'CC.collaborator_id')
       .where('CC.collaborator_id', collaboratorUserId)
       .then((cookbooks) => done(null, cookbooks))
       .catch((err) => done(err));

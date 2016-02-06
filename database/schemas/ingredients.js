@@ -6,7 +6,7 @@ const Ingredients = {
   timestampFn: DB.fn.now(),
   build: function (table) {
     table.increments('id').primary();
-    table.decimal('amount', 2).notNullable();
+    table.decimal('amount', 2);
     table.integer('unit_id').unsigned().references('id').inTable('units');
     table.integer('food_id').unsigned().references('id').inTable('foods');
     table.boolean('optional').defaultTo(false);

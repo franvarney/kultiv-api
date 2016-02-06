@@ -53,9 +53,9 @@ class Base {
     });
   }
 
-  patch(id, payload, done){
+  patch(id, payload, done) {
     this.findById(id)
-      .then((results)=>{
+      .then((results) => {
         this.validate(payload, this.schema, (err, validated) => {
           if (err) return done(err);
 
@@ -66,7 +66,7 @@ class Base {
             .catch((err) => done(err));
         });
       })
-      .catch((err)=>done(err));
+      .catch((err) => done(err));
   }
 
   toggleIsPrivate(id, done) {
