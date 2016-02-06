@@ -48,7 +48,7 @@ class User extends Base {
       .where('email', email)
       .orWhere('username', username)
       .whereNull('deleted_at')
-      .limit(1)
+      .first()
       .then((user) => {
         if (!user) return done(null, false);
         return done(null, user);
