@@ -1,7 +1,7 @@
 'use strict';
 
 const Base = require('./base');
-const IngredientModel = require('../models/ingredients');
+const IngredientModel = require('../models/ingredient');
 
 const TABLE_NAME = 'ingredients';
 

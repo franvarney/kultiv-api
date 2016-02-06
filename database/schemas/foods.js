@@ -3,7 +3,7 @@ const Foods = {
   timestamps: false,
   build: function (table) {
     table.increments('id').primary();
-    table.text('name');
+    table.string('name').unique().notNullable();
   },
   populate: function (database) {
     return database('foods').insert([
