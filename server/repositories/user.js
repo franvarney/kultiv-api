@@ -47,7 +47,7 @@ class User extends Base {
     this.db
       .where('email', email)
       .orWhere('username', username)
-      .andWhere('deleted_at', null)
+      .whereNull('deleted_at')
       .limit(1)
       .then((user) => {
         if (!user) return done(null, false);

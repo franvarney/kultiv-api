@@ -8,7 +8,7 @@ const Friends = {
     table.increments('id').primary();
     table.integer('initiator_id').unsigned().references('id').inTable('users');
     table.integer('recipient_id').unsigned().references('id').inTable('users');
-    table.enu('status', 'pending, accepted, rejected');
+    table.enu('status',['pending','accepted','rejected']);
     table.timestamp('deleted_at').nullable();
   },
   populate: function (database) {

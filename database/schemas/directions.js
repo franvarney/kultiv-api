@@ -7,7 +7,6 @@ const Directions = {
   build: function (table) {
     table.increments('id').primary();
     table.text('direction');
-    table.timestamp('deleted_at').nullable();
   },
   populate: function (database) {
     return database('directions').insert([

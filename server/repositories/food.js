@@ -13,6 +13,7 @@ class Food extends Base {
   findByName(name, done) {
     this.db
       .where('name', 'LIKE', `%${name}%`)
+      .whereNull('deleted_at')
       .then((foods) => done(null, foods))
       .catch((err) => done(err));
   }

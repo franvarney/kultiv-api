@@ -1,15 +1,15 @@
 const Manager = require('knex-schema');
 
-const CookbooksCollaborators = require('../../database/cookbooks-collaborators');
-const CookbooksRecipes = require('../../database/cookbooks-recipes');
+const CookbooksCollaborators = require('../../database/schemas/cookbooks-collaborators');
+const CookbooksRecipes = require('../../database/schemas/cookbooks-recipes');
 const Cookbooks = require('../../database/schemas/cookbooks');
 const Foods = require('../../database/schemas/foods');
-const Friends = require('../../database/friends');
+const Friends = require('../../database/schemas/friends');
 const DB = require('../connections/postgres');
 const Directions = require('../../database/schemas/directions');
 const Ingredients = require('../../database/schemas/ingredients');
-const RecipesDirections = require('../../database/recipes-directions');
-const RecipesIngredients = require('../../database/recipes-ingredients');
+const RecipesDirections = require('../../database/schemas/recipes-directions');
+const RecipesIngredients = require('../../database/schemas/recipes-ingredients');
 const Recipes = require('../../database/schemas/recipes');
 const Units = require('../../database/schemas/units');
 const Users = require('../../database/schemas/users');
@@ -17,30 +17,30 @@ const Users = require('../../database/schemas/users');
 const manager = new Manager(DB);
 
 exports.migrate = function (request, reply) {
-  manager.sync([Foods, Units, Users]); // lookup tables + users
-  manager.sync([Cookbooks, Friends, Recipes, Directions, Ingredients]); //
-  manager.sync([CookbooksCollaborators, CookbooksRecipes, RecipesIngredients, RecipesDirections]);
+  manager.sync([Foods, Units, Users, Cookbooks, Recipes,
+                Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
+                RecipesIngredients, RecipesDirections,Friends]);
   reply('Move bitch, get out the way!');
 };
 
 exports.reset = function (request, reply) {
-  manager.reset([CookbooksCollaborators, CookbooksRecipes, RecipesIngredients, RecipesDirections]);
-  manager.reset([Cookbooks, Friends, Recipes, Directions, Ingredients]);
-  manager.reset([Foods, Units, Users]); // lookup tables + users
+  manager.reset([Foods, Units, Users, Cookbooks, Friends, Recipes,
+    Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
+    RecipesIngredients, RecipesDirections]);
   reply('Resetedededed');
 };
 
 exports.seed = function (request, reply) {
-  manager.populate([Foods, Units, Users]); // lookup tables + users
-  manager.populate([Cookbooks, Friends, Recipes, Directions, Ingredients]);
-  manager.populate([CookbooksCollaborators, CookbooksRecipes, RecipesIngredients, RecipesDirections]);
+  manager.populate([Foods, Units, Users, Cookbooks, Friends, Recipes,
+    Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
+    RecipesIngredients, RecipesDirections]);
   reply('Put your seeds in me.');
 };
 
 exports.drop = function (request, reply) {
-  manager.drop([Foods, Units, Users]); // lookup tables + users
-  manager.drop([Cookbooks, Friends, Recipes, Directions, Ingredients]);
-  manager.drop([CookbooksCollaborators, CookbooksRecipes, RecipesIngredients, RecipesDirections]);
+  manager.drop([Foods, Units, Users, Cookbooks, Friends, Recipes,
+    Directions, Ingredients,CookbooksCollaborators, CookbooksRecipes,
+    RecipesIngredients, RecipesDirections]);
   reply('Drop it like it\'s hot.');
 };
 

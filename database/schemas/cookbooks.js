@@ -15,33 +15,33 @@ const Cookbooks = {
   populate: function (database) {
     return database('cookbooks').insert([
       {
-        user_id: 1,
+        owner_id: 1,
         name: 'Cookbook 11',
         description: 'This is cookbook #1',
         is_private: true
       },
       {
-        user_id: 1,
+        owner_id: 1,
         name: 'Cookbook 12',
         description: null
       },
       {
-        user_id: 2,
+        owner_id: 2,
         name: 'Cookbook 21',
         description: 'This is cookbook #21'
       },
       {
-        user_id: 2,
+        owner_id: 2,
         name: 'Cookbook 22',
         description: 'This is cookbook #22'
       },
       {
-        user_id: 3,
+        owner_id: 3,
         name: 'Cookbook 31',
         description: 'This is cookbook #31'
       },
       {
-        user_id: 3,
+        owner_id: 3,
         name: 'Cookbook 32',
         description: 'This is cookbook #32',
         is_private: true

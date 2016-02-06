@@ -13,6 +13,7 @@ class Cookbook extends Base {
   findByOwner(ownerUserId, done) {
     this.db
       .where('owner_id', ownerUserId)
+      .whereNull('deleted_at')
       .then((cookbooks) => done(null, cookbooks))
       .catch((err) => done(err));
   }
@@ -20,6 +21,7 @@ class Cookbook extends Base {
   findByCollaborator(collaboratorUserId, done) {
     this.db
       .innerJoin('cookbooks-collaborators AS CC', 'cookbooks.id', 'CC.collaborator_id')
+      .whereNull('cookbooks.deleted_at')
       .where('CC.collaborator_id', collaboratorUserId)
       .then((cookbooks) => done(null, cookbooks))
       .catch((err) => done(err));
