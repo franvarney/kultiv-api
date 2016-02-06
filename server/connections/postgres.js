@@ -7,7 +7,7 @@ const Config = require('../../config');
 const knex = Knex({
   client: 'pg',
   connection: Config.postgres.uri,
-  debug: Config.env !== 'production' ? true : false
+  debug: Config.env !== 'production'
 });
 
 knex.raw('SELECT 1 + 1 as result')

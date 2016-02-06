@@ -59,6 +59,6 @@ class User extends Base {
   update() {
     //
   }
-};
+}
 
 module.exports = new User();

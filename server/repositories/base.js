@@ -11,7 +11,7 @@ class Base {
     this.db = DB(this.type);
   }
 
-  findById(id, done){
+  findById(id, done) {
     this.db
       .where({
         id: id,
@@ -41,12 +41,42 @@ class Base {
     });
   }
 
-  add(payload, done) {
+  create(payload, done) {
     this.validate(payload, (err, validated) => {
+      if (err) return done(err);
+
       this.db
         .insert(validated)
         .returning('id')
         .then((id) => done(null, id))
+        .catch((err) => done(err));
+    });
+  }
+
+  patch(id, payload, done){
+    this.findById(id)
+      .then((results)=>{
+        this.validate(payload, this.schema, (err, validated) => {
+          if (err) return done(err);
+
+          results
+            .update(validated)
+            .returning('id')
+            .then((id) => done(null, id))
+            .catch((err) => done(err));
+        });
+      })
+      .catch((err)=>done(err));
+  }
+
+  toggleIsPrivate(id, done) {
+    this.findById(id, (err, result) => {
+      if (err) return done(err);
+
+      result
+        .update('is_private', !result.is_private)
+        .returning('id')
+        .then((id) => done(null, true))
         .catch((err) => done(err));
     });
   }
