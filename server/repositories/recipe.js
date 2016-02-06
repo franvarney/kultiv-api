@@ -1,8 +1,11 @@
 'use strict';
 
+const Treeize = require('treeize');
+
 const Base = require('./base');
 const RecipeModel = require('../models/recipe');
 
+const treeize = new Treeize();
 const TABLE_NAME = 'recipes';
 
 class Recipe extends Base {
@@ -11,46 +14,74 @@ class Recipe extends Base {
   }
 
   findByUserId(userId, isLoaded, done) {
-    if(typeof done !== "function") done = Function.prototype;
-    this.db
-      .where('user_id', userId)
-      .whereNull('recipes.deleted_at')
-      //.select(["recipes".*, "F"."name" AS "food:name", "U"."name" AS "unit:name", "D"."direction" AS "direction:direction"])
-      .select("recipes.*","F.name AS food:name", "U.name AS unit:name", "D.direction AS direction:direction")
-      .innerJoin('recipes_ingredients AS RI', 'recipes.id', 'RI.recipe_id')
-      .innerJoin('ingredients AS I', 'RI.ingredient_id', 'I.id')
-      .innerJoin('foods AS F', 'F.id', 'I.food_id')
-      .innerJoin('units AS U', 'U.id', 'I.unit_id')
-      .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
-      .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
-      .then((recipes)=>done(null,recipes))
-      .catch((err) => done(err));
+    this.loadRecipe(`recipes.user_id = ${userId}`, isLoaded, done);
   }
 
   findByTitle(title, isLoaded, done) {
-    if(typeof done !== "function") done = Function.prototype;
-
-    this.db
-      .where('title', 'LIKE', `%${title}%`)
-      .whereNull('deleted_at')
-      .then((recipes)=>done(null, isLoaded ? this.loadRecipe(recipes,done) : recipes))
-      .catch((err) => done(err));
+    this.loadRecipe(`recipes.title LIKE %${title}%`, isLoaded, done);
   }
 
-  loadRecipe(recipes, done) {
-    this.db(recipes)
-      .select('recipes.*, F.name AS food:name, U.name AS unit:name, D.direction AS direction:direction')
+  loadRecipe(rawQuery, isLoaded, done) {
+    if (typeof isLoaded === 'function') {
+      done = isLoaded;
+      isLoaded = false;
+    }
 
-      .innerJoin('recipe-ingredients AS RI', 'recipes.id', 'RI.recipe_id')
-        .innerJoin('ingredients AS I', 'RI.ingredient_id', 'I.id')
-          .innerJoin('foods AS F', 'F.id', 'I.food_id')
-          .innerJoin('units AS U', 'U.id', 'I.unit_id')
+    if (!done) done = Function.prototype;
 
-      .innerJoin('recipe-directions AS RD', 'recipes.id', 'RD.recipe_id')
-        .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
+    var baseRecipe = function (queryBuilder) {
+      queryBuilder
+        .select('recipes.id', 'recipes.title', 'recipes.cook_time',
+                'recipes.prep_time', 'recipes.description', 'recipes.is_private',
+                'recipes.created_at', 'recipes.updated_at',
+                'recipes.user_id AS user:id', 'U.username AS user:username',
+                'recipes.yield_amount AS yield:amount', 'RU.name AS yield:unit')
+        .innerJoin('users AS U', 'U.id', 'recipes.user_id')
+        .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
+        .whereNull('recipes.deleted_at')
+        .groupBy('recipes.id', 'U.username', 'RU.name')
+    }
 
-      .then((recipes)=>done(null, recipes))
-      .catch((err)=>done(err))
+    var ingredients = function (queryBuilder) {
+      queryBuilder
+        .select('I.id AS ingredients:id', 'I.amount AS ingredients:amount',
+                'IU.name AS ingredients:unit', 'F.name AS ingredients:food')
+        .innerJoin('recipes_ingredients AS RI', 'recipes.id', 'RI.recipe_id')
+          .innerJoin('ingredients AS I', 'I.id', 'RI.ingredient_id')
+            .innerJoin('foods AS F', 'I.food_id', 'F.id')
+            .innerJoin('units AS IU', 'I.unit_id', 'IU.id')
+        .groupBy('RI.recipe_id', 'I.id', 'IU.name', 'F.name')
+    }
+
+    var directions = function (queryBuilder) {
+      queryBuilder
+        .select('D.id AS directions:id', 'D.direction AS directions:direction')
+        .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
+          .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
+        .groupBy('D.id')
+    }
+
+    if (!isLoaded) {
+      this.db
+        .whereRaw(rawQuery)
+        .modify(baseRecipe)
+        .then((recipes) => {
+          var formatted = treeize.grow(recipes);
+          done(null, formatted.getData());
+        })
+        .catch((err) => done(err));
+    } else {
+      this.db
+        .whereRaw(rawQuery)
+        .modify(baseRecipe)
+        .modify(ingredients)
+        .modify(directions)
+        .then((recipes) => {
+          var formatted = treeize.grow(recipes);
+          done(null, formatted.getData());
+        })
+        .catch((err) => done(err));
+    }
   }
 }
 
