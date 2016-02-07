@@ -34,8 +34,8 @@ class Recipe extends Base {
         .select('recipes.id', 'recipes.title', 'recipes.cook_time',
                 'recipes.prep_time', 'recipes.description', 'recipes.is_private',
                 'recipes.created_at', 'recipes.updated_at',
-                'recipes.user_id AS user_id', 'U.username AS username',
-                'recipes.yield_amount AS amount', 'RU.name AS unit')
+                'recipes.user_id AS creator:id', 'U.username AS creator:username',
+                'recipes.yield_amount AS yield:amount', 'RU.name AS yield:unit')
         .innerJoin('users AS U', 'U.id', 'recipes.user_id')
         .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
         .whereNull('recipes.deleted_at')
@@ -44,7 +44,8 @@ class Recipe extends Base {
     const ingredients = function (queryBuilder) {
       return queryBuilder
         .select('I.id AS ingredients:id', 'I.amount AS ingredients:amount',
-                'IU.name AS ingredients:unit', 'F.name AS ingredients:food')
+                'IU.name AS ingredients:unit', 'F.name AS ingredients:food',
+                'I.optional AS ingredients:optional')
         .innerJoin('recipes_ingredients AS RI', 'recipes.id', 'RI.recipe_id')
           .innerJoin('ingredients AS I', 'I.id', 'RI.ingredient_id')
             .innerJoin('foods AS F', 'I.food_id', 'F.id')
