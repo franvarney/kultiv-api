@@ -5,7 +5,7 @@ const Treeize = require('treeize');
 const Base = require('./base');
 const RecipeModel = require('../models/recipe');
 
-const treeize = new Treeize().setOptions({output: {prune:false}});
+const treeize = new Treeize({ output: { prune: false } });
 const TABLE_NAME = 'recipes';
 
 class Recipe extends Base {
@@ -59,7 +59,8 @@ class Recipe extends Base {
     };
 
     if (!isLoaded) {
-      this.db
+      this.knex
+        .from('recipes')
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .then((recipes) => {
@@ -68,7 +69,8 @@ class Recipe extends Base {
         })
         .catch((err) => done(err));
     } else {
-      this.db
+      this.knex
+        .from('recipes')
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .modify(ingredients)
