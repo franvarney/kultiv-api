@@ -1,21 +1,18 @@
 const Boom = require('boom');
 // const Debug = require('debug')('cookbook/src/controllers/user');
-const Waterfall = require('run-waterfall');
 
 const User = require('../repositories/user');
 
 exports.create = function (request, reply) {
-  User.create(request.payload, (err, exists, user) => {
+  User.create(request.payload, (err, id) => {
     if (err) return reply(Boom.badRequest(err));
-    if (exists) return reply(Boom.badRequest('User already exists'));
-    return reply(user).code(201);
+    return reply(id).code(201);
   });
 };
 
 exports.delete = function (request, reply) {
-  User.deleteById(request.params.id, (err, user) => {
+  User.deleteById(request.params.id, (err) => {
     if (err) return reply(Boom.badRequest(err));
-    if (!user) return reply(Boom.notFound('User not found'));
     return reply().code(204);
   });
 };
@@ -23,7 +20,6 @@ exports.delete = function (request, reply) {
 exports.get = function (request, reply) {
   User.findById(request.params.id, (err, user) => {
     if (err) return reply(Boom.badRequest(err));
-    if (!user) return reply(Boom.notFound('User not found'));
     return reply(user).code(200);
   });
 };

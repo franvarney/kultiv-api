@@ -17,14 +17,18 @@ module.exports = [
   { method: 'GET', path: '/admin/users', handler: Admin.users },
 
   // Cookbook routes
-  { method: 'GET', path: '/user/{username}/cookbooks', handler: Cookbook.allByUser },
-  { method: 'GET', path: '/cookbook/{id}', handler: Cookbook.find },
-  { method: 'POST', path: '/cookbook/create', handler: Cookbook.create },
-  { method: 'PUT', path: '/cookbook/{id}', handler: Cookbook.update },
-  { method: 'DELETE', path: '/cookbook/{id}', handler: Cookbook.delete },
+  { method: 'GET', path: '/users/{user_id}/cookbooks', handler: Cookbook.allByUser },
+  { method: 'GET', path: '/cookbooks/{id}', handler: Cookbook.get },
+  { method: 'POST', path: '/cookbooks', handler: Cookbook.create },
+  // { method: 'PUT', path: '/cookbooks/{id}', handler: Cookbook.update },
+  { method: 'DELETE', path: '/cookbooks/{id}', handler: Cookbook.delete },
 
   // Recipe routes
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
+  { method: 'GET', path: '/recipes/{id}', handler: Cookbook.get },
+  { method: 'POST', path: '/recipes', handler: Cookbook.create },
+  // { method: 'PUT', path: '/recipes/{id}', handler: Cookbook.update },
+  { method: 'DELETE', path: '/recipes/{id}', handler: Cookbook.delete },
 
   // User routes
   { method: 'GET', path: '/users/{id}', handler: User.get },
