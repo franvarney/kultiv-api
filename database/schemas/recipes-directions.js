@@ -8,6 +8,7 @@ const RecipesDirections = {
     table.increments('id').primary();
     table.integer('recipe_id').unsigned().references('id').inTable('recipes');
     table.integer('direction_id').unsigned().references('id').inTable('directions');
+    table.integer('order').unsigned().notNullable();
     table.timestamp('deleted_at').nullable();
   },
   populate: function (database) {
@@ -16,7 +17,7 @@ const RecipesDirections = {
         recipe_id: 1,
         direction_id: 1
       },
-       {
+      {
         recipe_id: 1,
         direction_id: 2
       },
