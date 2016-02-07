@@ -8,6 +8,7 @@ class Base {
   constructor(type, schema) {
     this.type = type;
     this.schema = schema;
+    this.knex = DB; // necessary for joins
     this.db = DB(this.type);
   }
 
