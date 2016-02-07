@@ -29,8 +29,8 @@ class Recipe extends Base {
 
     if (!done) done = Function.prototype;
 
-    var baseRecipe = function (queryBuilder) {
-      queryBuilder
+    const baseRecipe = function (queryBuilder) {
+      return queryBuilder
         .select('recipes.id', 'recipes.title', 'recipes.cook_time',
                 'recipes.prep_time', 'recipes.description', 'recipes.is_private',
                 'recipes.created_at', 'recipes.updated_at',
@@ -41,8 +41,8 @@ class Recipe extends Base {
         .whereNull('recipes.deleted_at')
     };
 
-    var ingredients = function (queryBuilder) {
-      queryBuilder
+    const ingredients = function (queryBuilder) {
+      return queryBuilder
         .select('I.id AS ingredients:id', 'I.amount AS ingredients:amount',
                 'IU.name AS ingredients:unit', 'F.name AS ingredients:food')
         .innerJoin('recipes_ingredients AS RI', 'recipes.id', 'RI.recipe_id')
@@ -51,8 +51,8 @@ class Recipe extends Base {
             .innerJoin('units AS IU', 'I.unit_id', 'IU.id')
     };
 
-    var directions = function (queryBuilder) {
-      queryBuilder
+    const directions = function (queryBuilder) {
+      return queryBuilder
         .select('D.id AS directions:id', 'D.direction AS directions:direction')
         .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
           .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
@@ -62,8 +62,7 @@ class Recipe extends Base {
       this.db
         .whereRaw(rawQuery)
         .modify(baseRecipe)
-        .then((results) => {
-          var recipes = results;
+        .then((recipes) => {
           var formatted = treeize.grow(recipes);
           done(null, formatted.getData());
         })
@@ -74,8 +73,7 @@ class Recipe extends Base {
         .modify(baseRecipe)
         .modify(ingredients)
         .modify(directions)
-        .then((results) => {
-          var recipes = results;
+        .then((recipes) => {
           var formatted = treeize.grow(recipes);
           done(null, formatted.getData());
         })
