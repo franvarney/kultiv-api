@@ -5,11 +5,11 @@ const Joi = require('joi');
 const DB = require('../connections/postgres');
 
 class Base {
-  constructor(type, schema) {
-    this.type = type;
+  constructor(name, schema) {
+    this.name = name;
     this.schema = schema;
     this.knex = DB; // necessary for joins
-    this.db = DB(this.type);
+    this.db = DB(this.name);
   }
 
   findById(id, done) {
