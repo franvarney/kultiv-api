@@ -62,7 +62,8 @@ class Recipe extends Base {
       this.db
         .whereRaw(rawQuery)
         .modify(baseRecipe)
-        .then((recipes) => {
+        .then((results) => {
+          var recipes = results;
           var formatted = treeize.grow(recipes);
           done(null, formatted.getData());
         })
