@@ -6,7 +6,38 @@ const Base = require('./base');
 const RecipeModel = require('../models/recipe');
 
 const treeize = new Treeize({ output: { prune: false } });
+
 const TABLE_NAME = 'recipes';
+
+const baseRecipe = function (queryBuilder) {
+  queryBuilder
+    .select('recipes.id', 'recipes.title', 'recipes.cook_time',
+            'recipes.prep_time', 'recipes.description', 'recipes.is_private',
+            'recipes.created_at', 'recipes.updated_at',
+            'recipes.user_id AS creator:id', 'U.username AS creator:username',
+            'recipes.yield_amount AS yield:amount', 'RU.name AS yield:unit')
+    .innerJoin('users AS U', 'U.id', 'recipes.user_id')
+    .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
+    .whereNull('recipes.deleted_at')
+};
+
+const ingredients = function (queryBuilder) {
+  queryBuilder
+    .select('I.id AS ingredients:id', 'I.amount AS ingredients:amount',
+            'IU.name AS ingredients:unit', 'F.name AS ingredients:food',
+            'I.optional AS ingredients:optional')
+    .innerJoin('recipes_ingredients AS RI', 'recipes.id', 'RI.recipe_id')
+      .innerJoin('ingredients AS I', 'I.id', 'RI.ingredient_id')
+        .innerJoin('foods AS F', 'I.food_id', 'F.id')
+        .innerJoin('units AS IU', 'I.unit_id', 'IU.id')
+};
+
+const directions = function (queryBuilder) {
+  queryBuilder
+    .select('D.id AS directions:id', 'D.direction AS directions:direction')
+    .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
+      .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
+};
 
 class Recipe extends Base {
   constructor() {
@@ -29,56 +60,24 @@ class Recipe extends Base {
 
     if (!done) done = Function.prototype;
 
-    const baseRecipe = function (queryBuilder) {
-      return queryBuilder
-        .select('recipes.id', 'recipes.title', 'recipes.cook_time',
-                'recipes.prep_time', 'recipes.description', 'recipes.is_private',
-                'recipes.created_at', 'recipes.updated_at',
-                'recipes.user_id AS creator:id', 'U.username AS creator:username',
-                'recipes.yield_amount AS yield:amount', 'RU.name AS yield:unit')
-        .innerJoin('users AS U', 'U.id', 'recipes.user_id')
-        .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
-        .whereNull('recipes.deleted_at')
-    };
-
-    const ingredients = function (queryBuilder) {
-      return queryBuilder
-        .select('I.id AS ingredients:id', 'I.amount AS ingredients:amount',
-                'IU.name AS ingredients:unit', 'F.name AS ingredients:food',
-                'I.optional AS ingredients:optional')
-        .innerJoin('recipes_ingredients AS RI', 'recipes.id', 'RI.recipe_id')
-          .innerJoin('ingredients AS I', 'I.id', 'RI.ingredient_id')
-            .innerJoin('foods AS F', 'I.food_id', 'F.id')
-            .innerJoin('units AS IU', 'I.unit_id', 'IU.id')
-    };
-
-    const directions = function (queryBuilder) {
-      return queryBuilder
-        .select('D.id AS directions:id', 'D.direction AS directions:direction')
-        .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
-          .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
-    };
-
     if (!isLoaded) {
       this.knex
-        .from('recipes')
+        .from(this.name)
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .then((recipes) => {
-          var formatted = treeize.grow(recipes);
-          done(null, formatted.getData());
+          done(null, treeize.grow(recipes).getData());
         })
         .catch((err) => done(err));
     } else {
       this.knex
-        .from('recipes')
+        .from(this.name)
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .modify(ingredients)
         .modify(directions)
         .then((recipes) => {
-          var formatted = treeize.grow(recipes);
-          done(null, formatted.getData());
+          done(null, treeize.grow(recipes).getData());
         })
         .catch((err) => done(err));
     }
