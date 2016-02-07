@@ -20,14 +20,14 @@ exports.create = function (request, reply) {
 };
 
 exports.delete = function (request, reply) {
-  Recipe.deleteById(request.payload.id, (err) => {
+  Recipe.deleteById(request.params.id, (err) => {
     if (err) return reply(Boom.badRequest(err));
     return reply().code(204);
   });
 };
 
 exports.get = function (request, reply) {
-  Recipe.findById(request.payload.id, (err, recipe) => {
+  Recipe.findById(request.params.id, (err, recipe) => {
     if (err) return reply(Boom.badRequest(err));
     return reply(recipe).code(204);
   });

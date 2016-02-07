@@ -25,10 +25,10 @@ module.exports = [
 
   // Recipe routes
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
-  { method: 'GET', path: '/recipes/{id}', handler: Cookbook.get },
-  { method: 'POST', path: '/recipes', handler: Cookbook.create },
-  // { method: 'PUT', path: '/recipes/{id}', handler: Cookbook.update },
-  { method: 'DELETE', path: '/recipes/{id}', handler: Cookbook.delete },
+  { method: 'GET', path: '/recipes/{id}', handler: Recipe.get },
+  { method: 'POST', path: '/recipes', handler: Recipe.create },
+  // { method: 'PUT', path: '/recipes/{id}', handler: Recipe.update },
+  { method: 'DELETE', path: '/recipes/{id}', handler: Recipe.delete },
 
   // User routes
   { method: 'GET', path: '/users/{id}', handler: User.get },
