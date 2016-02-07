@@ -31,11 +31,11 @@ class Recipe extends Base {
 
     var baseRecipe = function (queryBuilder) {
       queryBuilder
-        .select('recipes.id AS id', 'recipes.title AS details-:title', 'recipes.cook_time AS details-:cook_time',
-                'recipes.prep_time AS details-:prep_time', 'recipes.description AS details-:description', 'recipes.is_private AS details-:is_private',
-                'recipes.created_at AS details-:created_at', 'recipes.updated_at AS details-:updated_at',
-                'recipes.user_id AS user:id', 'U.username AS user:username',
-                'recipes.yield_amount AS details-:yield:amount', 'RU.name AS details-:yield:unit')
+        .select('recipes.id', 'recipes.title', 'recipes.cook_time',
+                'recipes.prep_time', 'recipes.description', 'recipes.is_private',
+                'recipes.created_at', 'recipes.updated_at',
+                'recipes.user_id AS user_id', 'U.username AS username',
+                'recipes.yield_amount AS yield:amount', 'RU.name AS yield:unit')
         .innerJoin('users AS U', 'U.id', 'recipes.user_id')
         .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
         .whereNull('recipes.deleted_at')
@@ -73,7 +73,8 @@ class Recipe extends Base {
         .modify(baseRecipe)
         .modify(ingredients)
         .modify(directions)
-        .then((recipes) => {
+        .then((results) => {
+          var recipes = results;
           var formatted = treeize.grow(recipes);
           done(null, formatted.getData());
         })
