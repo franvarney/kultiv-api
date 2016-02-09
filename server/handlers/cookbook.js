@@ -27,7 +27,7 @@ exports.delete = function (request, reply) {
 exports.get = function (request, reply) {
   Cookbook.findById(request.params.id, (err, cookbook) => {
     if (err) return reply(Boom.badRequest(err));
-    return reply(cookbook).code(204);
+    return reply(cookbook).code(200);
   });
 };
 

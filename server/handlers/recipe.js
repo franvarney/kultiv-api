@@ -30,7 +30,7 @@ exports.delete = function (request, reply) {
 exports.get = function (request, reply) {
   Recipe.findById(request.params.id, (err, recipe) => {
     if (err) return reply(Boom.badRequest(err));
-    return reply(recipe).code(204);
+    return reply(recipe).code(200);
   });
 };
 
