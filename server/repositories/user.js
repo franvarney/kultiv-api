@@ -31,14 +31,13 @@ class User extends Base {
 
     this.findByEmailOrUsername(email, username, (err, user) => {
       if (err) return done(err);
-      if (user.length > 0) return done(null, true);
+      if (user) return done(new Error("User already exists."));
 
       payload.auth_token = Uuid();
       hashPassword(payload.password, (err, hashed) => {
         if (err) return done(err);
-
         payload.password = hashed;
-        this.add(payload, done);
+        super.create(payload, done);
       });
     });
   }
@@ -50,15 +49,23 @@ class User extends Base {
       .whereNull('deleted_at')
       .first()
       .then((user) => {
-        if (!user) return done(null, false);
         return done(null, user);
       })
       .catch((err) => done(err));
   }
 
-  update() {
-    //
+  findByAuthToken(authToken, done) {
+    this.db
+      .Where('auth_token', authToken)
+      .whereNull('deleted_at')
+      .first()
+      .then((user) => {
+        if (!user) return done(null, false);
+        return done(null, user);
+      })
+      .catch((err) => done(err));
   }
 }
 
-module.exports = new User();
+module
+  .exports = new User();

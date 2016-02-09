@@ -13,6 +13,8 @@ const Recipes = {
     table.integer('yield_amount').unsigned().notNullable();
     table.integer('yield_unit_id').unsigned().references('id').inTable('units');
     table.string('description').nullable();
+    table.enu('source_type', ['manual', 'fork', 'url', 'import']).default('manual');
+    table.string('source_value').nullable();
     table.boolean('is_private').defaultTo(false);
     table.timestamp('deleted_at');
   },
@@ -26,6 +28,7 @@ const Recipes = {
         yield_amount: 2,
         yield_unit_id: 1,
         description: 'Too darn good',
+        source_type: 'manual',
         is_private: true,
         deleted_at: false
       },
@@ -37,6 +40,8 @@ const Recipes = {
         yield_amount: 3,
         yield_unit_id: 1,
         description: 'just aight',
+        source_type: 'fork',
+        source_value: 1,
         is_private: false
       },
       {
@@ -47,6 +52,8 @@ const Recipes = {
         yield_amount: 1,
         yield_unit_id: 1,
         description: 'pure shit',
+        source_type: 'url',
+        source_value: 'http://www.google.com/',
         is_private: false
       }
     ]);

@@ -18,9 +18,8 @@ class Base {
         id: id,
         deleted_at: null
       })
-      .limit(1)
+      .first()
       .then((result) => {
-        if (result.length < 1) return done(null, false);
         return done(null, result);
       })
       .catch((err) => done(err));
@@ -54,20 +53,22 @@ class Base {
     });
   }
 
-  patch(id, payload, done) {
-    this.findById(id)
-      .then((results) => {
-        this.validate(payload, this.schema, (err, validated) => {
-          if (err) return done(err);
+  update(id, payload, done) {
+    this.findById(id, (err, results) => {
+      console.log(results);
 
-          results
-            .update(validated)
-            .returning('id')
-            .then((id) => done(null, id))
-            .catch((err) => done(err));
-        });
-      })
-      .catch((err) => done(err));
+      payload = Object.assign(results, payload);
+      delete payload.created_at;
+      this.validate(payload, this.schema, (err, validated) => {
+        if (err) return done(err);
+
+        results
+          .update(validated)
+          .returning('id')
+          .then((id) => done(null, id))
+          .catch((err) => done(err));
+      });
+    });
   }
 
   toggleIsPrivate(id, done) {
@@ -83,6 +84,8 @@ class Base {
   }
 
   validate(payload, done) {
+    console.log(payload);
+    console.log("Validating....");
     Joi.validate(payload, this.schema, done);
   }
 }

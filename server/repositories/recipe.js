@@ -15,7 +15,7 @@ const baseRecipe = function (queryBuilder) {
             'recipes.prep_time', 'recipes.description', 'recipes.is_private',
             'recipes.created_at', 'recipes.updated_at',
             'recipes.user_id AS creator:id', 'U.username AS creator:username',
-            'recipes.yield_amount AS yield:amount', 'RU.name AS yield:unit')
+            'recipes.yield_amount AS yields-:amount', 'RU.name AS yields-:unit')
     .innerJoin('users AS U', 'U.id', 'recipes.user_id')
     .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
     .whereNull('recipes.deleted_at')
