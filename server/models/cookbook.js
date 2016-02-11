@@ -7,7 +7,7 @@ const CookbookModel = Joi.object().keys({
   name: Joi.string().min(3).max(50),
   description: Joi.string(),
   is_private: Joi.boolean(),
-  updated_at: Joi.string().default('now()'),
+  updated_at: Joi.string().default('now()').allow(null),
   deleted_at: Joi.string().allow('now()')
 });
 

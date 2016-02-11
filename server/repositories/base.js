@@ -9,15 +9,13 @@ class Base {
     this.name = name;
     this.schema = schema;
     this.knex = DB; // necessary for joins
-    this.db = DB(this.name);
+    this.db = DB.from(this.name);
   }
 
   findById(id, done) {
     this.db
-      .where({
-        id: id,
-        deleted_at: null
-      })
+      .where('id', id)
+      .whereNull('deleted_at')
       .first()
       .then((result) => {
         return done(null, result);
@@ -55,14 +53,16 @@ class Base {
 
   update(id, payload, done) {
     this.findById(id, (err, results) => {
-      console.log(results);
-
       payload = Object.assign(results, payload);
+
+      delete payload.id;
       delete payload.created_at;
-      this.validate(payload, this.schema, (err, validated) => {
+      delete payload.updated_at;
+
+      this.validate(payload, (err, validated) => {
         if (err) return done(err);
 
-        results
+        this.db
           .update(validated)
           .returning('id')
           .then((id) => done(null, id))
@@ -84,8 +84,6 @@ class Base {
   }
 
   validate(payload, done) {
-    console.log(payload);
-    console.log("Validating....");
     Joi.validate(payload, this.schema, done);
   }
 }
