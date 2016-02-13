@@ -11,7 +11,7 @@ class Direction extends Base {
   }
 
   findById(id, done) {
-    this.db
+    this.knex(this.name)
       .where('id', id)
       .first('id','direction')
       .then((direction) => done(null, direction))

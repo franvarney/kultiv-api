@@ -61,7 +61,7 @@ class Recipe extends Base {
     if (!done) done = Function.prototype;
 
     if (!isLoaded) {
-      this.db
+      this.knex(this.name)
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .then((recipes) => {
@@ -69,7 +69,7 @@ class Recipe extends Base {
         })
         .catch((err) => done(err));
     } else {
-      this.db
+      this.knex(this.name)
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .modify(ingredients)

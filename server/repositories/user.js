@@ -30,6 +30,7 @@ class User extends Base {
     var email = payload.email, username = payload.username;
 
     this.findByEmailOrUsername(email, username, (err, user) => {
+      console.log(email, username);
       if (err) return done(err);
       if (user) return done(new Error("User already exists."));
 
@@ -43,9 +44,19 @@ class User extends Base {
   }
 
   findByEmailOrUsername(email, username, done) {
-    this.db
-      .where('email', email)
-      .orWhere('username', username)
+    if (typeof username === 'function') {
+      done = username;
+      username = null;
+    }
+
+    if (!done) done = Function.prototype;
+
+    this.knex(this.name)
+      .where(function () {
+        if (username)
+          this.where('username', username)
+      })
+      .orWhere('email', email)
       .whereNull('deleted_at')
       .first()
       .then((user) => {
@@ -55,7 +66,7 @@ class User extends Base {
   }
 
   findByAuthToken(authToken, done) {
-    this.db
+    this.knex(this.name)
       .Where('auth_token', authToken)
       .whereNull('deleted_at')
       .first()
@@ -64,6 +75,18 @@ class User extends Base {
         return done(null, user);
       })
       .catch((err) => done(err));
+  }
+
+  update(id, payload, done) {
+    if (payload.username) return done(new Error("Username can not be updated."));
+    this.findByEmailOrUsername(payload.email, (err, user)=> {
+      if (err) return done(err);
+
+      if (user)
+        return done(new Error("Email already exists."));
+
+      return super.update(id, payload, done);
+    })
   }
 }
 

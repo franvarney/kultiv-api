@@ -11,7 +11,7 @@ class Cookbook extends Base {
   }
 
   findByOwner(ownerUserId, done) {
-    this.db
+    this.knex(this.name)
       .where('owner_id', ownerUserId)
       .whereNull('deleted_at')
       .then((cookbooks) => done(null, cookbooks))
@@ -19,7 +19,7 @@ class Cookbook extends Base {
   }
 
   findByCollaborator(collaboratorUserId, done) {
-    this.db
+    this.knex(this.name)
       .innerJoin('cookbooks-collaborators AS CC', 'cookbooks.id', 'CC.collaborator_id')
       .whereNull('cookbooks.deleted_at')
       .where('CC.collaborator_id', collaboratorUserId)

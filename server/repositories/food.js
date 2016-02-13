@@ -11,7 +11,7 @@ class Food extends Base {
   }
 
   findByName(name, done) {
-    this.db
+    this.knex(this.name)
       .where('name', 'LIKE', `%${name}%`)
       .whereNull('deleted_at')
       .then((foods) => done(null, foods))

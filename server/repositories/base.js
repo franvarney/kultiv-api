@@ -8,12 +8,14 @@ class Base {
   constructor(name, schema) {
     this.name = name;
     this.schema = schema;
-    this.knex = DB; // necessary for joins
+    this.knex = DB.bind(null, this.name);
     this.db = DB.from(this.name);
   }
 
   findById(id, done) {
-    this.db
+    //Must use this.knex(this.name)
+    this.knex(this.name)
+      .select('username')
       .where('id', id)
       .whereNull('deleted_at')
       .first()
@@ -28,11 +30,9 @@ class Base {
       if (err) return done(err);
       if (!result) return done(null, false);
 
-      this.db
-        .where({
-          id: id,
-          deleted_at: null
-        })
+      this.knex(this.name)
+        .where('id', id)
+        .whereNull('deleted_at')
         .update('deleted_at', 'now()')
         .then((count) => done(null, count))
         .catch((err) => done(err));
@@ -43,7 +43,7 @@ class Base {
     this.validate(payload, (err, validated) => {
       if (err) return done(err);
 
-      this.db
+      this.knex(this.name)
         .insert(validated)
         .returning('id')
         .then((id) => done(null, id))
@@ -62,7 +62,8 @@ class Base {
       this.validate(payload, (err, validated) => {
         if (err) return done(err);
 
-        this.db
+        this.knex(this.name)
+          .where('id', id)
           .update(validated)
           .returning('id')
           .then((id) => done(null, id))
@@ -75,7 +76,7 @@ class Base {
     this.findById(id, (err, result) => {
       if (err) return done(err);
 
-      result
+      this.knex(this.name)
         .update('is_private', !result.is_private)
         .returning('id')
         .then((id) => done(null, true))
