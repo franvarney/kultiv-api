@@ -8,27 +8,20 @@ class Base {
   constructor(name, schema) {
     this.name = name;
     this.schema = schema;
-    this.knex = DB.bind(null, this.name);
-    this.db = DB.from(this.name);
+    this.knex = DB;
   }
 
   findById(id, done) {
-    //Must use this.knex(this.name)
     this.knex(this.name)
-      .select('username')
       .where('id', id)
       .whereNull('deleted_at')
       .first()
-      .then((result) => {
-        return done(null, result);
-      })
       .catch((err) => done(err));
   }
 
   deleteById(id, done) {
     this.findById(id, (err, result) => {
       if (err) return done(err);
-      if (!result) return done(null, false);
 
       this.knex(this.name)
         .where('id', id)
@@ -77,6 +70,7 @@ class Base {
       if (err) return done(err);
 
       this.knex(this.name)
+        .where('id', id)
         .update('is_private', !result.is_private)
         .returning('id')
         .then((id) => done(null, true))
