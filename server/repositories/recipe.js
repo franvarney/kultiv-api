@@ -3,7 +3,7 @@
 const Treeize = require('treeize')
 
 const Base = require('./base')
-const RecipeModel = require('../models/recipe')
+const RecipeModel = require('../schemas/recipe')
 
 const treeize = new Treeize({ output: { prune: false } })
 

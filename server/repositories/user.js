@@ -4,7 +4,7 @@ const Bcrypt = require('bcryptjs')
 const Uuid = require('uuid4')
 
 const Base = require('./base')
-const UserModel = require('../models/user')
+const UserModel = require('../schemas/user')
 
 const SALT_WORK_FACTOR = 10
 const TABLE_NAME = 'users'
