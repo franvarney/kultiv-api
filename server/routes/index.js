@@ -1,9 +1,8 @@
-const Admin = require('../handlers/admin');
-const Cookbook = require('../handlers/cookbook');
-const Package = require('../../package.json');
-const Ping = require('../handlers/ping');
-const Recipe = require('../handlers/recipe');
-const User = require('../handlers/user');
+const Admin = require('../handlers/admin')
+const Cookbook = require('../handlers/cookbook')
+const Ping = require('../handlers/ping')
+const Recipe = require('../handlers/recipe')
+const User = require('../handlers/user')
 
 module.exports = [
   // Test route
@@ -35,4 +34,4 @@ module.exports = [
   { method: 'POST', path: '/users', handler: User.create, config: { auth: false } },
   { method: 'PUT', path: '/users/{id}', handler: User.update },
   { method: 'DELETE', path: '/users/{id}', handler: User.delete }
-];
+]

@@ -1,6 +1,6 @@
-const Debug = require('debug')('cookbook/index');
+const Debug = require('debug')('cookbook/index')
 
-require('./config');
-require('./server/server');
+require('./config')
+require('./server/server')
 
-Debug('Cookbook starting...');
+Debug('Cookbook starting...')
