@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "DEBUG=* npm start",
-    "lint": "mod-standard",
-    "posttest": "mod-standard",
+    "lint": "standard",
+    "posttest": "standard",
     "start": "node index",
     "test": "lab --coverage --verbose"
   },
@@ -35,10 +35,10 @@
     "winston": "1.1.1"
   },
   "devDependencies": {
-    "@modulus/standard": "*",
     "code": "1.5.0",
     "lab": "6.1.0",
     "proxyquire": "1.7.3",
-    "sinon": "1.17.1"
+    "sinon": "1.17.1",
+    "standard": "7.0.1"
   }
 }
