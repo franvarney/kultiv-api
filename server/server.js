@@ -1,30 +1,30 @@
 const Debug = require('debug')('cookbook/server/server')
-const Hapi = require('hapi')
+const {Server} = require('hapi')
 
-const Auth = require('./handlers/auth')
-const Config = require('../config')
+const {validate} = require('./handlers/auth')
+const {env, host, port} = require('../config')
 const HapiAuthBearerToken = require('hapi-auth-bearer-token')
 const Routes = require('./routes')
 require('./connections/postgres')
 
-var server = new Hapi.Server()
+var server = new Server()
 
 server.connection({
-  host: Config.env !== 'production' ? Config.host : null,
-  port: parseInt(Config.port, 10),
+  host: env !== 'production' ? host : null,
+  port: parseInt(port, 10),
   routes: { cors: true }
 })
 
 server.route(Routes)
 
-server.register(HapiAuthBearerToken, function (err) {
-  if (err) Debug('Plugin error :' + err)
+server.register(HapiAuthBearerToken, (err) => {
+  if (err) Debug(`Plugin error: ${err}`)
 
   server.auth.strategy('simple', 'bearer-access-token', {
     allowQueryToken: true,
     allowMultipleHeaders: false,
     accessTokenName: 'auth_token',
-    validateFunc: Auth.validate
+    validateFunc: validate
   })
 
   // TODO add this back in later
@@ -32,9 +32,9 @@ server.register(HapiAuthBearerToken, function (err) {
   //   strategy: 'simple'
   // })
 
-  server.start(function (err) {
+  server.start((err) => {
     if (err) throw err
-    Debug('Server starting at %s', server.info.uri)
+    Debug(`Server starting at ${server.info.uri}`)
   })
 })
 
