@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
 const UserModel = Joi.object().keys({
   username: Joi.string().alphanum().min(3).max(50).required(),
@@ -13,6 +13,6 @@ const UserModel = Joi.object().keys({
   auth_token: Joi.string().guid(),
   updated_at: Joi.string().default('now()').allow(null),
   deleted_at: Joi.string().allow(null)
-});
+})
 
-module.exports = UserModel;
+module.exports = UserModel

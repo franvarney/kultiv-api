@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
 const CookbookModel = Joi.object().keys({
   owner_id: Joi.number().integer().required(),
@@ -9,6 +9,6 @@ const CookbookModel = Joi.object().keys({
   is_private: Joi.boolean(),
   updated_at: Joi.string().default('now()').allow(null),
   deleted_at: Joi.string().allow(null)
-});
+})
 
-module.exports = CookbookModel;
+module.exports = CookbookModel

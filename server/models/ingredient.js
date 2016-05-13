@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-const Joi = require('joi');
+const Joi = require('joi')
 
 const IngredientModel = Joi.object().keys({
   amount: Joi.number(),
@@ -9,6 +9,6 @@ const IngredientModel = Joi.object().keys({
   optional: Joi.boolean(),
   updated_at: Joi.string().default('now()'),
   deleted_at: Joi.string().allow('now()')
-});
+})
 
-module.exports = IngredientModel;
+module.exports = IngredientModel
