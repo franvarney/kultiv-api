@@ -1,17 +1,14 @@
-'use strict'
-
 const Treeize = require('treeize')
 
 const Base = require('./base')
-const CookbookModel = require('../schemas/cookbook')
-
-const treeize = new Treeize({ output: { prune: false } })
+const CookbookSchema = require('../schemas/cookbook')
 
 const TABLE_NAME = 'cookbooks'
+let treeize = new Treeize({ output: { prune: false } })
 
 class Cookbook extends Base {
   constructor () {
-    super(TABLE_NAME, CookbookModel)
+    super(TABLE_NAME, CookbookSchema)
   }
 
   findByOwner (ownerUserId, done) {
@@ -23,14 +20,15 @@ class Cookbook extends Base {
               'C.updated_at AS cookbooks:updated_at')
       .where('users.id', ownerUserId)
       .innerJoin('cookbooks as C', 'users.id', 'C.owner_id')
-      .then((userCookbook) => {
-        userCookbook = treeize.grow(userCookbook).getData()[0]
-        delete userCookbook.password
-        delete userCookbook.auth_token
+      .asCallback((err, cookbook) => {
+        if (err) return done(err)
 
-        done(null, userCookbook)
+        cookbook = treeize.grow(cookbook).getData()[0]
+        delete cookbook.password
+        delete cookbook.auth_token
+
+        return done(null, cookbook)
       })
-      .catch((err) => done(err))
   }
 
   findByCollaborator (collaboratorUserId, done) {
@@ -39,8 +37,10 @@ class Cookbook extends Base {
                  'CC.collaborator_id')
       .whereNull('cookbooks.deleted_at')
       .where('CC.collaborator_id', collaboratorUserId)
-      .then((cookbooks) => done(null, cookbooks))
-      .catch((err) => done(err))
+      .asCallback((err, cookbooks) => {
+        if (err) return done(err)
+        return done(null, cookbooks)
+      })
   }
 }
 

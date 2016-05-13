@@ -1,21 +1,21 @@
-'use strict'
-
 const Base = require('./base')
-const FoodModel = require('../schemas/food')
+const FoodSchema = require('../schemas/food')
 
 const TABLE_NAME = 'foods'
 
 class Food extends Base {
   constructor () {
-    super(TABLE_NAME, FoodModel)
+    super(TABLE_NAME, FoodSchema)
   }
 
   findByName (name, done) {
     this.knex(this.name)
       .where('name', 'LIKE', `%${name}%`)
       .whereNull('deleted_at')
-      .then((foods) => done(null, foods))
-      .catch((err) => done(err))
+      .asCallback((err, foods) => {
+        if (err) return done(err)
+        return done(null, foods)
+      })
   }
 }
 

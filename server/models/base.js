@@ -1,5 +1,3 @@
-'use strict'
-
 const Joi = require('joi')
 
 const DB = require('../connections/postgres')
@@ -16,7 +14,10 @@ class Base {
       .where('id', id)
       .whereNull('deleted_at')
       .first()
-      .catch((err) => done(err))
+      .asCallback((err) => {
+        if (err) return done(err)
+        return done()
+      })
   }
 
   deleteById (id, done) {
@@ -27,24 +28,28 @@ class Base {
         .where('id', id)
         .whereNull('deleted_at')
         .update('deleted_at', 'now()')
-        .then((count) => done(null, count))
-        .catch((err) => done(err))
+        .asCallback((err, count) => {
+          if (err) return done(err)
+          return done(null, count)
+        })
     })
   }
 
-  create (payload, done) {
+  create (payload, returning = 'id', done) {
     this.validate(payload, (err, validated) => {
       if (err) return done(err)
 
       this.knex(this.name)
         .insert(validated)
-        .returning('id')
-        .then((id) => done(null, id))
-        .catch((err) => done(err))
+        .returning(returning)
+        .asCallback((err, id) => {
+          if (err) return done(err)
+          return done(null, id)
+        })
     })
   }
 
-  update (id, payload, done) {
+  update (id, payload, returning = 'id', done) {
     this.findById(id, (err, results) => {
       if (err) return done(err)
       payload = Object.assign(results, payload)
@@ -59,9 +64,11 @@ class Base {
         this.knex(this.name)
           .where('id', id)
           .update(validated)
-          .returning('id')
-          .then((id) => done(null, id))
-          .catch((err) => done(err))
+          .returning(returning)
+          .asCallback((err, id) => {
+            if (err) return done(err)
+            return done(null, id)
+          })
       })
     })
   }
@@ -74,8 +81,10 @@ class Base {
         .where('id', id)
         .update('is_private', !result.is_private)
         .returning('id')
-        .then((id) => done(null, true))
-        .catch((err) => done(err))
+        .asCallback((err) => {
+          if (err) return done(err)
+          return done(null, true)
+        })
     })
   }
 

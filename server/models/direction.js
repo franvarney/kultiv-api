@@ -1,21 +1,21 @@
-'use strict'
-
 const Base = require('./base')
-const DirectionModel = require('../schemas/direction')
+const DirectionSchema = require('../schemas/direction')
 
-const TABLE_NAME = 'foods'
+const TABLE_NAME = 'directions'
 
 class Direction extends Base {
   constructor () {
-    super(TABLE_NAME, DirectionModel)
+    super(TABLE_NAME, DirectionSchema)
   }
 
   findById (id, done) {
     this.knex(this.name)
       .where('id', id)
       .first('id', 'direction')
-      .then((direction) => done(null, direction))
-      .catch((err) => done(err))
+      .asCallback((err, direction) => {
+        if (err) return done(err)
+        return done(null, direction)
+      })
   }
 }
 

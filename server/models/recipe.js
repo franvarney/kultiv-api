@@ -1,13 +1,10 @@
-'use strict'
-
 const Treeize = require('treeize')
 
 const Base = require('./base')
 const RecipeModel = require('../schemas/recipe')
 
-const treeize = new Treeize({ output: { prune: false } })
-
 const TABLE_NAME = 'recipes'
+let treeize = new Treeize({ output: { prune: false } })
 
 const baseRecipe = function (queryBuilder) {
   queryBuilder
@@ -64,20 +61,20 @@ class Recipe extends Base {
       this.knex(this.name)
         .whereRaw(rawQuery)
         .modify(baseRecipe)
-        .then((recipes) => {
-          done(null, treeize.grow(recipes).getData())
+        .asCallback((err, recipes) => {
+          if (err) return done(err)
+          return done(null, treeize.grow(recipes).getData())
         })
-        .catch((err) => done(err))
     } else {
       this.knex(this.name)
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .modify(ingredients)
         .modify(directions)
-        .then((recipes) => {
-          done(null, treeize.grow(recipes).getData())
+        .asCallback((err, recipes) => {
+          if (err) return done(err)
+          return done(null, treeize.grow(recipes).getData())
         })
-        .catch((err) => done(err))
     }
   }
 }

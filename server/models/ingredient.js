@@ -1,13 +1,11 @@
-'use strict'
-
 const Base = require('./base')
-const IngredientModel = require('../schemas/ingredient')
+const IngredientSchema = require('../schemas/ingredient')
 
 const TABLE_NAME = 'ingredients'
 
 class Ingredient extends Base {
   constructor () {
-    super(TABLE_NAME, IngredientModel)
+    super(TABLE_NAME, IngredientSchema)
   }
 }
 

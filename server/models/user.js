@@ -1,13 +1,11 @@
-'use strict'
-
 const Bcrypt = require('bcryptjs')
 const Uuid = require('uuid4')
 
 const Base = require('./base')
-const UserModel = require('../schemas/user')
+const UserSchema = require('../schemas/user')
 
-const SALT_WORK_FACTOR = 10
 const TABLE_NAME = 'users'
+const SALT_WORK_FACTOR = 10
 
 function hashPassword (password, done) {
   Bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
@@ -15,19 +13,19 @@ function hashPassword (password, done) {
 
     Bcrypt.hash(password, salt, (err, hashed) => {
       if (err) return done(err)
-      done(null, hashed)
+      return done(null, hashed)
     })
   })
 }
 
 class User extends Base {
   constructor () {
-    super(TABLE_NAME, UserModel)
+    super(TABLE_NAME, UserSchema)
   }
 
   create (payload, done) {
-    var email = payload.email
-    var username = payload.username
+    let email = payload.email
+    let username = payload.username
 
     this.findByEmailOrUsername(email, username, (err, user) => {
       if (err) return done(err)
@@ -51,16 +49,16 @@ class User extends Base {
     if (!done) done = Function.prototype
 
     this.knex(this.name)
-      .where(function () {
+      .where(() => {
         if (username) this.where('username', username)
       })
       .orWhere('email', email)
       .whereNull('deleted_at')
       .first()
-      .then((user) => {
+      .asCallback((err, user) => {
+        if (err) return done(err)
         return done(null, user)
       })
-      .catch((err) => done(err))
   }
 
   findByAuthToken (authToken, done) {
@@ -68,20 +66,18 @@ class User extends Base {
       .Where('auth_token', authToken)
       .whereNull('deleted_at')
       .first()
-      .then((user) => {
+      .asCallback((err, user) => {
+        if (err) return done(err)
         if (!user) return done(null, false)
         return done(null, user)
       })
-      .catch((err) => done(err))
   }
 
   update (id, payload, done) {
     if (payload.username) return done(new Error('Username can not be updated.'))
     this.findByEmailOrUsername(payload.email, (err, user) => {
       if (err) return done(err)
-
       if (user) return done(new Error('Email already exists.'))
-
       return super.update(id, payload, done)
     })
   }
