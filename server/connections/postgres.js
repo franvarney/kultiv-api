@@ -1,21 +1,19 @@
 const Debug = require('debug')('connections:postgres')
 const Knex = require('knex')
 
-const Config = require('../../config')
+const {env, postgres} = require('../../config')
 
-const knex = Knex({
+let knex = Knex({
   client: 'pg',
-  connection: Config.postgres.uri,
-  debug: Config.env !== 'production'
+  connection: postgres.uri,
+  debug: env !== 'production'
 })
 
 knex
   .raw('SELECT 1 + 1 as result')
-  .then(() => {
-    Debug('knex connected successfully!')
-  })
-  .catch((err) => {
-    Debug(`knex connected unsuccessfully: ${err.message}`)
+  .asCallback((err) => {
+    if (err) return Debug(`knex connected unsuccessfully: ${err.message}`)
+    return Debug('knex connected successfully!')
   })
 
 module.exports = knex
