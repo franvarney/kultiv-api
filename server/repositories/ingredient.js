@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
-const Base = require('./base');
-const IngredientModel = require('../models/ingredient');
+const Base = require('./base')
+const IngredientModel = require('../models/ingredient')
 
-const TABLE_NAME = 'ingredients';
+const TABLE_NAME = 'ingredients'
 
 class Ingredient extends Base {
-  constructor() {
-    super(TABLE_NAME, IngredientModel);
+  constructor () {
+    super(TABLE_NAME, IngredientModel)
   }
 }
 
-module.exports = new Ingredient();
+module.exports = new Ingredient()
