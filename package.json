@@ -13,7 +13,7 @@
   "author": "Fran Varney <franvarn@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": "4.2",
+    "node": "6.x",
     "npm": "3"
   },
   "dependencies": {
