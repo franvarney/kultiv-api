@@ -1,7 +1,7 @@
 const Boom = require('boom')
 // const Debug = require('debug')('cookbook/src/controllers/cookbook')
 
-const Cookbook = require('../repositories/cookbook')
+const Cookbook = require('../models/cookbook')
 
 exports.allByUser = function (request, reply) {
   Cookbook.findByOwner(request.params.user_id, (err, cookbooks) => {

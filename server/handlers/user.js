@@ -1,7 +1,7 @@
 const Boom = require('boom')
 // const Debug = require('debug')('cookbook/src/controllers/user')
 
-const User = require('../repositories/user')
+const User = require('../models/user')
 
 exports.create = function (request, reply) {
   User.create(request.payload, (err, id) => {

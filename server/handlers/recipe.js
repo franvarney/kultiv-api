@@ -1,6 +1,6 @@
 const Boom = require('boom')
 
-const Recipe = require('../repositories/recipe')
+const Recipe = require('../models/recipe')
 
 exports.allByUser = function (request, reply) {
   var isLoaded = false
