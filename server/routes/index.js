@@ -9,10 +9,6 @@ module.exports = [
   { method: 'GET', path: '/ping', handler: Ping, config: { auth: false } },
 
   // Admin routes
-  { method: 'GET', path: '/admin/migrate', handler: Admin.migrate },
-  { method: 'GET', path: '/admin/reset', handler: Admin.reset },
-  { method: 'GET', path: '/admin/seed', handler: Admin.seed },
-  { method: 'GET', path: '/admin/drop', handler: Admin.drop },
   { method: 'GET', path: '/admin/users', handler: Admin.users },
 
   // Cookbook routes
