@@ -1,5 +1,5 @@
-const KnockKnock = require('knock-knock');
+const KnockKnock = require('knock-knock')
 
 module.exports = function (request, reply) {
-  KnockKnock(reply);
-};
+  KnockKnock(reply)
+}
