@@ -19,6 +19,7 @@
   "dependencies": {
     "bcryptjs": "2.3.0",
     "boom": "2.9.0",
+    "franston": "0.1.2",
     "hapi": "10.1.0",
     "hapi-auth-bearer-token": "3.1.1",
     "joi": "7.2.3",
@@ -32,7 +33,6 @@
     "shortid32": "0.1.0",
     "treeize": "2.0.2",
     "uuid4": "1.0.0",
-    "winston": "1.1.1"
   },
   "devDependencies": {
     "code": "1.5.0",
