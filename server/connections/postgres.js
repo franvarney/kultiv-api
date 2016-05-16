@@ -12,7 +12,7 @@ let knex = Knex({
 knex
   .raw('SELECT 1 + 1 as result')
   .asCallback((err) => {
-    if (err) return Logger.error(`knex connected unsuccessfully: ${err.message}`), throw err
+    if (err) return Logger.error(`knex connected unsuccessfully: ${err.message}`), err
     return Logger.info('knex connected successfully!')
   })
 

@@ -16,7 +16,7 @@ server.connection({
 })
 
 server.register(HapiAuthBearerToken, (err) => {
-  if (err) return Logger.error(err), throw err
+  if (err) return Logger.error(err), err
 
   server.auth.strategy('simple', 'bearer-access-token', {
     allowQueryToken: true,
@@ -31,7 +31,7 @@ server.register(HapiAuthBearerToken, (err) => {
   // })
 
   server.start((err) => {
-    if (err) return Logger.error(err), throw err
+    if (err) return Logger.error(err), err
 
     Logger.info(`Server starting at ${server.info.uri}`)
     server.route(Routes)
