@@ -4,9 +4,14 @@ cookbook-node
 ## Install
 `npm install`
 
+## Config
+  - `ADMIN_TOKEN`: An admin auth token
+  - `LOG_LEVEL`: Sets the log level
+  - `POSTGRES_URI`: A url to a Postgres database
+
 ## Run
-1. Run mongo in another terminal: `mongod`
-2. For dev/debugging, run `npm run dev` or production, run `npm start`
+Development: `POSTGRES_URI=pg_url npm run dev`
+Production: `POSTGRES_URI=pg_url npm start`
 
 ### Testing
 `npm test`
