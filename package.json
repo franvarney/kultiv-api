@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "DEBUG=* npm start",
+    "dev": "LOG_LEVEL=debug npm start",
     "lint": "standard",
     "posttest": "standard",
     "start": "node index",
-    "test": "lab --coverage --verbose"
+    "test": "lab --cvv"
   },
   "author": "Fran Varney <franvarn@gmail.com>",
   "license": "MIT",
