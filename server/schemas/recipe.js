@@ -1,5 +1,3 @@
-'use strict'
-
 const Joi = require('joi')
 
 const RecipeModel = Joi.object().keys({
