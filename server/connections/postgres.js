@@ -1,4 +1,4 @@
-const Debug = require('debug')('connections:postgres')
+const Logger = require('franston')('connections:postgres')
 const Knex = require('knex')
 
 const {env, postgres} = require('../../config')
@@ -12,8 +12,8 @@ let knex = Knex({
 knex
   .raw('SELECT 1 + 1 as result')
   .asCallback((err) => {
-    if (err) return Debug(`knex connected unsuccessfully: ${err.message}`)
-    return Debug('knex connected successfully!')
+    if (err) return Logger.error(`knex connected unsuccessfully: ${err.message}`), throw err
+    return Logger.info('knex connected successfully!')
   })
 
 module.exports = knex

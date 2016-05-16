@@ -1,5 +1,5 @@
-const Debug = require('debug')('cookbook/server/server')
 const {Server} = require('hapi')
+const Logger = require('franston')('server:server')
 
 const {validate} = require('./handlers/auth')
 const {env, host, port} = require('../config')
@@ -15,10 +15,8 @@ server.connection({
   routes: { cors: true }
 })
 
-server.route(Routes)
-
 server.register(HapiAuthBearerToken, (err) => {
-  if (err) Debug(`Plugin error: ${err}`)
+  if (err) return Logger.error(err), throw err
 
   server.auth.strategy('simple', 'bearer-access-token', {
     allowQueryToken: true,
@@ -33,8 +31,10 @@ server.register(HapiAuthBearerToken, (err) => {
   // })
 
   server.start((err) => {
-    if (err) throw err
-    Debug(`Server starting at ${server.info.uri}`)
+    if (err) return Logger.error(err), throw err
+
+    Logger.info(`Server starting at ${server.info.uri}`)
+    server.route(Routes)
   })
 })
 

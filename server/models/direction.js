@@ -1,3 +1,5 @@
+const Logger = require('franston')('server:models:direction')
+
 const Base = require('./base')
 const DirectionSchema = require('../schemas/direction')
 
@@ -9,11 +11,13 @@ class Direction extends Base {
   }
 
   findById (id, done) {
+    Logger.debug('direction.findById')
+
     this.knex(this.name)
       .where('id', id)
       .first('id', 'direction')
       .asCallback((err, direction) => {
-        if (err) return done(err)
+        if (err) return Logger.error(err), done(err)
         return done(null, direction)
       })
   }

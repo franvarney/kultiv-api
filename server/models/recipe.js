@@ -1,3 +1,4 @@
+const Logger = require('franston')('server:models:recipe')
 const Treeize = require('treeize')
 
 const Base = require('./base')
@@ -42,14 +43,18 @@ class Recipe extends Base {
   }
 
   findByUserId (userId, isLoaded, done) {
+    Logger.debug('recipe.findByUserId')
     this.loadRecipe(`recipes.user_id = ${userId}`, isLoaded, done)
   }
 
   findByTitle (title, isLoaded, done) {
+    Logger.debug('recipe.findByTitle')
     this.loadRecipe(`recipes.title LIKE %${title}%`, isLoaded, done)
   }
 
   loadRecipe (rawQuery, isLoaded, done) {
+    Logger.debug('recipe.loadRecipe')
+
     if (typeof isLoaded === 'function') {
       done = isLoaded
       isLoaded = false
@@ -62,7 +67,7 @@ class Recipe extends Base {
         .whereRaw(rawQuery)
         .modify(baseRecipe)
         .asCallback((err, recipes) => {
-          if (err) return done(err)
+          if (err) return Logger.error(err), done(err)
           return done(null, treeize.grow(recipes).getData())
         })
     } else {
@@ -72,7 +77,7 @@ class Recipe extends Base {
         .modify(ingredients)
         .modify(directions)
         .asCallback((err, recipes) => {
-          if (err) return done(err)
+          if (err) return Logger.error(err), done(err)
           return done(null, treeize.grow(recipes).getData())
         })
     }

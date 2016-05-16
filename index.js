@@ -1,6 +1,6 @@
-const Debug = require('debug')('cookbook/index')
+const Logger = require('franston')('index')
 
 require('./config')
 require('./server/server')
 
-Debug('Cookbook starting...')
+Logger.info('Cookbook starting...')

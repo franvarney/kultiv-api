@@ -1,3 +1,4 @@
+const Logger = require('franston')('server:models:cookbook')
 const Treeize = require('treeize')
 
 const Base = require('./base')
@@ -12,6 +13,8 @@ class Cookbook extends Base {
   }
 
   findByOwner (ownerUserId, done) {
+    Logger.debug('cookbook.findByOwner')
+
     this.knex('users')
       .select('users.*', 'C.id AS cookbooks:id', 'C.name AS cookbooks:name',
               'C.description AS cookbooks:description',
@@ -21,7 +24,7 @@ class Cookbook extends Base {
       .where('users.id', ownerUserId)
       .innerJoin('cookbooks as C', 'users.id', 'C.owner_id')
       .asCallback((err, cookbook) => {
-        if (err) return done(err)
+        if (err) return Logger.error(err), done(err)
 
         cookbook = treeize.grow(cookbook).getData()[0]
         delete cookbook.password
@@ -32,13 +35,15 @@ class Cookbook extends Base {
   }
 
   findByCollaborator (collaboratorUserId, done) {
+    Logger.debug('cookbook.findByCollaborator')
+
     this.knex(this.name)
       .innerJoin('cookbooks-collaborators AS CC', 'cookbooks.id',
                  'CC.collaborator_id')
       .whereNull('cookbooks.deleted_at')
       .where('CC.collaborator_id', collaboratorUserId)
       .asCallback((err, cookbooks) => {
-        if (err) return done(err)
+        if (err) return Logger.error(err), done(err)
         return done(null, cookbooks)
       })
   }

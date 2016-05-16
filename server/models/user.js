@@ -1,4 +1,5 @@
 const Bcrypt = require('bcryptjs')
+const Logger = require('franston')('server:models:user')
 const Uuid = require('uuid4')
 
 const Base = require('./base')
@@ -9,10 +10,10 @@ const SALT_WORK_FACTOR = 10
 
 function hashPassword (password, done) {
   Bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
-    if (err) return done(err)
+    if (err) return Logger.error(err), done(err)
 
     Bcrypt.hash(password, salt, (err, hashed) => {
-      if (err) return done(err)
+      if (err) return Logger.error(err), done(err)
       return done(null, hashed)
     })
   })
@@ -24,16 +25,18 @@ class User extends Base {
   }
 
   create (payload, done) {
+    Logger.debug('user.create')
+
     let email = payload.email
     let username = payload.username
 
     this.findByEmailOrUsername(email, username, (err, user) => {
-      if (err) return done(err)
+      if (err) return Logger.error(err), done(err)
       if (user) return done(new Error('User already exists.'))
 
       payload.auth_token = Uuid()
       hashPassword(payload.password, (err, hashed) => {
-        if (err) return done(err)
+        if (err) return Logger.error(err), done(err)
         payload.password = hashed
         super.create(payload, done)
       })
@@ -41,6 +44,8 @@ class User extends Base {
   }
 
   findByEmailOrUsername (email, username, done) {
+    Logger.debug('user.findByEmailOrUsername')
+
     if (typeof username === 'function') {
       done = username
       username = null
@@ -56,27 +61,31 @@ class User extends Base {
       .whereNull('deleted_at')
       .first()
       .asCallback((err, user) => {
-        if (err) return done(err)
+        if (err) return Logger.error(err), done(err)
         return done(null, user)
       })
   }
 
   findByAuthToken (authToken, done) {
+    Logger.debug('user.findByAuthToken')
+
     this.knex(this.name)
       .Where('auth_token', authToken)
       .whereNull('deleted_at')
       .first()
       .asCallback((err, user) => {
-        if (err) return done(err)
+        if (err) return Logger.error(err), done(err)
         if (!user) return done(null, false)
         return done(null, user)
       })
   }
 
   update (id, payload, done) {
+    Logger.debug('user.update')
+
     if (payload.username) return done(new Error('Username can not be updated.'))
     this.findByEmailOrUsername(payload.email, (err, user) => {
-      if (err) return done(err)
+      if (err) return Logger.error(err), done(err)
       if (user) return done(new Error('Email already exists.'))
       return super.update(id, payload, done)
     })

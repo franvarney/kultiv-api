@@ -1,10 +1,12 @@
-// const Debug = require('debug')('cookbook/src/controllers/auth')
+const Logger = require('franston')('server:handlers:auth')
 
 exports.validate = function (token, callback) {
+  Logger.debug('auth.validate')
+
   const User = this.server.plugins['hapi-mongo-models'].User
 
   User.findByToken(token, function (err, user) {
-    if (err) return callback(err)
+    if (err) return Logger.err(err), callback(err)
 
     if (user) {
       callback(null, true, {
