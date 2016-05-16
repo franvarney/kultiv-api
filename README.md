@@ -1,5 +1,5 @@
-cookbook-node
-=============
+kultiv-api
+==========
 
 ## Install
 `npm install`
