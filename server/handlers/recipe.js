@@ -1,4 +1,4 @@
-onst {badRequest} = require('boom')
+const {badRequest} = require('boom')
 const Logger = require('franston')('server:handlers:recipe')
 
 const Recipe = require('../models/recipe')
