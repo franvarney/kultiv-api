@@ -8,7 +8,7 @@ exports.allByUser = function (request, reply) {
 
   Cookbook.findByOwner(request.params.user_id, (err, cookbooks) => {
     if (err) return Logger.error(err), reply(badRequest(err))
-    return Logger.debug(cookbooks), reply(cookbooks).code(200)
+    return Logger.debug(cookbooks), reply.treeize(cookbooks).code(200)
   })
 }
 
@@ -17,7 +17,7 @@ exports.create = function (request, reply) {
 
   Cookbook.create(request.payload, (err, id) => {
     if (err) return Logger.error(err), reply(badRequest(err))
-    return Logger.debug(id), reply(id).code(201)
+    return Logger.debug(id), reply({ id }).code(201)
   })
 }
 
@@ -35,7 +35,7 @@ exports.get = function (request, reply) {
 
   Cookbook.findById(request.params.id, (err, cookbook) => {
     if (err) return Logger.error(err), reply(badRequest(err))
-    return Logger.debug(cookbook), eply(cookbook).code(200)
+    return Logger.debug(cookbook), reply(cookbook).code(200)
   })
 }
 
