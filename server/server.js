@@ -4,6 +4,7 @@ const Logger = require('franston')('server:server')
 const {validate} = require('./handlers/auth')
 const {env, host, port} = require('../config')
 const HapiAuthBearerToken = require('hapi-auth-bearer-token')
+const HapiTreeize = require('./plugins/hapi-treeize')
 const Routes = require('./routes')
 require('./connections/postgres')
 
@@ -15,7 +16,7 @@ server.connection({
   routes: { cors: true }
 })
 
-server.register(HapiAuthBearerToken, (err) => {
+server.register([HapiAuthBearerToken, HapiTreeize], (err) => {
   if (err) return Logger.error(err), err
 
   server.auth.strategy('simple', 'bearer-access-token', {
