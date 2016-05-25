@@ -15,18 +15,14 @@ class Cookbook extends Base {
   findByOwner (ownerUserId, done) {
     Logger.debug('cookbook.findByOwner')
 
-    this.knex('users')
-      .select('users.*', 'C.id AS cookbooks:id', 'C.name AS cookbooks:name',
-              'C.description AS cookbooks:description',
-              'C.is_private AS cookbooks:is_private',
-              'C.created_at AS cookbooks:created_at',
-              'C.updated_at AS cookbooks:updated_at')
-      .where('users.id', ownerUserId)
-      .innerJoin('cookbooks as C', 'users.id', 'C.owner_id')
+    this.knex(this.name)
+      .select('id', 'owner_id', 'name', 'description',
+              'is_private','created_at', 'updated_at')
+      .where('owner_id', ownerUserId)
+      .whereNull('deleted_at')
       .asCallback((err, cookbook) => {
         if (err) return Logger.error(err), done(err)
 
-        cookbook = treeize.grow(cookbook).getData()[0]
         delete cookbook.password
         delete cookbook.auth_token
 
@@ -42,6 +38,7 @@ class Cookbook extends Base {
                  'CC.collaborator_id')
       .whereNull('cookbooks.deleted_at')
       .where('CC.collaborator_id', collaboratorUserId)
+      .whereNull('deleted_at')
       .asCallback((err, cookbooks) => {
         if (err) return Logger.error(err), done(err)
         return done(null, cookbooks)
