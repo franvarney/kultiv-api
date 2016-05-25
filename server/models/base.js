@@ -17,9 +17,9 @@ class Base {
       .where('id', id)
       .whereNull('deleted_at')
       .first()
-      .asCallback((err) => {
+      .asCallback((err, found) => {
         if (err) return Logger.error(err), done(err)
-        return done()
+        return done(null, found)
       })
   }
 
@@ -43,6 +43,11 @@ class Base {
   create (payload, returning = 'id', done) {
     Logger.debug(`base.${this.name}.create`)
 
+    if (typeof returning === 'function') {
+      done = returning
+      returning = 'id'
+    }
+
     this.validate(payload, (err, validated) => {
       if (err) return done(err)
 
@@ -51,7 +56,7 @@ class Base {
         .returning(returning)
         .asCallback((err, id) => {
           if (err) return Logger.error(err), done(err)
-          return done(null, id)
+          return done(null, id[0])
         })
     })
   }
