@@ -1,10 +1,9 @@
 const {Server} = require('hapi')
 const Logger = require('franston')('server:server')
 
-const {validate} = require('./handlers/auth')
+const {getCredentialsFunc} = require('./handlers/auth')
 const {env, host, port} = require('../config')
-const HapiAuthBearerToken = require('hapi-auth-bearer-token')
-const HapiTreeize = require('./plugins/hapi-treeize')
+const Plugins = require('./plugins')
 const Routes = require('./routes')
 require('./connections/postgres')
 
@@ -16,20 +15,14 @@ server.connection({
   routes: { cors: true }
 })
 
-server.register([HapiAuthBearerToken, HapiTreeize], (err) => {
+server.register(Plugins, (err) => {
   if (err) return Logger.error(err), err
 
-  server.auth.strategy('simple', 'bearer-access-token', {
-    allowQueryToken: true,
-    allowMultipleHeaders: false,
-    accessTokenName: 'auth_token',
-    validateFunc: validate
-  })
+  server.auth.strategy('hawk', 'hawk', { getCredentialsFunc })
 
-  // TODO add this back in later
-  // server.auth.default({
-  //   strategy: 'simple'
-  // })
+  server.auth.default({
+    strategy: 'hawk'
+  })
 
   server.start((err) => {
     if (err) return Logger.error(err), err
