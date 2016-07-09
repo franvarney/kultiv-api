@@ -35,6 +35,6 @@ exports.update = function (request, reply) {
 
   User.update(request.params.id, request.payload, (err, id) => {
     if (err) return Logger.error(err), reply(badRequest(err))
-    return Logger.debug(id), eply(id).code(200)
+    return Logger.debug(id), reply(id).code(200)
   })
 }
