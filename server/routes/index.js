@@ -1,6 +1,8 @@
 const Admin = require('../handlers/admin')
 const Auth = require('../handlers/auth')
+const AuthSchema = require('../schemas/auth')
 const Cookbook = require('../handlers/cookbook')
+const Errors = require('../utils/errors')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
 const User = require('../handlers/user')
@@ -13,7 +15,20 @@ module.exports = [
   { method: 'GET', path: '/admin/users', handler: Admin.users },
 
   // Auth
-  { method: 'POST', path: '/auth', handler: Auth.login, config: { auth: false } },
+  {
+    method: 'POST',
+    path: '/auth',
+    config: {
+      auth: false,
+      validate: {
+        payload: AuthSchema.loginPayload,
+        failAction: Errors.validate,
+        errorFields: { 'testinggg': 'error'},
+        options: { stripUnknown: true, abortEarly: true }
+      },
+      handler: Auth.login
+    }
+  },
   { method: 'DELETE', path: '/auth', handler: Auth.logout },
 
   // Cookbook
