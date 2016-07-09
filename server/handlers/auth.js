@@ -1,6 +1,7 @@
 const Logger = require('franston')('server:handlers:auth')
 
 const AuthModel = require('../models/auth')
+const Errors = require('../utils/errors')
 
 const Auth = new AuthModel()
 
@@ -18,7 +19,7 @@ exports.login = function (request, reply) {
   let {login, password} = request.payload
 
   Auth.create(login, password, (err, auth) => {
-    if (err) return Logger.error(err), reply(err)
+    if (err) return Logger.error(err), reply(Errors.get(err))
     return reply(null, auth)
   })
 }
