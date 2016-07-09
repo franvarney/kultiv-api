@@ -23,10 +23,14 @@ class Auth extends Base {
 
     User.findByEmailOrUsername(email, username, (err, user) => {
       if (err) return Logger.error(err), done(err)
+      if (!user) {
+        let err = 'User Not Found'
+        return Logger.error(err), done(['notFound', err])
+      }
 
       if (!Bcrypt.compareSync(password, user.password)) {
-        let err = new Error('Invalid Password')
-        return Logger.error(err), done(err)
+        let err = 'Invalid Password'
+        return Logger.error(err), done(['unauthorized', err])
       }
 
       let payload = {
