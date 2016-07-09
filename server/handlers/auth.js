@@ -1,23 +1,33 @@
 const Logger = require('franston')('server:handlers:auth')
 
-exports.validate = function (token, callback) {
-  Logger.debug('auth.validate')
+const AuthModel = require('../models/auth')
 
-  const User = this.server.plugins['hapi-mongo-models'].User
+const Auth = new AuthModel()
 
-  User.findByToken(token, function (err, user) {
-    if (err) return Logger.err(err), callback(err)
+exports.getCredentialsFunc = function (id, callback) {
+  // TODO admin token
 
-    if (user) {
-      callback(null, true, {
-        token: token,
-        user: {
-          id: user._id, // eslint-disable-line no-underscore-dangle
-          username: user.username
-        }
-      })
-    } else {
-      callback(null, false, { token: token })
-    }
+  Auth.findById(id, (err, auth) => {
+    if (err) return Logger.error(err), callback(err)
+    auth.algorithm = 'sha256'
+    return callback(null, auth)
+  })
+}
+
+exports.login = function (request, reply) {
+  let {login, password} = request.payload
+
+  Auth.create(login, password, (err, auth) => {
+    if (err) return Logger.error(err), reply(err)
+    return reply(null, auth)
+  })
+}
+
+exports.logout = function (request, reply) {
+  let {credentials} = request.auth
+
+  Auth.deleteById(credentials.id, credentials.user_id, (err) => {
+    if (err) return Logger.error(err), reply(err)
+    return reply()
   })
 }
