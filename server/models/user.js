@@ -1,6 +1,5 @@
 const Bcrypt = require('bcryptjs')
 const Logger = require('franston')('server:models:user')
-const Uuid = require('uuid4')
 
 const Base = require('./base')
 const UserSchema = require('../schemas/user')
@@ -34,7 +33,6 @@ class User extends Base {
       if (err) return Logger.error(err), done(err)
       if (user) return done(new Error('User already exists.'))
 
-      payload.auth_token = Uuid()
       hashPassword(payload.password, (err, hashed) => {
         if (err) return Logger.error(err), done(err)
         payload.password = hashed
@@ -54,7 +52,7 @@ class User extends Base {
     if (!done) done = Function.prototype
 
     this.knex(this.name)
-      .where(() => {
+      .where(function () {
         if (username) this.where('username', username)
       })
       .orWhere('email', email)
@@ -62,20 +60,6 @@ class User extends Base {
       .first()
       .asCallback((err, user) => {
         if (err) return Logger.error(err), done(err)
-        return done(null, user)
-      })
-  }
-
-  findByAuthToken (authToken, done) {
-    Logger.debug('user.findByAuthToken')
-
-    this.knex(this.name)
-      .Where('auth_token', authToken)
-      .whereNull('deleted_at')
-      .first()
-      .asCallback((err, user) => {
-        if (err) return Logger.error(err), done(err)
-        if (!user) return done(null, false)
         return done(null, user)
       })
   }
