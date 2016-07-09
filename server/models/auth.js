@@ -12,7 +12,7 @@ const TABLE_NAME = 'auth_keys'
 
 class Auth extends Base {
   constructor () {
-    super(TABLE_NAME, AuthKeySchema)
+    super(TABLE_NAME, AuthKeySchema.general)
   }
 
   create (login, password, done) { // aka login
@@ -94,8 +94,6 @@ class Auth extends Base {
 
   findById (hawkId, done) {
     Logger.debug(`${this.name}.findById`)
-
-    console.log(hawkId)
 
     this.knex(this.name)
       .select('UAK.user_id AS user_id', 'auth_keys.hawk_id AS id', 'auth_keys.hawk_key AS key')
