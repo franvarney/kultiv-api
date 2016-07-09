@@ -19,7 +19,7 @@ class Base {
       .first()
       .asCallback((err, found) => {
         if (err) return Logger.error(err), done(err)
-        return done(null, found)
+        return done(null, Object.assign({}, found))
       })
   }
 
