@@ -23,8 +23,7 @@ module.exports = [
       validate: {
         payload: AuthSchema.loginPayload,
         failAction: Errors.validate,
-        errorFields: { 'testinggg': 'error'},
-        options: { stripUnknown: true, abortEarly: true }
+        options: { stripUnknown: true }
       },
       handler: Auth.login
     }
