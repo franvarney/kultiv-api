@@ -69,6 +69,11 @@ class Base {
   update (id, payload, returning = 'id', done) {
     Logger.debug(`base.${this.name}.update`)
 
+    if (typeof returning === 'function') {
+      done = returning
+      returning = 'id'
+    }
+
     this.findById(id, (err, results) => {
       if (err) return Logger.error(err), done(err)
       payload = Object.assign(results, payload)
