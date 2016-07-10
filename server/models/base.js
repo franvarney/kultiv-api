@@ -17,9 +17,14 @@ class Base {
       .where('id', id)
       .whereNull('deleted_at')
       .first()
-      .asCallback((err, found) => {
+      .asCallback((err, user) => {
         if (err) return Logger.error(err), done(err)
-        return done(null, Object.assign({}, found))
+        if (!user) {
+          let err = 'Not Found'
+          return Logger.error(err), done(['notFound', err])
+        }
+
+        return done(null, Object.assign({}, user))
       })
   }
 

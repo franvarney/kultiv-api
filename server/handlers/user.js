@@ -1,7 +1,9 @@
+const Joi = require('joi')
 const Logger = require('franston')('server:handlers:user')
 
 const Errors = require('../utils/errors')
 const User = require('../models/user')
+const UserSchema = require('../schemas/user')
 
 exports.create = function (request, reply) {
   Logger.debug('user.create')
@@ -26,7 +28,12 @@ exports.get = function (request, reply) {
 
   User.findById(request.params.id, (err, user) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(user), reply(user).code(200)
+
+      console.log(user)
+    Joi.validate(user, UserSchema.sanitize, (err, sanitized) => {
+      if (err) return Logger.error(err), reply(Errors.get(err))
+      return Logger.debug(sanitized), reply(sanitized).code(200)
+    })
   })
 }
 
