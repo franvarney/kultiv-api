@@ -17,14 +17,14 @@ class Base {
       .where('id', id)
       .whereNull('deleted_at')
       .first()
-      .asCallback((err, user) => {
+      .asCallback((err, found) => {
         if (err) return Logger.error(err), done(err)
-        if (!user) {
+        if (!found) {
           let err = 'Not Found'
           return Logger.error(err), done(['notFound', err])
         }
 
-        return done(null, Object.assign({}, user))
+        return done(null, Object.assign({}, found))
       })
   }
 
@@ -78,6 +78,7 @@ class Base {
       if (err) return Logger.error(err), done(err)
       payload = Object.assign(results, payload)
 
+      // TODO review why this is needed
       delete payload.id
       delete payload.created_at
       delete payload.updated_at
