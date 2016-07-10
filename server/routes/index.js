@@ -6,6 +6,7 @@ const Errors = require('../utils/errors')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
 const User = require('../handlers/user')
+const UserSchema = require('../schemas/user')
 
 module.exports = [
   // Test
@@ -46,7 +47,19 @@ module.exports = [
 
   // User
   { method: 'GET', path: '/users/{id}', handler: User.get },
-  { method: 'POST', path: '/users', handler: User.create, config: { auth: false } },
+  {
+    method: 'POST',
+    path: '/users',
+    config: {
+      auth: false,
+      validate: {
+        payload: UserSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: User.create
+    }
+  },
   { method: 'PUT', path: '/users/{id}', handler: User.update },
   { method: 'DELETE', path: '/users/{id}', handler: User.delete }
 ]

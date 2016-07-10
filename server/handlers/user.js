@@ -8,7 +8,7 @@ exports.create = function (request, reply) {
 
   User.create(request.payload, (err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(id), reply(id).code(201)
+    return Logger.debug({ id }), reply({ id }).code(201)
   })
 }
 

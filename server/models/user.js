@@ -20,7 +20,7 @@ function hashPassword (password, done) {
 
 class User extends Base {
   constructor () {
-    super(TABLE_NAME, UserSchema)
+    super(TABLE_NAME, UserSchema.general)
   }
 
   create (payload, done) {
@@ -31,7 +31,7 @@ class User extends Base {
 
     this.findByEmailOrUsername(email, username, (err, user) => {
       if (err) return Logger.error(err), done(err)
-      if (user) return done(new Error('User already exists.'))
+      if (user) return done(['conflict', 'User Already Exists'])
 
       hashPassword(payload.password, (err, hashed) => {
         if (err) return Logger.error(err), done(err)
