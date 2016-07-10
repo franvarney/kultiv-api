@@ -1,15 +1,13 @@
 const Logger = require('franston')('server:models:cookbook')
-const Treeize = require('treeize')
 
 const Base = require('./base')
 const CookbookSchema = require('../schemas/cookbook')
 
 const TABLE_NAME = 'cookbooks'
-let treeize = new Treeize({ output: { prune: false } })
 
 class Cookbook extends Base {
   constructor () {
-    super(TABLE_NAME, CookbookSchema)
+    super(TABLE_NAME, CookbookSchema.general)
   }
 
   findByOwner (ownerUserId, done) {
@@ -22,10 +20,6 @@ class Cookbook extends Base {
       .whereNull('deleted_at')
       .asCallback((err, cookbook) => {
         if (err) return Logger.error(err), done(err)
-
-        delete cookbook.password
-        delete cookbook.auth_token
-
         return done(null, cookbook)
       })
   }
@@ -46,4 +40,4 @@ class Cookbook extends Base {
   }
 }
 
-module.exports = new Cookbook()
+module.exports = Cookbook

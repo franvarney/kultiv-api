@@ -2,15 +2,21 @@ const Logger = require('franston')('server:handlers:cookbook')
 
 const CookbookModel = require('../models/cookbook')
 const Errors = require('../utils/errors')
+const UserModel = require('../models/user')
 
-const Cookbook = new CookbookModel
+const Cookbook = new CookbookModel()
+const User = new UserModel()
 
 exports.allByUser = function (request, reply) {
   Logger.debug('cookbook.allByUser')
 
-  Cookbook.findByOwner(request.params.user_id, (err, cookbooks) => {
+  User.findById(request.params.user_id, (err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(cookbooks), reply.treeize(cookbooks).code(200)
+
+    Cookbook.findByOwner(request.params.user_id, (err, cookbooks) => {
+      if (err) return Logger.error(err), reply(Errors.get(err))
+      return Logger.debug(cookbooks), reply.treeize(cookbooks).code(200)
+    })
   })
 }
 
@@ -19,7 +25,7 @@ exports.create = function (request, reply) {
 
   Cookbook.create(request.payload, (err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(id), reply({ id }).code(201)
+    return Logger.debug({ id }), reply({ id }).code(201)
   })
 }
 
