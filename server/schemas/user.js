@@ -21,3 +21,15 @@ exports.createPayload = Joi.object({
   location: Joi.string().min(2).max(50).allow(null),
   is_admin: Joi.boolean()
 })
+
+exports.sanitize = Joi.object({
+  id: Joi.number().integer().required(),
+  username: Joi.string().required(),
+  email: Joi.string().email().required(),
+  first_name: Joi.string().allow(null),
+  last_name: Joi.string().allow(null),
+  location: Joi.string().allow(null),
+  created_at: Joi.date().timestamp('unix').required(),
+  updated_at: Joi.date().timestamp('unix').required()
+})
+  .options({ stripUnknown: true })
