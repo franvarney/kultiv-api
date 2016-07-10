@@ -33,3 +33,12 @@ exports.sanitize = Joi.object({
   updated_at: Joi.date().timestamp('unix').required()
 })
   .options({ stripUnknown: true })
+
+exports.updatePayload = Joi.object({
+  email: Joi.string().email(),
+  password: Joi.string(),
+  first_name: Joi.string().allow(null),
+  last_name: Joi.string().allow(null),
+  location: Joi.string().allow(null),
+})
+  .options({ stripUnknown: true })
