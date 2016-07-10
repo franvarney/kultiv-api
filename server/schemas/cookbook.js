@@ -8,3 +8,9 @@ exports.general = Joi.object({
   updated_at: Joi.string().default('now()').allow(null),
   deleted_at: Joi.string().allow(null)
 })
+
+exports.createPayload = Joi.object({
+  name: Joi.string().min(3).max(50).required(),
+  description: Joi.string().allow(null),
+  is_private: Joi.boolean(),
+})

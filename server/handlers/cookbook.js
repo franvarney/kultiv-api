@@ -23,6 +23,7 @@ exports.allByUser = function (request, reply) {
 exports.create = function (request, reply) {
   Logger.debug('cookbook.create')
 
+  request.payload.owner_id = request.auth.credentials.user
   Cookbook.create(request.payload, (err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug({ id }), reply({ id }).code(201)
