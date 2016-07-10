@@ -67,13 +67,25 @@ class User extends Base {
   update (id, payload, done) {
     Logger.debug('user.update')
 
-    if (payload.username) return done(new Error('Username can not be updated.'))
-    this.findByEmailOrUsername(payload.email, (err, user) => {
+    this.findById(id, (err, user) => {
       if (err) return Logger.error(err), done(err)
-      if (user) return done(new Error('Email already exists.'))
-      return super.update(id, payload, done)
+
+      this.findByEmailOrUsername(payload.email, (err, user) => {
+        if (err) return Logger.error(err), done(err)
+        if (user) return done(['conflict', 'Email Already Exists'])
+
+        if (payload.password) {
+          return hashPassword(payload.password, (err, hashed) => {
+            if (err) return Logger.error(err), done(err)
+            payload.password = hashed
+            return super.update(id, payload, done)
+          })
+        }
+
+        return super.update(id, payload, done)
+      })
     })
   }
 }
 
-module.exports = new User()
+module.exports = User

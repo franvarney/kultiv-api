@@ -60,6 +60,17 @@ module.exports = [
       handler: User.create
     }
   },
-  { method: 'PUT', path: '/users/{id}', handler: User.update },
+  {
+    method: 'PUT',
+    path: '/users/{id}',
+    config: {
+      validate: {
+        payload: UserSchema.updatePayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: User.update
+    }
+  },
   { method: 'DELETE', path: '/users/{id}', handler: User.delete }
 ]
