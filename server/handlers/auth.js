@@ -10,8 +10,8 @@ exports.getCredentialsFunc = function (id, callback) {
   // TODO admin token
 
   Auth.findById(id, (err, auth) => {
-    if (err) return Logger.error(err), callback(err)
-    auth.algorithm = ALGORITHM
+    if (err) return Logger.error(err), callback(Errors.get(err))
+    if (auth) auth.algorithm = ALGORITHM
     return callback(null, auth)
   })
 }
@@ -29,7 +29,7 @@ exports.logout = function (request, reply) {
   let {credentials} = request.auth
 
   Auth.deleteById(credentials.id, credentials.user_id, (err) => {
-    if (err) return Logger.error(err), reply(err)
+    if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })
 }

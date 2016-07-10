@@ -96,13 +96,19 @@ class Auth extends Base {
     Logger.debug(`${this.name}.findById`)
 
     this.knex(this.name)
-      .select('UAK.user_id AS user_id', 'auth_keys.hawk_id AS id', 'auth_keys.hawk_key AS key')
+      .select('UAK.user_id AS user', 'auth_keys.hawk_id AS id', 'auth_keys.hawk_key AS key')
       .innerJoin('user_auth_keys AS UAK', 'UAK.auth_key_id', 'auth_keys.id')
       .where('auth_keys.hawk_id', hawkId)
       .first()
       .asCallback((err, auth) => {
         if (err) return Logger.error(err), done(err)
-        return done(null, Object.assign({}, auth))
+        if (!auth) {
+          let err = 'Key Not Found'
+          return Logger.error(err), done(['notFound', err])
+        }
+
+        if (auth) auth = Object.assign({}, auth)
+        return done(null, auth)
       })
   }
 
