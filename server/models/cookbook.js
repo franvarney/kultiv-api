@@ -14,10 +14,13 @@ class Cookbook extends Base {
     Logger.debug('cookbook.findByOwner')
 
     this.knex(this.name)
-      .select('id', 'owner_id', 'name', 'description',
-              'is_private','created_at', 'updated_at')
+      .select('cookbooks.id', 'cookbooks.name', 'cookbooks.description',
+              'cookbooks.is_private','cookbooks.created_at',
+              'cookbooks.updated_at', 'U.id AS creator:id',
+              'U.username AS creator:username')
+      .innerJoin('users AS U', 'U.id', 'cookbooks.owner_id')
       .where('owner_id', ownerUserId)
-      .whereNull('deleted_at')
+      .whereNull('cookbooks.deleted_at')
       .asCallback((err, cookbook) => {
         if (err) return Logger.error(err), done(err)
         return done(null, cookbook)

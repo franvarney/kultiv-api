@@ -10,10 +10,10 @@ const User = new UserModel()
 exports.allByUser = function (request, reply) {
   Logger.debug('cookbook.allByUser')
 
-  User.findById(request.params.user_id, (err) => {
+  User.findById(request.params.id, (err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
 
-    Cookbook.findByOwner(request.params.user_id, (err, cookbooks) => {
+    Cookbook.findByOwner(request.params.id, (err, cookbooks) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
       return Logger.debug(cookbooks), reply.treeize(cookbooks).code(200)
     })
@@ -24,6 +24,7 @@ exports.create = function (request, reply) {
   Logger.debug('cookbook.create')
 
   request.payload.owner_id = request.auth.credentials.user
+
   Cookbook.create(request.payload, (err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug({ id }), reply({ id }).code(201)
