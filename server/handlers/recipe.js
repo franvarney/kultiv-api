@@ -1,6 +1,6 @@
-const {badRequest} = require('boom')
 const Logger = require('franston')('server:handlers:recipe')
 
+const Errors = require('../utils/errors')
 const Recipe = require('../models/recipe')
 
 exports.allByUser = function (request, reply) {
@@ -11,17 +11,19 @@ exports.allByUser = function (request, reply) {
   if (request.query && request.query.full) isLoaded = true
 
   Recipe.findByUserId(request.params.id, isLoaded, (err, recipes) => {
-    if (err) return Logger.error(err), reply(badRequest(err))
-    return Logger.debug(recipes), reply(recipes).code(200)
+    if (err) return Logger.error(err), reply(Errors.get(err))
+    return Logger.debug(recipes), reply.treeize(recipes).code(200)
   })
 }
 
 exports.create = function (request, reply) {
   Logger.debug('recipe.create')
 
+  request.payload.owner_id = request.auth.credentials.user
+
   Recipe.create(request.payload, (err, id) => {
-    if (err) return Logger.error(err), reply(badRequest(err))
-    return Logger.debug(id), reply(id).code(201)
+    if (err) return Logger.error(err), reply(Errors.get(err))
+    return Logger.debug({ id }), reply({ id }).code(201)
   })
 }
 
@@ -29,7 +31,7 @@ exports.delete = function (request, reply) {
   Logger.debug('recipe.delete')
 
   Recipe.deleteById(request.params.id, (err) => {
-    if (err) return Logger.error(err), reply(badRequest(err))
+    if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })
 }
@@ -38,7 +40,7 @@ exports.get = function (request, reply) {
   Logger.debug('recipe.get')
 
   Recipe.findById(request.params.id, (err, recipe) => {
-    if (err) return Logger.error(err), reply(badRequest(err))
+    if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug(recipe), reply(recipe).code(200)
   })
 }
