@@ -24,6 +24,7 @@ class Base {
           return Logger.error(err), done(['notFound', err])
         }
 
+        delete found.deleted_at
         return done(null, Object.assign({}, found))
       })
   }
