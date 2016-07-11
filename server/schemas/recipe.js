@@ -1,6 +1,6 @@
 const Joi = require('joi')
 
-const RecipeModel = Joi.object().keys({
+exports.general = Joi.object({
   user_id: Joi.number().integer().required(),
   title: Joi.string().min(3).max(255).required(),
   prep_time: Joi.number().integer().required(),
@@ -12,5 +12,3 @@ const RecipeModel = Joi.object().keys({
   updated_at: Joi.string().default('now()'),
   deleted_at: Joi.string().allow('now()')
 })
-
-module.exports = RecipeModel

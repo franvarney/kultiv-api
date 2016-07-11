@@ -1,7 +1,11 @@
 const Logger = require('franston')('server:handlers:recipe')
 
 const Errors = require('../utils/errors')
-const Recipe = require('../models/recipe')
+const RecipeModel = require('../models/recipe')
+const UserModel = require('../models/user')
+
+const Recipe = new RecipeModel()
+const User = new UserModel()
 
 exports.allByUser = function (request, reply) {
   Logger.debug('recipe.allByUser')
@@ -10,11 +14,17 @@ exports.allByUser = function (request, reply) {
 
   if (request.query && request.query.full) isLoaded = true
 
-  Recipe.findByUserId(request.params.id, isLoaded, (err, recipes) => {
+  User.findById(request.params.id, (err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(recipes), reply.treeize(recipes).code(200)
+
+    Recipe.findByUserId(request.params.id, isLoaded, (err, recipes) => {
+      if (err) return Logger.error(err), reply(Errors.get(err))
+      return Logger.debug(recipes), reply.treeize(recipes).code(200)
+    })
   })
 }
+
+// exports.allByCookbook = function (request, reply) {}
 
 exports.create = function (request, reply) {
   Logger.debug('recipe.create')

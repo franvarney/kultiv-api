@@ -37,7 +37,7 @@ const directions = function (queryBuilder) {
 
 class Recipe extends Base {
   constructor () {
-    super(TABLE_NAME, RecipeModel)
+    super(TABLE_NAME, RecipeModel.general)
   }
 
   create (payload, done) {

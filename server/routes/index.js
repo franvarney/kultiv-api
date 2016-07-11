@@ -33,7 +33,7 @@ module.exports = [
   { method: 'DELETE', path: '/auth', handler: Auth.logout },
 
   // Cookbook
-  { method: 'GET', path: '/users/{user_id}/cookbooks', handler: Cookbook.allByUser },
+  { method: 'GET', path: '/users/{id}/cookbooks', handler: Cookbook.allByUser },
   { method: 'GET', path: '/cookbooks/{id}', handler: Cookbook.get },
   {
     method: 'POST',
