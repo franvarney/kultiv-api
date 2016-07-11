@@ -1,11 +1,9 @@
 const Logger = require('franston')('server:models:recipe')
-const Treeize = require('treeize')
 
 const Base = require('./base')
 const RecipeModel = require('../schemas/recipe')
 
 const TABLE_NAME = 'recipes'
-let treeize = new Treeize({ output: { prune: false } })
 
 const baseRecipe = function (queryBuilder) {
   queryBuilder
@@ -42,6 +40,35 @@ class Recipe extends Base {
     super(TABLE_NAME, RecipeModel)
   }
 
+  create (payload, done) {
+    // transaction
+    // // insert recipe
+    // // connect cookbook-recipe
+    // // insert ingredients
+    // // connect recipe-ingredient
+    // // insert directions
+    // // connect recipe-direction
+  }
+
+  findById (id, done) {
+    Logger.debug('recipe.findById')
+
+    this.knex(this.name)
+      .select('recipes.id', 'recipes.title', 'recipes.cook_time',
+            'recipes.prep_time', 'recipes.description', 'recipes.is_private',
+            'recipes.created_at', 'recipes.updated_at',
+            'recipes.user_id AS creator_id', 'U.username AS creator_username',
+            'recipes.yield_amount', 'RU.name AS yields_unit')
+        .innerJoin('users AS U', 'U.id', 'recipes.user_id')
+        .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
+      .where('recipes.id', id)
+      .whereNull('recipes.deleted_at')
+      .asCallback((err, found) => {
+        if (err) return Logger.error(err), done(err)
+        return done(null, found)
+      })
+  }
+
   findByUserId (userId, isLoaded, done) {
     Logger.debug('recipe.findByUserId')
     this.loadRecipe(`recipes.user_id = ${userId}`, isLoaded, done)
@@ -68,7 +95,7 @@ class Recipe extends Base {
         .modify(baseRecipe)
         .asCallback((err, recipes) => {
           if (err) return Logger.error(err), done(err)
-          return done(null, treeize.grow(recipes).getData())
+          return done(null, recipes)
         })
     } else {
       this.knex(this.name)
@@ -78,10 +105,10 @@ class Recipe extends Base {
         .modify(directions)
         .asCallback((err, recipes) => {
           if (err) return Logger.error(err), done(err)
-          return done(null, treeize.grow(recipes).getData())
+          return done(null, recipes)
         })
     }
   }
 }
 
-module.exports = new Recipe()
+module.exports = Recipe
