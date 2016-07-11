@@ -44,10 +44,15 @@ exports.get = function (request, reply) {
 
   Cookbook.findById(request.params.id, (err, cookbook) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return reply().code(204)
+    return Logger.debug(cookbook), reply(cookbook).code(200)
   })
 }
 
 exports.update = function (request, reply) {
-  //
+  Logger.debug('cookbook.update')
+
+  Cookbook.update(request.params.id, request.payload, (err) => {
+    if (err) return Logger.error(err), reply(Errors.get(err))
+    return reply().code(204)
+  })
 }

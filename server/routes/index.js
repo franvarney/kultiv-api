@@ -47,7 +47,18 @@ module.exports = [
       handler: Cookbook.create
     }
   },
-  { method: 'PUT', path: '/cookbooks/{id}', handler: Cookbook.update },
+  {
+    method: 'PUT',
+    path: '/cookbooks/{id}',
+    config: {
+      validate: {
+        payload: CookbookSchema.updatePayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Cookbook.update
+    }
+  },
   { method: 'DELETE', path: '/cookbooks/{id}', handler: Cookbook.delete },
 
   // Recipe

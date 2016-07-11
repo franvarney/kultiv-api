@@ -12,5 +12,11 @@ exports.general = Joi.object({
 exports.createPayload = Joi.object({
   name: Joi.string().min(3).max(50).required(),
   description: Joi.string().allow(null),
-  is_private: Joi.boolean(),
+  is_private: Joi.boolean()
+})
+
+exports.updatePayload = Joi.object({
+  name: Joi.string().min(3).max(50),
+  description: Joi.string().allow(null),
+  is_private: Joi.boolean()
 })
