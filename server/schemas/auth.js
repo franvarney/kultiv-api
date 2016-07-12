@@ -1,6 +1,7 @@
 const Joi = require('joi')
 
-exports.general = Joi.object().keys({
+exports.general = Joi.object({
+  user_id: Joi.number().integer(),
   hawk_id: Joi.string().guid(),
   hawk_key: Joi.string().guid()
 })

@@ -6,9 +6,10 @@ const AuthKeySchema = require('../schemas/auth')
 const Base = require('./base')
 const DB = require('../connections/postgres')
 
-const User = require('./user')
+const UserModel = require('./user')
 
-const TABLE_NAME = 'auth_keys'
+const TABLE_NAME = 'user_auth_keys'
+const User = new UserModel()
 
 class Auth extends Base {
   constructor () {
@@ -34,27 +35,19 @@ class Auth extends Base {
       }
 
       let payload = {
+        user_id: user.id,
         hawk_id: Uuid(),
         hawk_key: Uuid()
       }
 
-      // TODO transaction?
       super.create(payload, ['id', 'hawk_id', 'hawk_key'], (err, auth) => {
         if (err) return Logger.error(err), done(err)
 
-        DB('user_auth_keys')
-          .insert({
-            user_id: user.id,
-            auth_key_id: auth.id
-          })
-          .asCallback((err) => {
-            if (err) return Logger.error(err), done(err)
-            return done(null, {
-              hawk_id: auth.hawk_id,
-              hawk_key: auth.hawk_key,
-              user_id: user.id
-            })
-          })
+        return done(null, {
+          hawk_id: auth.hawk_id,
+          hawk_key: auth.hawk_key,
+          user_id: user.id
+        })
       })
     })
   }
@@ -62,33 +55,14 @@ class Auth extends Base {
   deleteById (hawkId, userId, done) { // aka logout
     Logger.debug(`${this.name}.deleteById`)
 
-    // TODO transaction?
     this.knex(this.name)
-      .select('auth_keys.id AS auth_key_id', 'UAK.id AS user_auth_key_id')
-      .innerJoin('user_auth_keys AS UAK', 'UAK.auth_key_id', 'auth_keys.id')
-      .where('auth_keys.hawk_id', hawkId)
-      .andWhere('UAK.user_id', userId)
-      .first()
-      .asCallback((err, auth) => {
+      .where('hawk_id', hawkId)
+      .del()
+      .asCallback((err, count) => {
         if (err) return Logger.error(err), done(err)
+        // TODO do something with count?
 
-        DB('user_auth_keys')
-          .where('id', auth.user_auth_key_id)
-          .del()
-          .asCallback((err, count) => {
-            if (err) return Logger.error(err), done(err)
-            // TODO do something with count?
-
-            this.knex(this.name)
-              .where('id', auth.auth_key_id)
-              .del()
-              .asCallback((err, count) => {
-                if (err) return Logger.error(err), done(err)
-                // TODO do something with count?
-
-                return done()
-              })
-          })
+        return done()
       })
   }
 
@@ -96,9 +70,8 @@ class Auth extends Base {
     Logger.debug(`${this.name}.findById`)
 
     this.knex(this.name)
-      .select('UAK.user_id AS user', 'auth_keys.hawk_id AS id', 'auth_keys.hawk_key AS key')
-      .innerJoin('user_auth_keys AS UAK', 'UAK.auth_key_id', 'auth_keys.id')
-      .where('auth_keys.hawk_id', hawkId)
+      .select('user_id AS user', 'hawk_id AS id', 'hawk_key AS key')
+      .where('hawk_id', hawkId)
       .first()
       .asCallback((err, auth) => {
         if (err) return Logger.error(err), done(err)
