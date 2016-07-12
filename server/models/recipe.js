@@ -1,7 +1,7 @@
 const Logger = require('franston')('server:models:recipe')
 
 const Base = require('./base')
-const RecipeModel = require('../schemas/recipe')
+const RecipeSchema = require('../schemas/recipe')
 
 const TABLE_NAME = 'recipes'
 
@@ -35,9 +35,16 @@ const directions = function (queryBuilder) {
       .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
 }
 
+const cookbook = function (cookbookId, queryBuilder) {
+  queryBuilder
+    .innerJoin('cookbooks_recipes AS CR', 'CR.recipe_id', 'recipes.id')
+    .where('CR.cookbook_id', cookbookId)
+    .whereNull('CR.deleted_at')
+}
+
 class Recipe extends Base {
   constructor () {
-    super(TABLE_NAME, RecipeModel.general)
+    super(TABLE_NAME, RecipeSchema.general)
   }
 
   create (payload, done) {
@@ -72,6 +79,37 @@ class Recipe extends Base {
   findByUserId (userId, isLoaded, done) {
     Logger.debug('recipe.findByUserId')
     this.loadRecipe(`recipes.user_id = ${userId}`, isLoaded, done)
+  }
+
+  findByCookbookId (cookbookId, isLoaded, done) {
+    Logger.debug('recipe.findByCookbookdId')
+
+    if (typeof isLoaded === 'function') {
+      done = isLoaded
+      isLoaded = false
+    }
+
+    if (!done) done = Function.prototype
+
+    if (!isLoaded) {
+      this.knex(this.name)
+        .modify(baseRecipe)
+        .modify(cookbook.bind(null, cookbookId))
+        .asCallback((err, recipes) => {
+          if (err) return Logger.error(err), done(err)
+          return done(null, recipes)
+        })
+    } else {
+      this.knex(this.name)
+        .modify(baseRecipe)
+        .modify(cookbook.bind(null, cookbookId))
+        .modify(ingredients)
+        .modify(directions)
+        .asCallback((err, recipes) => {
+          if (err) return Logger.error(err), done(err)
+          return done(null, recipes)
+        })
+    }
   }
 
   findByTitle (title, isLoaded, done) {

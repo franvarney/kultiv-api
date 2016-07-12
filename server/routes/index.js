@@ -63,6 +63,7 @@ module.exports = [
 
   // Recipe
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
+  { method: 'GET', path: '/cookbooks/{id}/recipes', handler: Recipe.allByCookbook },
   { method: 'GET', path: '/recipes/{id}', handler: Recipe.get },
   { method: 'POST', path: '/recipes', handler: Recipe.create },
   { method: 'PUT', path: '/recipes/{id}', handler: Recipe.update },
