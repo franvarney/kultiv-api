@@ -7,6 +7,8 @@ const Auth = new AuthModel()
 const ALGORITHM = 'sha256'
 
 exports.getCredentialsFunc = function (id, callback) {
+  Logger.debug('auth.getCredentialsFunc')
+
   // TODO admin token
 
   Auth.findById(id, (err, auth) => {
