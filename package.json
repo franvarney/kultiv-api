@@ -24,7 +24,7 @@
     "hapi-auth-hawk": "3.0.1",
     "hapi-treeize": "0.2.0",
     "joi": "7.2.3",
-    "knex": "0.9.0",
+    "knex": "0.11.7",
     "knex-schema": "2.1.1",
     "knock-knock": "0.1.0",
     "pg": "4.5.5",
