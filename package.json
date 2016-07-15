@@ -28,6 +28,7 @@
     "knex-schema": "2.1.1",
     "knock-knock": "0.1.0",
     "lodash.isequal": "4.2.0",
+    "lodash.pick": "4.2.1",
     "lodash.xorwith": "4.3.0",
     "pg": "4.5.5",
     "run-parallel": "1.1.4",
