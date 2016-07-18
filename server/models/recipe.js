@@ -1,9 +1,24 @@
 const Logger = require('franston')('server:models:recipe')
+const Waterfall = require('run-waterfall')
 
 const Base = require('./base')
+const CookbookRecipeModel = require('./cookbook-recipe')
+const DirectionModel = require('./direction')
+const FoodModel = require('./food')
+const IngredientModel = require('./ingredient')
+const RecipeDirectionModel = require('./recipe-direction')
+const RecipeIngredientModel = require('./recipe-ingredient')
 const RecipeSchema = require('../schemas/recipe')
+const UnitModel = require('./unit')
 
+const CookbookRecipe = new CookbookRecipeModel()
+const Direction = new DirectionModel()
+const Food = new FoodModel()
+const Ingredient = new IngredientModel()
+const RecipeDirection = new RecipeDirectionModel()
+const RecipeIngredient = new RecipeIngredientModel()
 const TABLE_NAME = 'recipes'
+const Unit = new UnitModel()
 
 const baseRecipe = function (queryBuilder) {
   queryBuilder
@@ -47,14 +62,116 @@ class Recipe extends Base {
     super(TABLE_NAME, RecipeSchema.general)
   }
 
-  create (payload, done) {
-    // transaction
-    // // insert recipe
-    // // connect cookbook-recipe
-    // // insert ingredients
-    // // connect recipe-ingredient
-    // // insert directions
-    // // connect recipe-direction
+  create (payload, cookbookId, done) {
+    let that = this
+
+    this.knex.transaction((trx) => {
+      let directions = payload.directions
+      let ingredients = payload.ingredients
+      let foods = ingredients.map((ingredient) => ingredient.food)
+      let units = ingredients.map((ingredient) => ingredient.unit)
+      let recipeId
+
+      // TODO add manual, source_value property
+
+      Waterfall([
+        // get unit id for yields
+        function (callback) {
+          Unit.findOrCreate(payload.yield_unit, trx, (err, yieldUnit) => {
+            if (err) return callback(err)
+            payload.yield_unit_id = yieldUnit.id
+            return callback()
+          })
+        },
+        // create the recipe
+        // TODO check if entire recipe exists first
+        super.create.bind(that, payload, trx),
+        // get unit ids for each ingredient
+        function (id, callback) {
+          recipeId = id
+
+          Unit.batchFindOrCreate(units, trx, (err, foundOrCreatedUnits) => {
+            if (err) return callback(err)
+
+            let unitMap = new Map()
+            foundOrCreatedUnits.forEach((unit) => {
+              if (!unitMap.get(unit.name)) {
+                unitMap.set(unit.name, { unit_id: unit.id, unit: unit.name })
+              }
+            })
+
+            ingredients = payload.ingredients.map((ingredient) =>{
+              return Object.assign(ingredient, unitMap.get(ingredient.unit))
+            })
+
+            return callback()
+          })
+        },
+        // get food ids for each food
+        function (callback) {
+          Food.batchFindOrCreate(foods, trx, (err, foundOrCreatedFoods) => {
+            if (err) return callback(err)
+
+            let foodMap = new Map()
+            foundOrCreatedFoods.forEach((food) => {
+              if (!foodMap.get(food.name)) {
+                foodMap.set(food.name, { food_id: food.id, food: food.name })
+              }
+            })
+
+            ingredients = payload.ingredients.map((ingredient) =>{
+              return Object.assign(ingredient, foodMap.get(ingredient.food))
+            })
+
+            return callback()
+          })
+        },
+        // create ingredients
+        function (callback) {
+          return Ingredient.batchFindOrCreate(
+            ingredients.map((ingredient) => {
+              let {amount, unit_id, food_id, optional} = ingredient
+              return { amount, unit_id, food_id, optional }
+            }), trx, callback)
+        },
+        // create recipe ingredients
+        function (ingredientIds, callback) {
+          return RecipeIngredient.batchFindOrCreate(
+            ingredientIds.map((ingredientId) => {
+              return { recipe_id: recipeId, ingredient_id: ingredientId }
+            }), trx, callback)
+        },
+        // create directions
+        function (recipeIngredientIds, callback) {
+          return Direction.batchFindOrCreate(directions, trx, callback)
+        },
+        // create recipe directions
+        function (directionIds, callback) {
+          return RecipeDirection.batchFindOrCreate(
+            directionIds.map((directionId) => {
+              return { recipe_id: recipeId, direction_id: directionId }
+            }), trx, callback)
+        }
+       ], (err) => {
+        if (err) {
+          if (trx) Logger.error('Transaction Failed'), trx.rollback(err)
+          return Logger.error(err), done(err)
+        }
+
+        if (trx) Logger.debug('Transaction Completed'), trx.commit()
+
+        // attach to cookbook if cookbook is selected
+        if (payload.cookbook_id) {
+          let {cookbook_id} = payload
+          return CookbookRecipe.findOrCreate({
+              cookbook_id,
+              recipe_id: recipeId
+            }, done.bind(null, null, recipeId))
+        }
+
+        return done(null, recipeId)
+      })
+    })
   }
 
   findById (id, done) {
@@ -81,7 +198,7 @@ class Recipe extends Base {
     this.loadRecipe(`recipes.user_id = ${userId}`, isLoaded, done)
   }
 
-  findByCookbookId (cookbookId, isLoaded, done) {
+  findByCookbookId (cookbookId, isLoaded, done) { // TODO refactor this later
     Logger.debug('recipe.findByCookbookdId')
 
     if (typeof isLoaded === 'function') {
