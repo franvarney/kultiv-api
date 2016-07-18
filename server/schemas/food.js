@@ -1,7 +1,8 @@
 const Joi = require('joi')
 
-const FoodModel = Joi.object().keys({
-  name: Joi.string().min(2).max(255).required()
+exports.food = Joi.object({
+  id: Joi.number().integer(),
+  name: Joi.string().required()
 })
 
-module.exports = FoodModel
+exports.general = Joi.alternatives().try(exports.food, Joi.array().items(exports.food))

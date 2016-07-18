@@ -1,8 +1,12 @@
 const Joi = require('joi')
 
-const DirectionModel = Joi.object().keys({
-  direction: Joi.string(),
-  updated_at: Joi.string().default('now()')
+exports.general = Joi.object({
+  direction: Joi.string().required(),
+  order: Joi.number().integer().required()
 })
+  .options({ stripUnknown: true })
 
-module.exports = DirectionModel
+exports.createPayload = Joi.object({
+  direction: Joi.string().required(),
+  order: Joi.number().integer()
+})
