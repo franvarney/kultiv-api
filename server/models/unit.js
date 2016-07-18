@@ -25,13 +25,13 @@ class Unit extends Base {
       .orWhere('name', idOrName)
       .first()
       .transacting(trx)
-      .asCallback((err, unit) => {
+      .asCallback((err, found) => {
         if (err) {
           if (trx) Logger.error('Transaction failed'), trx.rollback()
           return Logger.error(err), done(err)
         }
 
-        if (unit) return done(null, Object.assign({}, unit))
+        if (found) return done(null, Object.assign({}, found))
 
         this.validate({ name: idOrName }, (err, validated) => {
           if (err) {
@@ -56,33 +56,32 @@ class Unit extends Base {
       .select('id', 'name')
       .whereIn('name', units)
       .transacting(trx)
-      .asCallback((err, foundUnits) => {
+      .asCallback((err, found) => {
         if (err) {
           if (trx) Logger.error('Transaction Failed'), trx.rollback()
           return Logger.error(err), done()
         }
 
-        let names = foundUnits.map((unit) => unit.name)
-        let toCreate = units.filter((unit) => {
+        let names = found.map((unit) => unit.name)
+        let create = units.filter((unit) => {
           return names.indexOf(unit) === -1 ? true : false
         }).map((unit) => {
           return { name: unit }
         })
 
-        if (!toCreate || !toCreate.length) {
+        if (!create || !create.length) {
           // if (trx) Logger.error('Transaction Completed'), trx.commit()
-          return done(null, foundUnits)
+          return done(null, found)
         }
 
         // TODO validate?
 
-        DB.batchInsert(this.name, toCreate)
+        DB.batchInsert(this.name, create)
           .returning(['id', 'name'])
           .transacting(trx)
-          .then((createdUnits) => {
+          .then((created) => {
             // if (trx) Logger.error('Transaction Completed'), trx.commit()
-            let merged = foundUnits.concat(createdUnits)
-            return done(null, merged)
+            return done(null, found.concat(created))
           })
           .catch((err) => {
             if (trx) Logger.error('Transaction Failed'), trx.rollback()
