@@ -1,4 +1,10 @@
+const Parallel = require('run-parallel')
+
 function split(text) {
+  if (text.indexOf('\n') > - 1) {
+    text += '\n'
+  }
+
   return text.split(/\n/g)
 }
 
@@ -86,7 +92,7 @@ function parseDirections(directions, done) {
 
   directions = split(directions)
   directions = directions.filter((direction) => !!direction)
-  directions = directions.map((direction) => ({ direction }))
+  directions = directions.map((direction, i) => ({ direction, order: i + 1 }))
 
   return done(null, directions)
 }
@@ -94,14 +100,14 @@ function parseDirections(directions, done) {
 module.exports = function (payload, done) {
   let {ingredients, directions} = payload
 
-  parseIngredients(ingredients, (err, parsed) => {
+  Parallel([
+    parseIngredients.bind(null, ingredients),
+    parseDirections.bind(null, directions)
+  ], (err, parsed) => {
     if (err) return done(err)
-    payload.ingredients = parsed
 
-    parseDirections(directions, (err, parsed) => {
-      if (err) return done(err)
-      payload.directions = parsed
-      return done(null, payload)
-    })
+    payload.ingredients = parsed[0]
+    payload.directions = parsed[1]
+    return done(null, payload)
   })
 }

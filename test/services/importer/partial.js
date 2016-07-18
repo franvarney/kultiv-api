@@ -17,9 +17,9 @@ let ingredients = [
 ].join('\n')
 
 let directions = [
-  'direction 1',
-  'direction 2',
-  'direction 3',
+  'Direction 1',
+  'Direction 2',
+  'Direction 3',
   ''
 ].join('\n')
 
@@ -39,10 +39,22 @@ describe('services/importer/partial', () => {
     describe('when no ingredients', () => {
       it('yield an error', (done) => {
         let ingredients = ''
-        let directions = ['Direction 1', 'Direction 2']
 
         PartialImporter({ ingredients, directions }, (err) => {
           expect(err).to.equal('No Ingredients')
+          return done()
+        })
+      })
+    })
+
+    describe('when single ingredients', () => {
+      it('yield an error', (done) => {
+        let ingredients = '1 cup pepperoni'
+
+        PartialImporter({ ingredients, directions }, (err, recipe) => {
+          expect(err).to.be.null()
+          expect(recipe.ingredients[0].amount).to.equal(1)
+          expect(recipe.ingredients[0].unit).to.equal('cup')
           return done()
         })
       })
@@ -75,7 +87,7 @@ describe('services/importer/partial', () => {
     })
 
     describe('when amount includes "a" or "an"', () => {
-      it('removes "a" or "an"' , (done) => {
+      it('removes "a" or "an"', (done) => {
         let ingredients = ['an apple', 'a pepper'].join('\n')
 
         PartialImporter({ ingredients, directions }, (err, recipe) => {
