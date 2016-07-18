@@ -26,6 +26,8 @@ exports.createPayload = Joi.object({
   yield_unit: Joi.string().required(),
   description: Joi.string().max(255).allow(null),
   is_private: Joi.boolean(),
+  source_type: Joi.string().allow('manual', 'fork', 'url').default('manual'),
+  source_value: Joi.string(),
   ingredients: Joi.array().items(IngredientSchema.createPayload).required(),
   directions: Joi.array().items(DirectionSchema.createPayload).required()
 })
