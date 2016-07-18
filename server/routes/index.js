@@ -4,6 +4,8 @@ const AuthSchema = require('../schemas/auth')
 const Cookbook = require('../handlers/cookbook')
 const CookbookSchema = require('../schemas/cookbook')
 const Errors = require('../utils/errors')
+const Importer = require('../handlers/importer')
+const ImporterSchema = require('../schemas/importer')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
 const RecipeSchema = require('../schemas/recipe')
@@ -61,6 +63,21 @@ module.exports = [
     }
   },
   { method: 'DELETE', path: '/cookbooks/{id}', handler: Cookbook.delete },
+
+  // Importer
+  {
+    method: 'POST',
+    path: '/importer',
+    config: {
+      validate: {
+        query: ImporterSchema.createQuery,
+        payload: ImporterSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Importer.create
+    }
+  },
 
   // Recipe
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
