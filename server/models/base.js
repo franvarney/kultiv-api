@@ -46,22 +46,39 @@ class Base {
     })
   }
 
-  create (payload, returning = 'id', done) {
+  create (payload, returning = 'id', trx, done) {
     Logger.debug(`base.${this.name}.create`)
 
     if (typeof returning === 'function') {
-      done = returning
+      done = trx
+      trx = returning
       returning = 'id'
     }
 
+    if (typeof returning !== 'function' && !done) {
+      done = trx
+      trx = undefined
+    }
+
+    if (!done) Function.prototype
+
     this.validate(payload, (err, validated) => {
-      if (err) return done(err)
+      if (err) {
+        if (trx) Logger.error('Transaction Failed'), trx.rollback()
+        return Logger.error(err), done(err)
+      }
 
       this.knex(this.name)
         .insert(validated)
+        .transacting(trx)
         .returning(returning)
         .asCallback((err, id) => {
-          if (err) return Logger.error(err), done(err)
+          if (err) {
+            if (trx) Logger.error('Transaction Failed'), trx.rollback()
+            return Logger.error(err), done(err)
+          }
+
+          // if (trx) Logger.debug('Transaction Completed'), trx.commit()
           return done(null, id[0])
         })
     })
