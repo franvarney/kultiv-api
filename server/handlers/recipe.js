@@ -48,8 +48,9 @@ exports.create = function (request, reply) {
 
   request.payload.user_id = request.auth.credentials.user
 
-  Recipe.create(request.payload, (err, id) => {
+  Recipe.create(request.payload, request.params.id, (err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
+      console.log(id)
     return Logger.debug({ id }), reply({ id }).code(201)
   })
 }

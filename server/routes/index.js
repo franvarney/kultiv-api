@@ -6,6 +6,7 @@ const CookbookSchema = require('../schemas/cookbook')
 const Errors = require('../utils/errors')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
+const RecipeSchema = require('../schemas/recipe')
 const User = require('../handlers/user')
 const UserSchema = require('../schemas/user')
 
@@ -65,7 +66,18 @@ module.exports = [
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
   { method: 'GET', path: '/cookbooks/{id}/recipes', handler: Recipe.allByCookbook },
   { method: 'GET', path: '/recipes/{id}', handler: Recipe.get },
-  { method: 'POST', path: '/recipes', handler: Recipe.create },
+  {
+    method: 'POST',
+    path: '/recipes',
+    config: {
+      validate: {
+        payload: RecipeSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Recipe.create
+    }
+  },
   { method: 'PUT', path: '/recipes/{id}', handler: Recipe.update },
   { method: 'DELETE', path: '/recipes/{id}', handler: Recipe.delete },
 
