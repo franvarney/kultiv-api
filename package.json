@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "code": "1.5.0",
-    "lab": "6.1.0",
+    "lab": "10.9.0",
     "proxyquire": "1.7.3",
     "sinon": "1.17.1",
     "standard": "7.0.1"
