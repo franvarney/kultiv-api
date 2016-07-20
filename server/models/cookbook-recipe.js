@@ -6,32 +6,28 @@ const CookbookRecipeSchema = require('../schemas/cookbook-recipe')
 const TABLE_NAME = 'cookbooks_recipes'
 
 class CookbookRecipe extends Base {
-  constructor () {
-    super(TABLE_NAME, CookbookRecipeSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, CookbookRecipeSchema.general, data)
   }
 
-  findOrCreate(payload, trx, done) {
-    console.log(payload)
+  findOrCreate(done) {
     Logger.debug('cookbook-recipe.findOrCreate')
-
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
 
     this.knex(this.name)
       .select('id')
-      .where(payload)
+      .where(this.payload)
       .first()
-      .transacting(trx)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction failed'), trx.rollback()
+          if (trx) Logger.error('Transaction failed'), this.trx.rollback()
           return Logger.error(err), done(err)
         }
 
         if (found) {
-          // trx.commit
+          if (this.trx && this.willCommit) {
+            Logger.error('Transaction Completed'), this.trx.commit()
+          }
           return done(null, Object.assign({}, found))
         }
 

@@ -7,35 +7,30 @@ const UnitSchema = require('../schemas/unit')
 const TABLE_NAME = 'units'
 
 class Unit extends Base {
-  constructor () {
-    super(TABLE_NAME, UnitSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, UnitSchema.general, data)
   }
 
-  findOrCreate(idOrName, trx, done) {
+  findOrCreate(done) {
     Logger.debug('unit.findOrCreate')
-
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
 
     this.knex(this.name)
       .select('id', 'name')
-      .where('id', Number(idOrName) || -1) // use -1, undefined throws error
-      .orWhere('name', idOrName)
+      .where('id', Number(this.payload.idOrName) || -1) // use -1, undefined throws error
+      .orWhere('name', this.payload.idOrName)
       .first()
-      .transacting(trx)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction failed'), trx.rollback()
+          if (this.trx) Logger.error('Transaction failed'), trx.rollback()
           return Logger.error(err), done(err)
         }
 
         if (found) return done(null, Object.assign({}, found))
 
-        this.validate({ name: idOrName }, (err, validated) => {
+        this.validate({ name: this.payload.idOrName }, (err, validated) => {
           if (err) {
-            if (trx) Logger.error('Transaction failed'), trx.rollback()
+            if (this.trx) Logger.error('Transaction failed'), trx.rollback()
             return Logger.error(err), done(err)
           }
 
@@ -44,33 +39,30 @@ class Unit extends Base {
       })
   }
 
-  batchFindOrCreate(units, trx={}, done) {
+  batchFindOrCreate(done) {
     Logger.debug('unit.batchFindOrCreate')
-
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
 
     this.knex(this.name)
       .select('id', 'name')
-      .whereIn('name', units)
-      .transacting(trx)
+      .whereIn('name', this.units)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction Failed'), trx.rollback()
+          if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
           return Logger.error(err), done()
         }
 
         let names = found.map((unit) => unit.name)
-        let create = units.filter((unit) => {
+        let create = this.units.filter((unit) => {
           return names.indexOf(unit) === -1 ? true : false
         }).map((unit) => {
           return { name: unit }
         })
 
         if (!create || !create.length) {
-          // if (trx) Logger.error('Transaction Completed'), trx.commit()
+          if (this.trx && this.willCommit) {
+            Logger.error('Transaction Completed'), this.trx.commit()
+          }
           return done(null, found)
         }
 
@@ -78,13 +70,15 @@ class Unit extends Base {
 
         DB.batchInsert(this.name, create)
           .returning(['id', 'name'])
-          .transacting(trx)
+          .transacting(this.trx)
           .then((created) => {
-            // if (trx) Logger.error('Transaction Completed'), trx.commit()
+            if (this.trx && this.willCommit) {
+              Logger.error('Transaction Completed'), this.trx.commit()
+            }
             return done(null, found.concat(created))
           })
           .catch((err) => {
-            if (trx) Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
             return Logger.error(err), done()
           })
       })

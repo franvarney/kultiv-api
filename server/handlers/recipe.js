@@ -5,21 +5,21 @@ const Errors = require('../utils/errors')
 const RecipeModel = require('../models/recipe')
 const UserModel = require('../models/user')
 
-const Cookbook = new CookbookModel()
-const Recipe = new RecipeModel()
-const User = new UserModel()
-
 exports.allByUser = function (request, reply) {
-  Logger.debug('recipe.allByUser')
+  Logger.debug('recipes.allByUser')
 
   let isLoaded = false
 
   if (request.query && request.query.full) isLoaded = true
 
-  User.findById(request.params.id, (err) => {
+  const User = new UserModel({ payload: { id: request.params.id }})
+
+  User.findById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
 
-    Recipe.findByUserId(request.params.id, isLoaded, (err, recipes) => {
+    const Recipe = new RecipeModel({ payload: { id: request.params.id }})
+
+    Recipe.findByUserId(isLoaded, (err, recipes) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
       return Logger.debug(recipes), reply.treeize(recipes).code(200)
     })
@@ -27,14 +27,18 @@ exports.allByUser = function (request, reply) {
 }
 
 exports.allByCookbook = function (request, reply) {
-  Logger.debug('recipe.allByCookbook')
+  Logger.debug('recipes.allByCookbook')
 
   let isLoaded = false
 
   if (request.query && request.query.full) isLoaded = true
 
+  const Cookbook = new CookbookModel({ payload: { id: request.params.id }})
+
   Cookbook.findById(request.params.id, (err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
+
+    const Recipe = new RecipeModel({ payload: { id: request.params.id }})
 
     Recipe.findByCookbookId(request.params.id, isLoaded, (err, recipes) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
@@ -44,30 +48,35 @@ exports.allByCookbook = function (request, reply) {
 }
 
 exports.create = function (request, reply) {
-  Logger.debug('recipe.create')
+  Logger.debug('recipes.create')
 
   request.payload.user_id = request.auth.credentials.user
 
-  Recipe.create(request.payload, request.params.id, (err, id) => {
+  const Recipe = new RecipeModel({ payload: request.payload })
+
+  Recipe.create((err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-      console.log(id)
     return Logger.debug({ id }), reply({ id }).code(201)
   })
 }
 
 exports.delete = function (request, reply) {
-  Logger.debug('recipe.delete')
+  Logger.debug('recipes.delete')
 
-  Recipe.deleteById(request.params.id, (err) => {
+  const Recipe = new RecipeModel({ payload: { id: request.params.id }})
+
+  Recipe.deleteById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })
 }
 
 exports.get = function (request, reply) {
-  Logger.debug('recipe.get')
+  Logger.debug('recipes.get')
 
-  Recipe.findById(request.params.id, (err, recipe) => {
+  const Recipe = new RecipeModel({ payload: { id: request.params.id }})
+
+  Recipe.findById((err, recipe) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug(recipe), reply(recipe).code(200)
   })

@@ -8,35 +8,30 @@ const RecipeDirectionSchema = require('../schemas/recipe-direction')
 const TABLE_NAME = 'recipes_directions'
 
 class RecipeDirection extends Base {
-  constructor () {
-    super(TABLE_NAME, RecipeDirectionSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, RecipeDirectionSchema.general, data)
   }
 
-  batchFindOrCreate(recipeDirections, trx, done) {
+  batchFindOrCreate(done) {
     Logger.debug('recipe-direction.batchFindOrCreate')
-
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
 
     this.knex(this.name)
       .select('id', 'recipe_id', 'direction_id')
       .where(function () {
-        recipeDirections.forEach((recipeDirection) => {
+        this.payload.recipeDirections.forEach((recipeDirection) => {
           return this.orWhere(recipeDirection)
         })
       })
-      .transacting(trx)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction Failed'), trx.rollback()
+          if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
           return Logger.error(err), done()
         }
 
         let ids = []
         let create = Lodash.xorWith(
-          recipeDirections,
+          this.payload.recipeDirections,
           found.map((recipeDirection) => {
             ids.push(Lodash.pick(found, 'id'))
             return {
@@ -46,7 +41,9 @@ class RecipeDirection extends Base {
           }), Lodash.isEqual)
 
         if (!create || !create.length) {
-          // if (trx) Logger.error('Transaction Completed'), trx.commit()
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), this.trx.commit()
+          }
           return done(null, found)
         }
 
@@ -54,13 +51,15 @@ class RecipeDirection extends Base {
 
         DB.batchInsert(this.name, create)
           .returning('id')
-          .transacting(trx)
+          .transacting(this.trx)
           .then((created) => {
-            // if (trx) Logger.error('Transaction Completed'), trx.commit()
+            if (this.trx && this.willCommit) {
+              Logger.debug('Transaction Completed'), this.trx.commit()
+            }
             return done(null, ids.concat(created))
           })
           .catch((err) => {
-            if (trx) Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
             return Logger.error(err), done()
           })
       })

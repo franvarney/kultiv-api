@@ -8,40 +8,45 @@ const Lodash = require('../utils/lodash')
 const TABLE_NAME = 'directions'
 
 class Direction extends Base {
-  constructor () {
-    super(TABLE_NAME, DirectionSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, DirectionSchema.general, data)
   }
 
-  findById (id, done) {
+  findById (done) {
     Logger.debug('direction.findById')
 
     this.knex(this.name)
-      .where('id', id)
+      .where('id', this.payload.id)
+      .transacting(this.trx)
       .first('id', 'direction')
       .asCallback((err, direction) => {
-        if (err) return Logger.error(err), done(err)
+        if (err) {
+          if (this.trx) {
+            Logger.error('Transaction Failed'), this.trx.rollback()
+          }
+          return Logger.error(err), done(err)
+        }
+
+        if (this.trx && this.willCommit) {
+          Logger.debug('Transaction Completed'), this.trx.commit()
+        }
         return done(null, direction)
       })
   }
 
-  batchFindOrCreate(directions, trx, done) {
+  batchFindOrCreate(done) {
     Logger.debug('direction.batchFindOrCreate')
-
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
 
     // TODO handle for two directions being the same (with different order)?
     this.knex(this.name)
       .select('id', 'direction', 'order')
       .where(function () {
-        directions.forEach((direction) => this.orWhere(direction))
+        this.payload.directions.forEach((direction) => this.orWhere(direction))
       })
-      .transacting(trx)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction Failed'), trx.rollback()
+          if (trx) Logger.error('Transaction Failed'), this.trx.rollback()
           return Logger.error(err), done()
         }
 
@@ -55,7 +60,9 @@ class Direction extends Base {
           }), Lodash.isEqual)
 
         if (!create || !create.length) {
-          // if (trx) Logger.error('Transaction Completed'), trx.commit()
+          if (this.trx && this.willCommit) {
+            Logger.error('Transaction Completed'), this.trx.commit()
+          }
           return done(null, ids)
         }
 
@@ -63,13 +70,15 @@ class Direction extends Base {
 
         DB.batchInsert(this.name, create)
           .returning('id', 'direction')
-          .transacting(trx)
+          .transacting(this.trx)
           .then((created) => {
-            // if (trx) Logger.error('Transaction Completed'), trx.commit()
+            if (this.trx && this.willCommit) {
+              Logger.error('Transaction Completed'), this.trx.commit()
+            }
             return done(null, ids.concat(created))
           })
           .catch((err) => {
-            if (trx) Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
             return Logger.error(err), done()
           })
       })

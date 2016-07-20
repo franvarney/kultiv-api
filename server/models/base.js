@@ -23,8 +23,8 @@ class Base {
       .first()
       .asCallback((err, found) => {
         if (err) {
-          if (this.trx && this.willCommit) {
-            Logger.error('Transaction Failed'), trx.rollback()
+          if (this.trx) {
+            Logger.error('Transaction Failed'), this.trx.rollback()
           }
           return Logger.error(err), done(err)
         }
@@ -35,7 +35,7 @@ class Base {
         }
 
         if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), trx.commit()
+          Logger.debug('Transaction Completed'), this.trx.commit()
         }
 
         delete found.deleted_at
@@ -56,14 +56,14 @@ class Base {
         .transacting(this.trx)
         .asCallback((err, count) => {
           if (err) {
-            if (this.trx && this.willCommit) {
-              Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) {
+              Logger.error('Transaction Failed'), this.trx.rollback()
             }
             return Logger.error(err), done(err)
           }
 
           if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), trx.commit()
+            Logger.debug('Transaction Completed'), this.trx.commit()
           }
           return done(null, count)
         })
@@ -80,8 +80,8 @@ class Base {
 
     this.validate((err, validated) => {
       if (err) {
-        if (this.trx && this.willCommit) {
-          Logger.error('Transaction Failed'), trx.rollback()
+        if (this.trx) {
+          Logger.error('Transaction Failed'), this.trx.rollback()
         }
         return Logger.error(err), done(err)
       }
@@ -92,14 +92,14 @@ class Base {
         .returning(returning)
         .asCallback((err, id) => {
           if (err) {
-            if (this.trx && this.willCommit) {
-              Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) {
+              Logger.error('Transaction Failed'), this.trx.rollback()
             }
             return Logger.error(err), done(err)
           }
 
           if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), trx.commit()
+            Logger.debug('Transaction Completed'), this.trx.commit()
           }
           return done(null, id[0])
         })
@@ -133,14 +133,14 @@ class Base {
           .returning(returning)
           .asCallback((err, id) => {
             if (err) {
-              if (this.trx && this.willCommit) {
-                Logger.error('Transaction Failed'), trx.rollback()
+              if (this.trx) {
+                Logger.error('Transaction Failed'), this.trx.rollback()
               }
               return Logger.error(err), done(err)
             }
 
             if (this.trx && this.willCommit) {
-              Logger.debug('Transaction Completed'), trx.commit()
+              Logger.debug('Transaction Completed'), this.trx.commit()
             }
             return done(null, id)
           })
@@ -160,14 +160,14 @@ class Base {
         .returning('id')
         .asCallback((err) => {
           if (err) {
-            if (this.trx && this.willCommit) {
-              Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) {
+              Logger.error('Transaction Failed'), this.trx.rollback()
             }
             return Logger.error(err), done(err)
           }
 
           if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), trx.commit()
+            Logger.debug('Transaction Completed'), this.trx.commit()
           }
           return done(null, true)
         })

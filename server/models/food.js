@@ -11,19 +11,29 @@ class Food extends Base {
     super(TABLE_NAME, FoodSchema.general)
   }
 
-  findByName (name, done) {
+  findByName (done) {
     Logger.debug('food.findByName')
 
     this.knex(this.name)
-      .where('name', 'LIKE', `%${name}%`)
+      .where('name', 'LIKE', `%${this.payload.name}%`)
       .whereNull('deleted_at')
+      .transacting(this.trx)
       .asCallback((err, foods) => {
-        if (err) return Logger.error(err), done(err)
+        if (err) {
+          if (this.trx) {
+            Logger.error('Transaction Failed'), this.trx.rollback()
+          }
+          return Logger.error(err), done(err)
+        }
+
+        if (this.trx && this.willCommit) {
+          Logger.debug('Transaction Completed'), this.trx.commit()
+        }
         return done(null, foods)
       })
   }
 
-  findOrCreate(idOrName, trx, done) {
+  findOrCreate(done) {
     Logger.debug('food.findOrCreate')
 
     if (!done) {
@@ -33,44 +43,44 @@ class Food extends Base {
 
     this.knex(this.name)
       .select('id', 'name')
-      .where('id', Number(idOrName) || -1) // use -1, undefined throws error
-      .orWhere('name', idOrName)
+      .where('id', Number(this.payload.idOrName) || -1) // use -1, undefined throws error
+      .orWhere('name', this.payload.idOrName)
       .first()
-      .transacting(trx)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction failed'), trx.rollback()
+          if (this.trx) Logger.error('Transaction failed'), this.trx.rollback()
           return Logger.error(err), done(err)
         }
 
-        if (found) return done(null, Object.assign({}, found))
+        if (found) {
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), this.trx.commit()
+          }
+          return done(null, Object.assign({}, found))
+        }
 
-        this.validate({ name: idOrName }, (err, validated) => {
+        this.validate({ name: this.payload.idOrName }, (err, validated) => {
           if (err) {
-            if (trx) Logger.error('Transaction failed'), trx.rollback()
+            if (this.trx) Logger.error('Transaction failed'), this.trx.rollback()
             return Logger.error(err), done(err)
           }
 
-          return super.create(validated, ['id', 'name'], trx, done)
+          return super.create(['id', 'name']done)
         })
       })
   }
 
-  batchFindOrCreate(foods, trx, done) {
+  batchFindOrCreate(done) {
     Logger.debug('food.batchFindOrCreate')
-
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
 
     this.knex(this.name)
       .select('id', 'name')
-      .whereIn('name', foods)
-      .transacting(trx)
+      .whereIn('name', this.payload.foods)
+      .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction Failed'), trx.rollback()
+          if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
           return Logger.error(err), done()
         }
 
@@ -82,7 +92,9 @@ class Food extends Base {
         })
 
         if (!create || !create.length) {
-          // if (trx) Logger.error('Transaction Completed'), trx.commit()
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), this.trx.commit()
+          }
           return done(null, found)
         }
 
@@ -90,13 +102,15 @@ class Food extends Base {
 
         DB.batchInsert(this.name, create)
           .returning(['id', 'name'])
-          .transacting(trx)
+          .transacting(this.trx)
           .then((created) => {
-            // if (trx) Logger.error('Transaction Completed'), trx.commit()
+            if (this.trx && this.willCommit) {
+              Logger.error('Transaction Completed'), this.trx.commit()
+            }
             return done(null, found.concat(created))
           })
           .catch((err) => {
-            if (trx) Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
             return Logger.error(err), done()
           })
       })

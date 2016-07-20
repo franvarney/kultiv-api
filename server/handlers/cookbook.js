@@ -4,16 +4,21 @@ const CookbookModel = require('../models/cookbook')
 const Errors = require('../utils/errors')
 const UserModel = require('../models/user')
 
-const Cookbook = new CookbookModel()
-const User = new UserModel()
-
 exports.allByUser = function (request, reply) {
-  Logger.debug('cookbook.allByUser')
+  Logger.debug('cookbooks.allByUser')
 
-  User.findById(request.params.id, (err) => {
+  const User = new UserModel({
+    payload: { owner_id: request.params.id }
+  })
+
+  User.findById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
 
-    Cookbook.findByOwner(request.params.id, (err, cookbooks) => {
+    const Cookbook = new CookbookModel({
+      payload: { id: request.params.id }
+    })
+
+    Cookbook.findByOwner((err, cookbooks) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
       return Logger.debug(cookbooks), reply.treeize(cookbooks).code(200)
     })
@@ -21,38 +26,54 @@ exports.allByUser = function (request, reply) {
 }
 
 exports.create = function (request, reply) {
-  Logger.debug('cookbook.create')
+  Logger.debug('cookbooks.create')
 
   request.payload.owner_id = request.auth.credentials.user
 
-  Cookbook.create(request.payload, (err, id) => {
+  const Cookbook = new CookbookModel({
+    payload: request.payload
+  })
+
+  Cookbook.create((err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug({ id }), reply({ id }).code(201)
   })
 }
 
 exports.delete = function (request, reply) {
-  Logger.debug('cookbook.delete')
+  Logger.debug('cookbooks.delete')
 
-  Cookbook.deleteById(request.params.id, (err) => {
+  const Cookbook = new CookbookModel({
+    payload: { id: request.params.id }
+  })
+
+  Cookbook.deleteById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })
 }
 
 exports.get = function (request, reply) {
-  Logger.debug('cookbook.get')
+  Logger.debug('cookbooks.get')
 
-  Cookbook.findById(request.params.id, (err, cookbook) => {
+  const Cookbook = new CookbookModel({
+    payload: { id: request.params.id }
+  })
+
+  Cookbook.findById((err, cookbook) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug(cookbook), reply(cookbook).code(200)
   })
 }
 
 exports.update = function (request, reply) {
-  Logger.debug('cookbook.update')
+  Logger.debug('cookbooks.update')
 
-  Cookbook.update(request.params.id, request.payload, (err) => {
+  const Cookbook = new CookbookModel({
+    payload: Object.assign({}, { id: request.params.id }, request.payload)
+  })
+
+  Cookbook.update((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })

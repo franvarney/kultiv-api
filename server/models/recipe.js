@@ -11,14 +11,7 @@ const RecipeIngredientModel = require('./recipe-ingredient')
 const RecipeSchema = require('../schemas/recipe')
 const UnitModel = require('./unit')
 
-const CookbookRecipe = new CookbookRecipeModel()
-const Direction = new DirectionModel()
-const Food = new FoodModel()
-const Ingredient = new IngredientModel()
-const RecipeDirection = new RecipeDirectionModel()
-const RecipeIngredient = new RecipeIngredientModel()
 const TABLE_NAME = 'recipes'
-const Unit = new UnitModel()
 
 const baseRecipe = function (queryBuilder) {
   queryBuilder
@@ -43,9 +36,11 @@ const ingredients = function (queryBuilder) {
         .innerJoin('units AS IU', 'I.unit_id', 'IU.id')
 }
 
+// TODO add order
 const directions = function (queryBuilder) {
   queryBuilder
-    .select('D.id AS directions:id', 'D.direction AS directions:direction')
+    .select('D.id AS directions:id', 'D.direction AS directions:direction',
+             'D.order AS directions:order')
     .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
       .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
 }
@@ -58,16 +53,16 @@ const cookbook = function (cookbookId, queryBuilder) {
 }
 
 class Recipe extends Base {
-  constructor () {
-    super(TABLE_NAME, RecipeSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, RecipeSchema.general, data)
   }
 
-  create (payload, cookbookId, done) {
-    let that = this
+  create (done) {
+    const that = this
 
     this.knex.transaction((trx) => {
-      let directions = payload.directions
-      let ingredients = payload.ingredients
+      let directions = this.payload.directions
+      let ingredients = this.payload.ingredients
       let foods = ingredients.map((ingredient) => ingredient.food)
       let units = ingredients.map((ingredient) => ingredient.unit)
       let recipeId
@@ -77,20 +72,26 @@ class Recipe extends Base {
       Waterfall([
         // get unit id for yields
         function (callback) {
-          Unit.findOrCreate(payload.yield_unit, trx, (err, yieldUnit) => {
+          const Unit = new UnitModel({
+            payload: { idOrName: that.payload.yield_unit, trx }
+          })
+
+          Unit.findOrCreate((err, yieldUnit) => {
             if (err) return callback(err)
-            payload.yield_unit_id = yieldUnit.id
+            that.payload.yield_unit_id = yieldUnit.id
             return callback()
           })
         },
         // create the recipe
         // TODO check if entire recipe exists first
-        super.create.bind(that, payload, trx),
+        super.create.bind(that),
         // get unit ids for each ingredient
         function (id, callback) {
           recipeId = id
 
-          Unit.batchFindOrCreate(units, trx, (err, foundOrCreatedUnits) => {
+          const Unit = new UnitModel({ payload: units, trx })
+
+          Unit.batchFindOrCreate((err, foundOrCreatedUnits) => {
             if (err) return callback(err)
 
             let unitMap = new Map()
@@ -100,7 +101,7 @@ class Recipe extends Base {
               }
             })
 
-            ingredients = payload.ingredients.map((ingredient) =>{
+            ingredients = this.payload.ingredients.map((ingredient) =>{
               return Object.assign(ingredient, unitMap.get(ingredient.unit))
             })
 
@@ -109,7 +110,9 @@ class Recipe extends Base {
         },
         // get food ids for each food
         function (callback) {
-          Food.batchFindOrCreate(foods, trx, (err, foundOrCreatedFoods) => {
+          const Food = new FoodModel({ payload: foods, trx })
+
+          Food.batchFindOrCreate((err, foundOrCreatedFoods) => {
             if (err) return callback(err)
 
             let foodMap = new Map()
@@ -119,7 +122,7 @@ class Recipe extends Base {
               }
             })
 
-            ingredients = payload.ingredients.map((ingredient) =>{
+            ingredients = that.payload.ingredients.map((ingredient) =>{
               return Object.assign(ingredient, foodMap.get(ingredient.food))
             })
 
@@ -128,29 +131,42 @@ class Recipe extends Base {
         },
         // create ingredients
         function (callback) {
-          return Ingredient.batchFindOrCreate(
-            ingredients.map((ingredient) => {
+          const Ingredient = new IngredientModel({
+            payload: ingredients.map((ingredient) => {
               let {amount, unit_id, food_id, optional} = ingredient
               return { amount, unit_id, food_id, optional }
-            }), trx, callback)
+            }),
+            trx
+          })
+
+          return Ingredient.batchFindOrCreate(callback)
         },
         // create recipe ingredients
         function (ingredientIds, callback) {
-          return RecipeIngredient.batchFindOrCreate(
-            ingredientIds.map((ingredientId) => {
+          const RecipeIngredient = new RecipeIngredientModel({
+            payload: ingredientIds.map((ingredientId) => {
               return { recipe_id: recipeId, ingredient_id: ingredientId }
-            }), trx, callback)
+            }),
+            trx
+          })
+
+          return RecipeIngredient.batchFindOrCreate(callback)
         },
         // create directions
         function (recipeIngredientIds, callback) {
-          return Direction.batchFindOrCreate(directions, trx, callback)
+          const Direction = new DirectionModel({ payload: directions, trx })
+          return Direction.batchFindOrCreate(callback)
         },
         // create recipe directions
         function (directionIds, callback) {
-          return RecipeDirection.batchFindOrCreate(
-            directionIds.map((directionId) => {
+          const RecipeDirection = RecipeDirectionModel({
+            payload: directionIds.map((directionId) => {
               return { recipe_id: recipeId, direction_id: directionId }
-            }), trx, callback)
+            }),
+            trx
+          })
+
+          return RecipeDirection.batchFindOrCreate(callback)
         }
        ], (err) => {
         if (err) {
@@ -158,15 +174,21 @@ class Recipe extends Base {
           return Logger.error(err), done(err)
         }
 
-        if (trx) Logger.debug('Transaction Completed'), trx.commit()
+        if (trx && this.willCommit) {
+          Logger.debug('Transaction Completed'), this.trx.commit()
+        }
 
         // attach to cookbook if cookbook is selected
-        if (payload.cookbook_id) {
-          let {cookbook_id} = payload
-          return CookbookRecipe.findOrCreate({
-              cookbook_id,
+        if (that.payload.cookbook_id) {
+          const CookbookRecipe = new CookbookRecipeModel({
+            payload: {
+              cookbook_id: that.payload.cookbook_id,
               recipe_id: recipeId
-            }, done.bind(null, null, recipeId))
+            },
+            trx
+          })
+
+          return CookbookRecipe.findOrCreate(done.bind(null, null, recipeId))
         }
 
         return done(null, recipeId)
@@ -174,7 +196,7 @@ class Recipe extends Base {
     })
   }
 
-  findById (id, done) {
+  findById (done) {
     Logger.debug('recipe.findById')
 
     this.knex(this.name)
@@ -185,7 +207,7 @@ class Recipe extends Base {
             'recipes.yield_amount', 'RU.name AS yields_unit')
         .innerJoin('users AS U', 'U.id', 'recipes.user_id')
         .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
-      .where('recipes.id', id)
+      .where('recipes.id', this.payload.id)
       .whereNull('recipes.deleted_at')
       .asCallback((err, found) => {
         if (err) return Logger.error(err), done(err)
@@ -193,12 +215,12 @@ class Recipe extends Base {
       })
   }
 
-  findByUserId (userId, isLoaded, done) {
+  findByUserId (isLoaded, done) {
     Logger.debug('recipe.findByUserId')
-    this.loadRecipe(`recipes.user_id = ${userId}`, isLoaded, done)
+    this.loadRecipe(`recipes.user_id = ${this.payload.user_id}`, isLoaded, done)
   }
 
-  findByCookbookId (cookbookId, isLoaded, done) { // TODO refactor this later
+  findByCookbookId (isLoaded, done) { // TODO refactor this later
     Logger.debug('recipe.findByCookbookdId')
 
     if (typeof isLoaded === 'function') {
@@ -211,7 +233,7 @@ class Recipe extends Base {
     if (!isLoaded) {
       this.knex(this.name)
         .modify(baseRecipe)
-        .modify(cookbook.bind(null, cookbookId))
+        .modify(cookbook.bind(null, this.payload.cookbook_id))
         .asCallback((err, recipes) => {
           if (err) return Logger.error(err), done(err)
           return done(null, recipes)
@@ -219,7 +241,7 @@ class Recipe extends Base {
     } else {
       this.knex(this.name)
         .modify(baseRecipe)
-        .modify(cookbook.bind(null, cookbookId))
+        .modify(cookbook.bind(null, this.payload.cookbook_id))
         .modify(ingredients)
         .modify(directions)
         .asCallback((err, recipes) => {
@@ -229,9 +251,9 @@ class Recipe extends Base {
     }
   }
 
-  findByTitle (title, isLoaded, done) {
+  findByTitle (isLoaded, done) {
     Logger.debug('recipe.findByTitle')
-    this.loadRecipe(`recipes.title LIKE %${title}%`, isLoaded, done)
+    this.loadRecipe(`recipes.title LIKE %${this.payload.title}%`, isLoaded, done)
   }
 
   loadRecipe (rawQuery, isLoaded, done) {

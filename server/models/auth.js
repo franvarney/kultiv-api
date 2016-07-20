@@ -63,15 +63,15 @@ class Auth extends Base {
       .transacting(this.trx)
       .asCallback((err, count) => {
         if (err) {
-          if (this.trx && this.willCommit) {
-            Logger.error('Transaction Failed'), trx.rollback()
+          if (this.trx) {
+            Logger.error('Transaction Failed'), this.trx.rollback()
           }
           return Logger.error(err), done(err)
         }
         // TODO do something with count?
 
         if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), trx.commit()
+          Logger.debug('Transaction Completed'), this.trx.commit()
         }
         return done()
       })
@@ -87,8 +87,8 @@ class Auth extends Base {
       .first()
       .asCallback((err, auth) => {
         if (err) {
-          if (this.trx && this.willCommit) {
-            Logger.error('Transaction Failed'), trx.rollback()
+          if (this.trx) {
+            Logger.error('Transaction Failed'), this.trx.rollback()
           }
           return Logger.error(err), done(err)
         }
@@ -99,7 +99,7 @@ class Auth extends Base {
         }
 
         if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), trx.commit()
+          Logger.debug('Transaction Completed'), this.trx.commit()
         }
 
         if (auth) auth = Object.assign({}, auth)
