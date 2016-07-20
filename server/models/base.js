@@ -1,13 +1,16 @@
-const Logger = require('franston')('server:models:base')
 const Joi = require('joi')
+const Logger = require('franston')('server:models:base')
 
 const DB = require('../connections/postgres')
 
 class Base {
-  constructor (name, schema) {
+  constructor (name, schema, data={}) {
     this.name = name
     this.schema = schema
     this.knex = DB
+    this.trx = data.trx
+    this.willCommit = data.willCommit || false
+    this.payload = data.payload || {}
   }
 
   findById (id, done) {
@@ -46,39 +49,37 @@ class Base {
     })
   }
 
-  create (payload, returning = 'id', trx, done) {
+  create (returning = 'id', done) {
     Logger.debug(`base.${this.name}.create`)
 
     if (typeof returning === 'function') {
       done = trx
-      trx = returning
       returning = 'id'
     }
 
-    if (typeof returning !== 'function' && !done) {
-      done = trx
-      trx = undefined
-    }
-
-    if (!done) Function.prototype
-
-    this.validate(payload, (err, validated) => {
+    this.validate(this.payload, (err, validated) => {
       if (err) {
-        if (trx) Logger.error('Transaction Failed'), trx.rollback()
+        if (this.trx && this.willCommit) {
+          Logger.error('Transaction Failed'), trx.rollback()
+        }
         return Logger.error(err), done(err)
       }
 
       this.knex(this.name)
         .insert(validated)
-        .transacting(trx)
+        .transacting(this.trx)
         .returning(returning)
         .asCallback((err, id) => {
           if (err) {
-            if (trx) Logger.error('Transaction Failed'), trx.rollback()
+            if (this.trx && this.willCommit) {
+              Logger.error('Transaction Failed'), trx.rollback()
+            }
             return Logger.error(err), done(err)
           }
 
-          // if (trx) Logger.debug('Transaction Completed'), trx.commit()
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), trx.commit()
+          }
           return done(null, id[0])
         })
     })
