@@ -10,8 +10,8 @@ exports.general = Joi.object({
 })
 
 exports.createPayload = Joi.object({
-  amount: Joi.number().precision(2),
-  unit: Joi.string().required(),
+  amount: Joi.number().precision(2).allow(null),
+  unit: Joi.string().required().default('none'),
   food: Joi.string().required(),
   optional: Joi.boolean().default(false)
 })
