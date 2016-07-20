@@ -5,11 +5,9 @@ const Uuid = require('uuid4')
 const AuthKeySchema = require('../schemas/auth')
 const Base = require('./base')
 const DB = require('../connections/postgres')
-
 const UserModel = require('./user')
 
 const TABLE_NAME = 'user_auth_keys'
-const User = new UserModel()
 
 class Auth extends Base {
   constructor () {
@@ -19,9 +17,12 @@ class Auth extends Base {
   create (login, password, done) { // aka login
     Logger.debug(`${this.name}.create`)
 
+    const User = new UserModel()
+
     let email = login.indexOf('@') >= 0 ? login : undefined
     let username = login.indexOf('@') === -1 ? login : undefined
 
+    // TODO check with username
     User.findByEmailOrUsername(email, username, (err, user) => {
       if (err) return Logger.error(err), done(err)
       if (!user) {
