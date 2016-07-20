@@ -10,38 +10,39 @@ const UserModel = require('./user')
 const TABLE_NAME = 'user_auth_keys'
 
 class Auth extends Base {
-  constructor () {
-    super(TABLE_NAME, AuthKeySchema.general)
+  constructor (data) {
+    super(TABLE_NAME, AuthKeySchema.general, data)
   }
 
-  create (login, password, done) { // aka login
-    Logger.debug(`${this.name}.create`)
+  create (done) { // aka login
+    Logger.debug('auth.create')
 
-    const User = new UserModel()
+    const User = new UserModel({
+      payload: {
+        email: this.payload.login,
+        username: this.payload.login
+      }
+    })
 
-    let email = login.indexOf('@') >= 0 ? login : undefined
-    let username = login.indexOf('@') === -1 ? login : undefined
-
-    // TODO check with username
-    User.findByEmailOrUsername(email, username, (err, user) => {
+    User.findByEmailOrUsername((err, user) => {
       if (err) return Logger.error(err), done(err)
       if (!user) {
         let err = 'User Not Found'
         return Logger.error(err), done(['notFound', err])
       }
 
-      if (!Bcrypt.compareSync(password, user.password)) {
+      if (!Bcrypt.compareSync(this.payload.password, user.password)) {
         let err = 'Invalid Password'
         return Logger.error(err), done(['unauthorized', err])
       }
 
-      let payload = {
+      this.payload = {
         user_id: user.id,
         hawk_id: Uuid(),
         hawk_key: Uuid()
       }
 
-      super.create(payload, ['id', 'hawk_id', 'hawk_key'], (err, auth) => {
+      super.create(['id', 'hawk_id', 'hawk_key'], (err, auth) => {
         if (err) return Logger.error(err), done(err)
 
         return done(null, {
@@ -53,32 +54,52 @@ class Auth extends Base {
     })
   }
 
-  deleteById (hawkId, userId, done) { // aka logout
-    Logger.debug(`${this.name}.deleteById`)
+  deleteById (done) { // aka logout
+    Logger.debug('auth.deleteById')
 
     this.knex(this.name)
-      .where('hawk_id', hawkId)
+      .where('hawk_id', this.payload.id)
       .del()
+      .transacting(this.trx)
       .asCallback((err, count) => {
-        if (err) return Logger.error(err), done(err)
+        if (err) {
+          if (this.trx && this.willCommit) {
+            Logger.error('Transaction Failed'), trx.rollback()
+          }
+          return Logger.error(err), done(err)
+        }
         // TODO do something with count?
 
+        if (this.trx && this.willCommit) {
+          Logger.debug('Transaction Completed'), trx.commit()
+        }
         return done()
       })
   }
 
-  findById (hawkId, done) {
-    Logger.debug(`${this.name}.findById`)
+  findById (done) {
+    Logger.debug('auth.findById')
 
     this.knex(this.name)
       .select('user_id AS user', 'hawk_id AS id', 'hawk_key AS key')
-      .where('hawk_id', hawkId)
+      .where('hawk_id', this.payload.id)
+      .transacting(this.trx)
       .first()
       .asCallback((err, auth) => {
-        if (err) return Logger.error(err), done(err)
+        if (err) {
+          if (this.trx && this.willCommit) {
+            Logger.error('Transaction Failed'), trx.rollback()
+          }
+          return Logger.error(err), done(err)
+        }
+
         if (!auth) {
           let err = 'Key Not Found'
           return Logger.error(err), done(['notFound', err])
+        }
+
+        if (this.trx && this.willCommit) {
+          Logger.debug('Transaction Completed'), trx.commit()
         }
 
         if (auth) auth = Object.assign({}, auth)

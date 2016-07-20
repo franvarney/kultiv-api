@@ -19,8 +19,8 @@ function hashPassword (password, done) {
 }
 
 class User extends Base {
-  constructor () {
-    super(TABLE_NAME, UserSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, UserSchema.general, data)
   }
 
   create (payload, done) {
@@ -41,17 +41,13 @@ class User extends Base {
     })
   }
 
-  findByEmailOrUsername (email, username, done) {
+  findByEmailOrUsername (done) {
     Logger.debug('user.findByEmailOrUsername')
 
-    if (typeof username === 'function') {
-      done = username
-      username = null
-    }
-
-    if (!done) done = Function.prototype
+    let {email, username} = this.payload
 
     this.knex(this.name)
+      .select('id', 'username', 'email', 'password')
       .where(function () {
         if (username) this.where('username', username)
       })

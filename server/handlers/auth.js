@@ -10,9 +10,9 @@ exports.getCredentialsFunc = function (id, callback) {
 
   // TODO admin token
 
-  const Auth = new AuthModel()
+  const Auth = new AuthModel({ payload: { id } })
 
-  Auth.findById(id, (err, auth) => {
+  Auth.findById((err, auth) => {
     if (err) return Logger.error(err), callback(Errors.get(err))
     if (auth) auth.algorithm = ALGORITHM
     return callback(null, auth)
@@ -24,9 +24,11 @@ exports.login = function (request, reply) {
 
   let {login, password} = request.payload
 
-  const Auth = new AuthModel()
+  const Auth = new AuthModel({
+    payload: { login, password }
+  })
 
-  Auth.create(login, password, (err, auth) => {
+  Auth.create((err, auth) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply(auth).code(201)
   })
@@ -37,9 +39,11 @@ exports.logout = function (request, reply) {
 
   let {credentials} = request.auth
 
-  const Auth = new AuthModel()
+  const Auth = new AuthModel({
+    payload: { id: credentials.id, user_id: credentials.user_id }
+  })
 
-  Auth.deleteById(credentials.id, credentials.user_id, (err) => {
+  Auth.deleteById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })
