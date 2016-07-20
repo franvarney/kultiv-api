@@ -34,26 +34,25 @@ class Ingredient extends Base {
         }
 
         let ids = []
-        let toCreate = XorWith(ingredients, found.map((ingredient) => {
+        let create = XorWith(ingredients, found.map((ingredient) => {
           ids.push(ingredient.id)
           delete ingredient.id
           ingredient.amount = Number(ingredient.amount)
           return Object.assign({}, ingredient)
         }), IsEqual)
 
-        if (!toCreate || !toCreate.length) {
+        if (!create || !create.length) {
           // if (trx) Logger.error('Transaction Completed'), trx.commit()
           return done(null, ids)
         }
 
         // TODO validate?
 
-        DB.batchInsert(this.name, toCreate)
+        DB.batchInsert(this.name, create)
           .returning('id')
           .transacting(trx)
           .then((created) => {
             // if (trx) Logger.error('Transaction Completed'), trx.commit()
-            console.log(ids,created)
             return done(null, ids.concat(created))
           })
           .catch((err) => {
