@@ -5,30 +5,38 @@ const Errors = require('../utils/errors')
 const UserModel = require('../models/user')
 const UserSchema = require('../schemas/user')
 
-const User = new UserModel()
-
 exports.create = function (request, reply) {
-  Logger.debug('user.create')
+  Logger.debug('users.create')
 
-  User.create(request.payload, (err, id) => {
+  const User = new UserModel({ payload: request.payload })
+
+  User.create((err, id) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return Logger.debug({ id }), reply({ id }).code(201)
   })
 }
 
 exports.delete = function (request, reply) {
-  Logger.debug('user.delete')
+  Logger.debug('users.delete')
 
-  User.deleteById(request.params.id, (err) => {
+  const User = new UserModel({
+    payload: { id: request.params.id }
+  })
+
+  User.deleteById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })
 }
 
 exports.get = function (request, reply) {
-  Logger.debug('user.get')
+  Logger.debug('users.get')
 
-  User.findById(request.params.id, (err, user) => {
+  const User = new UserModel({
+    payload: { id: request.params.id }
+  })
+
+  User.findById((err, user) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
 
     Joi.validate(user, UserSchema.sanitize, (err, sanitized) => {
@@ -39,9 +47,13 @@ exports.get = function (request, reply) {
 }
 
 exports.update = function (request, reply) {
-  Logger.debug('user.update')
+  Logger.debug('users.update')
 
-  User.update(request.params.id, request.payload, (err) => {
+  const User = new UserModel({
+    payload: Object.assign({}, { id: request.params.id }, request.payload)
+  })
+
+  User.update((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
     return reply().code(204)
   })

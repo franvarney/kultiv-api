@@ -23,20 +23,17 @@ class User extends Base {
     super(TABLE_NAME, UserSchema.general, data)
   }
 
-  create (payload, done) {
+  create (done) {
     Logger.debug('user.create')
 
-    let email = payload.email
-    let username = payload.username
-
-    this.findByEmailOrUsername(email, username, (err, user) => {
+    this.findByEmailOrUsername((err, user) => {
       if (err) return Logger.error(err), done(err)
       if (user) return done(['conflict', 'User Already Exists'])
 
-      hashPassword(payload.password, (err, hashed) => {
+      hashPassword(this.payload.password, (err, hashed) => {
         if (err) return Logger.error(err), done(err)
-        payload.password = hashed
-        super.create(payload, done)
+        this.payload.password = hashed
+        super.create(done)
       })
     })
   }
@@ -60,25 +57,25 @@ class User extends Base {
       })
   }
 
-  update (id, payload, done) {
+  update (done) {
     Logger.debug('user.update')
 
-    this.findById(id, (err, user) => {
+    this.findById((err, user) => {
       if (err) return Logger.error(err), done(err)
 
-      this.findByEmailOrUsername(payload.email, (err, user) => {
+      this.findByEmailOrUsername((err, user) => {
         if (err) return Logger.error(err), done(err)
         if (user) return done(['conflict', 'Email Already Exists'])
 
-        if (payload.password) {
-          return hashPassword(payload.password, (err, hashed) => {
+        if (this.payload.password) {
+          return hashPassword(this.payload.password, (err, hashed) => {
             if (err) return Logger.error(err), done(err)
-            payload.password = hashed
-            return super.update(id, payload, done)
+            this.payload.password = hashed
+            return super.update(done)
           })
         }
 
-        return super.update(id, payload, done)
+        return super.update(done)
       })
     })
   }

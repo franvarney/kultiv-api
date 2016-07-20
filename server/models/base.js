@@ -13,18 +13,29 @@ class Base {
     this.payload = data.payload || {}
   }
 
-  findById (id, done) {
+  findById (done) {
     Logger.debug(`base.${this.name}.findById`)
 
     this.knex(this.name)
-      .where('id', id)
+      .where('id', this.payload.id)
       .whereNull('deleted_at')
+      .transacting(this.trx)
       .first()
       .asCallback((err, found) => {
-        if (err) return Logger.error(err), done(err)
+        if (err) {
+          if (this.trx && this.willCommit) {
+            Logger.error('Transaction Failed'), trx.rollback()
+          }
+          return Logger.error(err), done(err)
+        }
+
         if (!found) {
           let err = 'Not Found'
           return Logger.error(err), done(['notFound', err])
+        }
+
+        if (this.trx && this.willCommit) {
+          Logger.debug('Transaction Completed'), trx.commit()
         }
 
         delete found.deleted_at
@@ -32,18 +43,28 @@ class Base {
       })
   }
 
-  deleteById (id, done) {
+  deleteById (done) {
     Logger.debug(`base.${this.name}.deleteById`)
 
-    this.findById(id, (err, result) => {
+    this.findById((err, result) => {
       if (err) return Logger.error(err), done(err)
 
       this.knex(this.name)
-        .where('id', id)
+        .where('id', this.payload.id)
         .whereNull('deleted_at')
         .update('deleted_at', 'now()')
+        .transacting(this.trx)
         .asCallback((err, count) => {
-          if (err) return Logger.error(err), done(err)
+          if (err) {
+            if (this.trx && this.willCommit) {
+              Logger.error('Transaction Failed'), trx.rollback()
+            }
+            return Logger.error(err), done(err)
+          }
+
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), trx.commit()
+          }
           return done(null, count)
         })
     })
@@ -52,12 +73,12 @@ class Base {
   create (returning = 'id', done) {
     Logger.debug(`base.${this.name}.create`)
 
-    if (typeof returning === 'function') {
-      done = trx
+    if (!done) {
+      done = returning
       returning = 'id'
     }
 
-    this.validate(this.payload, (err, validated) => {
+    this.validate((err, validated) => {
       if (err) {
         if (this.trx && this.willCommit) {
           Logger.error('Transaction Failed'), trx.rollback()
@@ -85,58 +106,77 @@ class Base {
     })
   }
 
-  update (id, payload, returning = 'id', done) {
+  update (returning = 'id', done) {
     Logger.debug(`base.${this.name}.update`)
 
-    if (typeof returning === 'function') {
+    if (!done) {
       done = returning
       returning = 'id'
     }
 
-    this.findById(id, (err, results) => {
+    this.findById((err, results) => {
       if (err) return Logger.error(err), done(err)
-      payload = Object.assign(results, payload)
+      this.payload = Object.assign(results, payload)
 
       // TODO review why this is needed
-      delete payload.id
-      delete payload.created_at
-      delete payload.updated_at
+      delete this.payload.id
+      delete this.payload.created_at
+      delete this.payload.updated_at
 
-      this.validate(payload, (err, validated) => {
+      this.validate((err, validated) => {
         if (err) return Logger.error(err), done(err)
 
         this.knex(this.name)
           .where('id', id)
           .update(validated)
+          .transacting(this.trx)
           .returning(returning)
           .asCallback((err, id) => {
-            if (err) return Logger.error(err), done(err)
+            if (err) {
+              if (this.trx && this.willCommit) {
+                Logger.error('Transaction Failed'), trx.rollback()
+              }
+              return Logger.error(err), done(err)
+            }
+
+            if (this.trx && this.willCommit) {
+              Logger.debug('Transaction Completed'), trx.commit()
+            }
             return done(null, id)
           })
       })
     })
   }
 
-  toggleIsPrivate (id, done) {
+  toggleIsPrivate (done) {
     Logger.debug(`base.${this.name}.toggleIsPrivate`)
 
-    this.findById(id, (err, result) => {
+    this.findById((err, result) => {
       if (err) return done(err)
 
       this.knex(this.name)
-        .where('id', id)
-        .update('is_private', !result.is_private)
+        .where('id', this.payload.id)
+        .transacting(this.trx)
         .returning('id')
         .asCallback((err) => {
-          if (err) return Logger.error(err), done(err)
+          if (err) {
+            if (this.trx && this.willCommit) {
+              Logger.error('Transaction Failed'), trx.rollback()
+            }
+            return Logger.error(err), done(err)
+          }
+
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), trx.commit()
+          }
           return done(null, true)
         })
     })
   }
 
-  validate (payload, done) {
+  validate (done) {
     Logger.debug(`base.${this.name}.validate`)
-    Joi.validate(payload, this.schema, done)
+    Joi.validate(this.payload, this.schema, done)
   }
 }
 
