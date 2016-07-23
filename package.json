@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "coverage": "NODE_ENV=coverage lab -r html -o coverage/index.html -r lcov -o coverage/lcov.info",
     "dev": "LOG_LEVEL=debug npm start",
     "lint": "standard",
-    "posttest": "standard",
+    "posttest": "npm run lint",
     "start": "node index",
-    "test": "lab -cvv"
+    "test": "KNEX_DEBUG=false LOG_LEVEL=none NODE_ENV=test lab -cv"
   },
   "author": "Fran Varney <franvarn@gmail.com>",
   "license": "MIT",
@@ -43,7 +44,6 @@
     "lab": "10.9.0",
     "mock-knex": "0.3.2",
     "proxyquire": "1.7.3",
-    "sinon": "1.17.1",
     "standard": "7.0.1"
   }
 }
