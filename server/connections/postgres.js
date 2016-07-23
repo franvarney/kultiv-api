@@ -1,12 +1,12 @@
 const Logger = require('franston')('connections:postgres')
 const Knex = require('knex')
 
-const {env, postgres} = require('../../config')
+const Config = require('../../config')
 
 let knex = Knex({
   client: 'pg',
-  connection: postgres.uri,
-  debug: env !== 'production'
+  connection: Config.postgres.uri,
+  debug: Config.knex.debug == true
 })
 
 knex
