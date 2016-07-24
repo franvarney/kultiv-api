@@ -8,14 +8,14 @@ exports.allByUser = function (request, reply) {
   Logger.debug('cookbooks.allByUser')
 
   const User = new UserModel({
-    payload: { owner_id: request.params.id }
+    payload: { id: request.params.id }
   })
 
   User.findById((err) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
 
     const Cookbook = new CookbookModel({
-      payload: { id: request.params.id }
+      payload: { owner_id: request.params.id }
     })
 
     Cookbook.findByOwner((err, cookbooks) => {

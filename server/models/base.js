@@ -17,7 +17,7 @@ class Base {
     Logger.debug(`base.${this.name}.findById`)
 
     this.knex(this.name)
-      .where('id', this.payload.id)
+      .where('id', Number(this.payload.id))
       .whereNull('deleted_at')
       .transacting(this.trx)
       .first()
@@ -116,9 +116,10 @@ class Base {
 
     this.findById((err, results) => {
       if (err) return Logger.error(err), done(err)
-      this.payload = Object.assign(results, payload)
+      this.payload = Object.assign(results, this.payload)
 
       // TODO review why this is needed
+      let id = this.payload.id
       delete this.payload.id
       delete this.payload.created_at
       delete this.payload.updated_at
