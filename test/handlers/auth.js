@@ -13,6 +13,8 @@ const UserModel = require('../../server/models/user')
 
 const server = new Server()
 
+let credentials
+
 describe('handlers/auth', () => {
   describe('getCredentialsFunc', () => {
     describe('when user exists', () => {
@@ -70,6 +72,7 @@ describe('handlers/auth', () => {
           url: '/auth',
           payload: { login: 'samdoe', password: 'secret' }
         }, (response) => {
+          credentials = response.result
           expect(response.statusCode).to.equal(201)
           expect(response.result.user_id).to.equal(3)
           return done()
@@ -99,6 +102,35 @@ describe('handlers/auth', () => {
           expect(response.statusCode).to.equal(404)
           expect(response.result.message).to.equal('User Not Found')
           return done()
+        })
+      })
+    })
+  })
+
+  describe('logout', () => {
+    before((done) => {
+      server.connection()
+      server.route({ method: 'DELETE', path: '/auth', handler: Auth.logout })
+      return done()
+    })
+
+    describe('when user logouts', () => {
+      it('yields no content', (done) => {
+        server.inject({
+          method: 'DELETE',
+          url: '/auth',
+          credentials: { id: credentials.hawk_id, user_id: credentials.user_id }
+        }, (response) => {
+          expect(response.statusCode).to.equal(204)
+          expect(response.result).to.be.null()
+
+          let auth = new AuthModel({ payload: { id: credentials.hawk_id } })
+
+          return auth.findById((err, found) => {
+            expect(err[1]).to.equal('Key Not Found')
+            expect(found).to.be.undefined()
+            return done()
+          })
         })
       })
     })
