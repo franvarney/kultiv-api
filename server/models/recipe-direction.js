@@ -15,10 +15,12 @@ class RecipeDirection extends Base {
   batchFindOrCreate(done) {
     Logger.debug('recipe-direction.batchFindOrCreate')
 
+    let that = this
+
     this.knex(this.name)
       .select('id', 'recipe_id', 'direction_id')
       .where(function () {
-        this.payload.recipeDirections.forEach((recipeDirection) => {
+        that.payload.forEach((recipeDirection) => {
           return this.orWhere(recipeDirection)
         })
       })
@@ -26,12 +28,12 @@ class RecipeDirection extends Base {
       .asCallback((err, found) => {
         if (err) {
           if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done()
+          return Logger.error(err), done(err)
         }
 
         let ids = []
         let create = Lodash.xorWith(
-          this.payload.recipeDirections,
+          that.payload,
           found.map((recipeDirection) => {
             ids.push(Lodash.pick(found, 'id'))
             return {
@@ -60,7 +62,7 @@ class RecipeDirection extends Base {
           })
           .catch((err) => {
             if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done()
+            return Logger.error(err), done(err)
           })
       })
   }

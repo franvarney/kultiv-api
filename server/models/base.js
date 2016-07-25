@@ -13,6 +13,22 @@ class Base {
     this.payload = data.payload || {}
   }
 
+  static treeize () {
+
+  }
+
+  static errors () {
+
+  }
+
+  static commit () {
+
+  }
+
+  static rollback () {
+
+  }
+
   findById (done) {
     Logger.debug(`base.${this.name}.findById`)
 
@@ -127,6 +143,8 @@ class Base {
       this.validate((err, validated) => {
         if (err) return Logger.error(err), done(err)
 
+        delete validated.email
+
         this.knex(this.name)
           .where('id', id)
           .update(validated)
@@ -147,6 +165,10 @@ class Base {
           })
       })
     })
+  }
+
+  batchInsert (done) {
+
   }
 
   toggleIsPrivate (done) {

@@ -13,6 +13,8 @@ const UnitModel = require('./unit')
 
 const TABLE_NAME = 'recipes'
 
+// TODO add transactions
+
 const baseRecipe = function (queryBuilder) {
   queryBuilder
     .select('recipes.id', 'recipes.title', 'recipes.cook_time',
@@ -101,7 +103,7 @@ class Recipe extends Base {
               }
             })
 
-            ingredients = this.payload.ingredients.map((ingredient) =>{
+            ingredients = that.payload.ingredients.map((ingredient) =>{
               return Object.assign(ingredient, unitMap.get(ingredient.unit))
             })
 
@@ -139,7 +141,10 @@ class Recipe extends Base {
             trx
           })
 
-          return Ingredient.batchFindOrCreate(callback)
+          Ingredient.batchFindOrCreate((err, ingredientIds) => {
+            if (err) return callback(err)
+            return callback(null, ingredientIds)
+          })
         },
         // create recipe ingredients
         function (ingredientIds, callback) {
@@ -150,23 +155,33 @@ class Recipe extends Base {
             trx
           })
 
-          return RecipeIngredient.batchFindOrCreate(callback)
+          return RecipeIngredient.batchFindOrCreate((err) => {
+            if (err) return callback(err)
+            return callback()
+          })
         },
         // create directions
-        function (recipeIngredientIds, callback) {
+        function (callback) {
           const Direction = new DirectionModel({ payload: directions, trx })
-          return Direction.batchFindOrCreate(callback)
+
+          Direction.batchFindOrCreate((err, directionIds) => {
+            if (err) return callback(err)
+            return callback(null, directionIds)
+          })
         },
         // create recipe directions
         function (directionIds, callback) {
-          const RecipeDirection = RecipeDirectionModel({
+          const RecipeDirection = new RecipeDirectionModel({
             payload: directionIds.map((directionId) => {
               return { recipe_id: recipeId, direction_id: directionId }
             }),
             trx
           })
 
-          return RecipeDirection.batchFindOrCreate(callback)
+          return RecipeDirection.batchFindOrCreate((err) => {
+            if (err) return callback(err)
+            return callback()
+          })
         }
        ], (err) => {
         if (err) {
@@ -188,7 +203,10 @@ class Recipe extends Base {
             trx
           })
 
-          return CookbookRecipe.findOrCreate(done.bind(null, null, recipeId))
+          return CookbookRecipe.findOrCreate((err) => {
+            if (err) return Logger.error(err), done(err)
+            return done(null, recipeId)
+          })
         }
 
         return done(null, recipeId)
@@ -209,8 +227,15 @@ class Recipe extends Base {
         .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
       .where('recipes.id', this.payload.id)
       .whereNull('recipes.deleted_at')
+      .first()
       .asCallback((err, found) => {
         if (err) return Logger.error(err), done(err)
+
+        if (!found) {
+          let err = 'Recipe Not Found'
+          return Logger.error(err), done(['notFound', err])
+        }
+
         return done(null, found)
       })
   }

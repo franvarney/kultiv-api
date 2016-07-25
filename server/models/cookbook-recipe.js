@@ -31,7 +31,7 @@ class CookbookRecipe extends Base {
           return done(null, Object.assign({}, found))
         }
 
-        return super.create(payload, done)
+        return super.create(done)
       })
   }
 }

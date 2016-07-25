@@ -44,16 +44,16 @@ class Unit extends Base {
 
     this.knex(this.name)
       .select('id', 'name')
-      .whereIn('name', this.units)
+      .whereIn('name', this.payload)
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
           if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done()
+          return Logger.error(err), done(err)
         }
 
         let names = found.map((unit) => unit.name)
-        let create = this.units.filter((unit) => {
+        let create = this.payload.filter((unit) => {
           return names.indexOf(unit) === -1 ? true : false
         }).map((unit) => {
           return { name: unit }
@@ -79,7 +79,7 @@ class Unit extends Base {
           })
           .catch((err) => {
             if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done()
+            return Logger.error(err), done(err)
           })
       })
   }

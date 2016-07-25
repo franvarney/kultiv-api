@@ -7,8 +7,8 @@ const FoodSchema = require('../schemas/food')
 const TABLE_NAME = 'foods'
 
 class Food extends Base {
-  constructor () {
-    super(TABLE_NAME, FoodSchema.general)
+  constructor (data) {
+    super(TABLE_NAME, FoodSchema.general, data)
   }
 
   findByName (done) {
@@ -36,11 +36,6 @@ class Food extends Base {
   findOrCreate(done) {
     Logger.debug('food.findOrCreate')
 
-    if (!done) {
-      done = trx
-      trx = undefined
-    }
-
     this.knex(this.name)
       .select('id', 'name')
       .where('id', Number(this.payload.idOrName) || -1) // use -1, undefined throws error
@@ -66,7 +61,7 @@ class Food extends Base {
             return Logger.error(err), done(err)
           }
 
-          return super.create(['id', 'name']done)
+          return super.create(['id', 'name'], done)
         })
       })
   }
@@ -76,16 +71,16 @@ class Food extends Base {
 
     this.knex(this.name)
       .select('id', 'name')
-      .whereIn('name', this.payload.foods)
+      .whereIn('name', this.payload)
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
           if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done()
+          return Logger.error(err), done(err)
         }
 
         let names = found.map((food) => food.name)
-        let create = foods.filter((food) => {
+        let create = this.payload.filter((food) => {
           return names.indexOf(food) === -1 ? true : false
         }).map((food) => {
           return { name: food }
@@ -111,7 +106,7 @@ class Food extends Base {
           })
           .catch((err) => {
             if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done()
+            return Logger.error(err), done(err)
           })
       })
   }

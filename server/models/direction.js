@@ -37,22 +37,24 @@ class Direction extends Base {
   batchFindOrCreate(done) {
     Logger.debug('direction.batchFindOrCreate')
 
+    let that = this
+
     // TODO handle for two directions being the same (with different order)?
     this.knex(this.name)
       .select('id', 'direction', 'order')
       .where(function () {
-        this.payload.directions.forEach((direction) => this.orWhere(direction))
+        that.payload.forEach((direction) => this.orWhere(direction))
       })
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done()
+          if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
+          return Logger.error(err), done(err)
         }
 
         let ids = []
         let create = Lodash.xorWith(
-          directions,
+          that.payload,
           found.map((direction) => {
             ids.push(direction.id)
             delete direction.id
@@ -79,7 +81,7 @@ class Direction extends Base {
           })
           .catch((err) => {
             if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done()
+            return Logger.error(err), done(err)
           })
       })
   }

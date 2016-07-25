@@ -16,20 +16,22 @@ class Ingredient extends Base {
   batchFindOrCreate(done) {
     Logger.debug('ingredient.batchFindOrCreate')
 
+    let that = this
+
     this.knex(this.name)
       .select('id', 'amount', 'unit_id', 'food_id', 'optional')
       .where(function () {
-        this.payload.ingredients.forEach((ingredient) => this.orWhere(ingredient))
+        that.payload.forEach((ingredient) => this.orWhere(ingredient))
       })
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
           if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done()
+          return Logger.error(err), done(err)
         }
 
         let ids = []
-        let create = XorWith(this.payload.ingredients, found.map((ingredient) => {
+        let create = XorWith(that.payload, found.map((ingredient) => {
           ids.push(ingredient.id)
           delete ingredient.id
           ingredient.amount = Number(ingredient.amount)
@@ -52,11 +54,12 @@ class Ingredient extends Base {
             if (this.trx && this.willCommit) {
               Logger.debug('Transaction Completed'), this.trx.commit()
             }
+
             return done(null, ids.concat(created))
           })
           .catch((err) => {
             if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done()
+            return Logger.error(err), done(err)
           })
       })
   }

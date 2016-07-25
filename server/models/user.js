@@ -63,6 +63,8 @@ class User extends Base {
     this.findById((err, user) => {
       if (err) return Logger.error(err), done(err)
 
+      this.payload = Object.assign(user, this.payload)
+
       this.findByEmailOrUsername((err, user) => {
         if (err) return Logger.error(err), done(err)
         if (user) return done(['conflict', 'Email Already Exists'])
