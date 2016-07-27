@@ -70,19 +70,19 @@ class Direction extends Base {
 
         // TODO validate?
 
-        DB.batchInsert(this.name, create)
-          .returning('id', 'direction')
-          .transacting(this.trx)
-          .then((created) => {
-            if (this.trx && this.willCommit) {
-              Logger.error('Transaction Completed'), this.trx.commit()
+        this.batchInsert(['id', 'direction'], (err, created) => {
+          if (err) {
+            if (this.trx) {
+              Logger.error('Transaction Failed'), this.trx.rollback()
             }
-            return done(null, ids.concat(created))
-          })
-          .catch((err) => {
-            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
             return Logger.error(err), done(err)
-          })
+          }
+
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), this.trx.commit()
+          }
+          return done(null, created.concat(found))
+        })
       })
   }
 }
