@@ -21,11 +21,15 @@ describe('handlers/auth', () => {
       it('should yield a credentials object', (done) => {
         Auth.getCredentialsFunc('b39e1e3d-8187-4087-a89f-e3886b67297a',
           (err, credentials) => {
-            expect(err).to.be.null()
-            expect(credentials.id).to.equal('b39e1e3d-8187-4087-a89f-e3886b67297a')
-            expect(credentials.key).to.equal('43a12a1e-309f-4dd2-922f-102ba19b76e7')
-            expect(credentials.user).to.equal(3)
-            return done()
+            try {
+              expect(err).to.be.null()
+              expect(credentials.id).to.equal('b39e1e3d-8187-4087-a89f-e3886b67297a')
+              expect(credentials.key).to.equal('43a12a1e-309f-4dd2-922f-102ba19b76e7')
+              expect(credentials.user).to.equal(3)
+              return done()
+            } catch (e) {
+              return done(e)
+            }
           })
       })
     })
@@ -49,21 +53,15 @@ describe('handlers/auth', () => {
     })
 
     describe('when user exists', () => {
-      let user = new UserModel()
+      let userId
 
       before((done) => {
-        Sinon.stub(user, 'findByEmailOrUsername').yields(null, {
-          id: 3,
-          username: 'samdoe',
-          email: 'samdoe@gmail.com',
-          password: '$2a$10$omDxHHXjobTTCyXZMTfPFuY9O/cvToUBS.zjisiGvaYzJoT1GR49C'
-        })
-        return done()
-      })
+        let user = new UserModel({ payload: { username: 'samdoe' } })
 
-      after((done) => {
-        user.findByEmailOrUsername.restore()
-        return done()
+        user.findByEmailOrUsername((err, u) => {
+          userId = u.id
+          return done()
+        })
       })
 
       it('yields the user', (done) => {
@@ -74,7 +72,7 @@ describe('handlers/auth', () => {
         }, (response) => {
           credentials = response.result
           expect(response.statusCode).to.equal(201)
-          expect(response.result.user_id).to.equal(3)
+          expect(response.result.user_id).to.equal(userId)
           return done()
         })
       })

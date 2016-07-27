@@ -9,12 +9,23 @@ const {before, after, describe, it} = lab
 
 const Cookbook = require('../../server/handlers/cookbook')
 const CookbookModel = require('../../server/models/cookbook')
+const UserModel = require('../../server/models/user')
 
 const server = new Server()
 
 let id
+let userId
 
 describe('handlers/cookbook', () => {
+  before((done) => {
+    let user = new UserModel({ payload: { username: 'samdoe' } })
+
+    user.findByEmailOrUsername((err, u) => {
+      userId = u.id
+      return done()
+    })
+  })
+
   describe('create', () => {
     before((done) => {
       server.connection()
@@ -28,7 +39,7 @@ describe('handlers/cookbook', () => {
           method: 'POST',
           url: '/cookbooks',
           payload: { name: 'Hearty Vegetarian' },
-          credentials: { user: 3 }
+          credentials: { user: userId }
         }, (response) => {
           id = response.result.id
           expect(response.statusCode).to.equal(201)
@@ -52,10 +63,10 @@ describe('handlers/cookbook', () => {
         server.inject({
           method: 'GET',
           url: `/cookbooks/${id}`,
-          credentials: { user: 3 }
+          credentials: { user: userId }
         }, (response) => {
           expect(response.statusCode).to.equal(200)
-          expect(response.result.owner_id).to.equal(3)
+          expect(response.result.owner_id).to.equal(userId)
           expect(response.result.name).to.equal('Hearty Vegetarian')
           expect(response.result.description).to.be.null()
           return done()
@@ -77,7 +88,7 @@ describe('handlers/cookbook', () => {
           method: 'PUT',
           url: `/cookbooks/${id}`,
           payload: { description: 'Test description' },
-          credentials: { user: 3 }
+          credentials: { user: userId }
         }, (response) => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
@@ -107,7 +118,7 @@ describe('handlers/cookbook', () => {
         server.inject({
           method: 'DELETE',
           url: `/cookbooks/${id}`,
-          credentials: { user: 3 }
+          credentials: { user: userId }
         }, (response) => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
@@ -136,8 +147,8 @@ describe('handlers/cookbook', () => {
       it('yields an array of cookbooks', (done) => {
         server.inject({
           method: 'GET',
-          url: `/users/3/cookbooks`,
-          credentials: { user: 3 }
+          url: `/users/${userId}/cookbooks`,
+          credentials: { user: userId }
         }, (response) => {
           expect(response.statusCode).to.equal(200)
           expect(response.result).to.be.array()
