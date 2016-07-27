@@ -1,5 +1,6 @@
 const Joi = require('joi')
 const Logger = require('franston')('server:models:base')
+const Treeize = require('treeize')
 
 const DB = require('../connections/postgres')
 
@@ -13,20 +14,42 @@ class Base {
     this.payload = data.payload || {}
   }
 
-  static treeize () {
+  static treeize (data, options, signature) {
+    if (!data) return undefined
 
+    let tree = new Treeize()
+    let defaults = {
+      output: {
+        prune: false
+      }
+    }
+
+    if (options) tree.options(options)
+    else tree.options(defaults)
+
+    if (signature) tree.setSignature(signature)
+
+    return tree.grow(data).getData()
   }
 
-  static errors () {
-
+  static errors (err, fn) {
+    return Logger.error(err), fn(err)
   }
 
   static commit () {
+    return !!(this.trx && this.willCommit)
+  }
 
+  static trxComplete () {
+    return Logger.debug('Transaction Completed'), this.trx.commit()
   }
 
   static rollback () {
+    return !!this.trx
+  }
 
+  static trxFailed() {
+    return Logger.error('Transaction Failed'), this.trx.rollback()
   }
 
   findById (done) {
@@ -167,8 +190,27 @@ class Base {
     })
   }
 
-  batchInsert (done) {
+  batchInsert (returning = 'id', done) {
+    Logger.debug(`base.${this.name}.batchInsert`)
 
+    if (!done) {
+      done = returning
+      returning = 'id'
+    }
+
+    DB.batchInsert(this.name, this.payload)
+      .returning(returning)
+      .transacting(this.trx)
+      .then((created) => {
+        if (this.trx && this.willCommit) {
+          Logger.error('Transaction Completed'), this.trx.commit()
+        }
+        return done(null, created)
+      })
+      .catch((err) => {
+        if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
+        return Logger.error(err), done(err)
+      })
   }
 
   toggleIsPrivate (done) {
