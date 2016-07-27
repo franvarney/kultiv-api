@@ -6,7 +6,7 @@ const Config = require('../../config')
 let knex = Knex({
   client: 'pg',
   connection: Config.postgres.uri,
-  debug: Config.knex.debug == true
+  debug: Config.knex.debug === 'true'
 })
 
 knex
