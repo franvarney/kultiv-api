@@ -9,9 +9,9 @@
     "lint": "standard",
     "posttest": "npm run lint",
     "start": "node index",
-    "test": "KNEX_DEBUG=false LOG_LEVEL=none NODE_ENV=test lab -cv"
+    "test": "KNEX_DEBUG=false LOG_LEVEL=none NODE_ENV=test lab -cv -m 10000"
   },
-  "author": "Fran Varney <franvarn@gmail.com>",
+  "author": "Fran Varney <fran.varn@gmail.com>",
   "license": "MIT",
   "engines": {
     "node": "6.x",
