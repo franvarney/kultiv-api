@@ -3,6 +3,10 @@ const Auth = require('../handlers/auth')
 const AuthSchema = require('../schemas/auth')
 const Cookbook = require('../handlers/cookbook')
 const CookbookSchema = require('../schemas/cookbook')
+const Directions = require('./handlers/directions')
+const DirectionSchema = require('../schemas/direction')
+const Foods = require('./handlers/foods')
+const FoodSchema = require('../schemas/food')
 const Errors = require('../utils/errors')
 const Importer = require('../handlers/importer')
 const ImporterSchema = require('../schemas/importer')
@@ -63,6 +67,36 @@ module.exports = [
     }
   },
   { method: 'DELETE', path: '/cookbooks/{id}', handler: Cookbook.delete },
+
+  // Directions
+  {
+    method: 'POST',
+    path: '/directions',
+    config: {
+      validate: {
+        payload: DirectionSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Directions.create
+    }
+  },
+  { method: 'GET', path: '/directions/{id}', handler: Directions.get },
+
+  // Foods
+  {
+    method: 'POST',
+    path: '/foods',
+    config: {
+      validate: {
+        payload: FoodSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Foods.create
+    }
+  },
+  { method: 'GET', path: '/foods/{id}', handler: Foods.get },
 
   // Importer
   {
