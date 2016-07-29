@@ -5,6 +5,11 @@ exports.direction = Joi.object({
 })
   .options({ stripUnknown: true })
 
+exports.general = Joi.alternatives().try(
+  exports.direction,
+  Joi.array().items(exports.direction)
+)
+
 exports.createPayload = Joi.alternatives().try(
   exports.direction,
   Joi.array().items(exports.direction)

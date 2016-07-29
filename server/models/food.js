@@ -1,7 +1,6 @@
 const Logger = require('franston')('server:models:food')
 
 const Base = require('./base')
-const DB = require('../connections/postgres')
 const FoodSchema = require('../schemas/food')
 
 const TABLE_NAME = 'foods'

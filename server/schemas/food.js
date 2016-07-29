@@ -4,6 +4,7 @@ exports.food = Joi.object({
   id: Joi.number().integer(),
   name: Joi.string().required()
 })
+  .options({ stripUnknown: true })
 
 exports.general = Joi.alternatives().try(
   exports.food,

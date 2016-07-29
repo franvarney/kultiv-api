@@ -25,8 +25,10 @@ class Direction extends Base {
           return this._errors(err, done)
         }
 
-        if (this._commit()) this._trxComplete()
-        if (found) return done(null, found)
+        if (found) {
+          if (this._commit()) this._trxComplete()
+          return done(null, found)
+        }
 
         return super.create(done)
       })
@@ -38,7 +40,7 @@ class Direction extends Base {
     let {payload} = this
 
     this.knex(this.name)
-      .select('id', 'direction')
+      .select('id')
       .where(function () {
         payload.forEach((direction) => this.orWhere(direction))
       })
