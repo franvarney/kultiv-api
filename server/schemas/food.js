@@ -5,4 +5,12 @@ exports.food = Joi.object({
   name: Joi.string().required()
 })
 
-exports.general = Joi.alternatives().try(exports.food, Joi.array().items(exports.food))
+exports.general = Joi.alternatives().try(
+  exports.food,
+  Joi.array().items(exports.food)
+)
+
+exports.createPayload = Joi.alternatives().try(
+  exports.food,
+  Joi.array().items(exports.food)
+)

@@ -20,15 +20,11 @@ class Food extends Base {
       .transacting(this.trx)
       .asCallback((err, foods) => {
         if (err) {
-          if (this.trx) {
-            Logger.error('Transaction Failed'), this.trx.rollback()
-          }
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
-        if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), this.trx.commit()
-        }
+        if (this._commit()) this._trxComplete()
         return done(null, foods)
       })
   }
@@ -38,31 +34,21 @@ class Food extends Base {
 
     this.knex(this.name)
       .select('id', 'name')
-      .where('id', Number(this.payload.idOrName) || -1) // use -1, undefined throws error
-      .orWhere('name', this.payload.idOrName)
+      .where('name', this.payload.name)
       .first()
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (this.trx) Logger.error('Transaction failed'), this.trx.rollback()
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
         if (found) {
-          if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), this.trx.commit()
-          }
-          return done(null, Object.assign({}, found))
+          if (this._commit()) this._trxComplete()
+          return done(null, found)
         }
 
-        this.validate({ name: this.payload.idOrName }, (err, validated) => {
-          if (err) {
-            if (this.trx) Logger.error('Transaction failed'), this.trx.rollback()
-            return Logger.error(err), done(err)
-          }
-
-          return super.create(['id', 'name'], done)
-        })
+        return super.create(done)
       })
   }
 
@@ -70,13 +56,13 @@ class Food extends Base {
     Logger.debug('food.batchFindOrCreate')
 
     this.knex(this.name)
-      .select('id', 'name')
+      .select('id')
       .whereIn('name', this.payload)
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
         let names = found.map((food) => food.name)
@@ -87,27 +73,21 @@ class Food extends Base {
         })
 
         if (!create || !create.length) {
-          if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), this.trx.commit()
-          }
+          if (this._commit()) this._trxComplete()
           return done(null, found)
         }
 
         // TODO validate?
 
-        DB.batchInsert(this.name, create)
-          .returning(['id', 'name'])
-          .transacting(this.trx)
-          .then((created) => {
-            if (this.trx && this.willCommit) {
-              Logger.error('Transaction Completed'), this.trx.commit()
-            }
-            return done(null, found.concat(created))
-          })
-          .catch((err) => {
-            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done(err)
-          })
+        this.batchInsert((err, created) => {
+          if (err) {
+            if (this._rollback()) this._trxRollback()
+            return this._errors(err, done)
+          }
+
+          if (this._commit()) this._trxComplete()
+          return done(null, created.concat(found))
+        })
       })
   }
 }
