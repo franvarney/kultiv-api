@@ -1,7 +1,6 @@
 const Logger = require('franston')('server:models:direction')
 
 const Base = require('./base')
-const DB = require('../connections/postgres')
 const DirectionSchema = require('../schemas/direction')
 const Lodash = require('../utils/lodash')
 
@@ -9,52 +8,50 @@ const TABLE_NAME = 'directions'
 
 class Direction extends Base {
   constructor (data) {
-    super(TABLE_NAME, DirectionSchema.general, data)
+    super(TABLE_NAME, DirectionSchema.createPayload, data)
   }
 
-  findById (done) {
-    Logger.debug('direction.findById')
+  findOrCreate(done) {
+    Logger.debug('direction.findOrCreate')
 
     this.knex(this.name)
-      .where('id', this.payload.id)
+      .select('id', 'direction')
+      .where('direction', this.payload.direction)
+      .first()
       .transacting(this.trx)
-      .first('id', 'direction')
-      .asCallback((err, direction) => {
+      .asCallback((err, found) => {
         if (err) {
-          if (this.trx) {
-            Logger.error('Transaction Failed'), this.trx.rollback()
-          }
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
-        if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), this.trx.commit()
-        }
-        return done(null, direction)
+        if (this._commit()) this._trxComplete()
+        if (found) return done(null, found)
+
+        return super.create(done)
       })
   }
 
   batchFindOrCreate(done) {
     Logger.debug('direction.batchFindOrCreate')
 
-    let that = this
+    let {payload} = this
 
-    // TODO handle for two directions being the same (with different order)?
     this.knex(this.name)
-      .select('id', 'direction', 'order')
+      .select('id', 'direction')
       .where(function () {
-        that.payload.forEach((direction) => this.orWhere(direction))
+        payload.forEach((direction) => this.orWhere(direction))
       })
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
-          if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
         let ids = []
         let create = Lodash.xorWith(
-          that.payload,
+          payload,
           found.map((direction) => {
             ids.push(direction.id)
             delete direction.id
@@ -62,25 +59,19 @@ class Direction extends Base {
           }), Lodash.isEqual)
 
         if (!create || !create.length) {
-          if (this.trx && this.willCommit) {
-            Logger.error('Transaction Completed'), this.trx.commit()
-          }
+          if (this._commit()) this._trxComplete()
           return done(null, ids)
         }
 
         // TODO validate?
 
-        this.batchInsert(['id', 'direction'], (err, created) => {
+        this.batchInsert((err, created) => {
           if (err) {
-            if (this.trx) {
-              Logger.error('Transaction Failed'), this.trx.rollback()
-            }
-            return Logger.error(err), done(err)
+            if (this._rollback()) this._trxRollback()
+            return this._errors(err, done)
           }
 
-          if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), this.trx.commit()
-          }
+          if (this._commit()) this._trxComplete()
           return done(null, created.concat(found))
         })
       })

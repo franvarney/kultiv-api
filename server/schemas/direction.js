@@ -1,12 +1,11 @@
 const Joi = require('joi')
 
-exports.general = Joi.object({
-  direction: Joi.string().required(),
-  order: Joi.number().integer().required()
+exports.direction = Joi.object({
+  direction: Joi.string().required()
 })
   .options({ stripUnknown: true })
 
-exports.createPayload = Joi.object({
-  direction: Joi.string().required(),
-  order: Joi.number().integer()
-})
+exports.createPayload = Joi.alternatives().try(
+  exports.direction,
+  Joi.array().items(exports.direction)
+)
