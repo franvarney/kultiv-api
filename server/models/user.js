@@ -41,13 +41,11 @@ class User extends Base {
   findByEmailOrUsername (done) {
     Logger.debug('user.findByEmailOrUsername')
 
-    let {email, username} = this.payload
+    let {email=null, username=null} = this.payload
 
     this.knex(this.name)
       .select('id', 'username', 'email', 'password')
-      .where(function () {
-        if (username) this.where('username', username)
-      })
+      .where('username', username)
       .orWhere('email', email)
       .whereNull('deleted_at')
       .first()

@@ -24,15 +24,11 @@ class Cookbook extends Base {
       .transacting(this.trx)
       .asCallback((err, cookbook) => {
         if (err) {
-          if (this.trx) {
-            Logger.error('Transaction Failed'), this.trx.rollback()
-          }
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
-        if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), this.trx.commit()
-        }
+        if (this._commit()) this._trxComplete()
         return done(null, cookbook)
       })
   }
@@ -49,15 +45,11 @@ class Cookbook extends Base {
       .transacting(this.trx)
       .asCallback((err, cookbooks) => {
         if (err) {
-          if (this.trx) {
-            Logger.error('Transaction Failed'), this.trx.rollback()
-          }
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
-        if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), this.trx.commit()
-        }
+        if (this._commit()) this._trxComplete()
         return done(null, cookbooks)
       })
   }
