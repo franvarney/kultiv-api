@@ -14,7 +14,7 @@ class Base {
     this.payload = data.payload || {}
   }
 
-  static treeize (data, options, signature) {
+  _treeize (data, options, signature) {
     if (!data) return undefined
 
     let tree = new Treeize()
@@ -32,32 +32,42 @@ class Base {
     return tree.grow(data).getData()
   }
 
-  static errors (err, fn) {
+  _errors (err, fn) {
     return Logger.error(err), fn(err)
   }
 
-  static commit () {
+  _commit () {
     return !!(this.trx && this.willCommit)
   }
 
-  static trxComplete () {
+  _trxComplete () {
     return Logger.debug('Transaction Completed'), this.trx.commit()
   }
 
-  static rollback () {
+  _rollback () {
     return !!this.trx
   }
 
-  static trxFailed() {
+  _trxFailed() {
     return Logger.error('Transaction Failed'), this.trx.rollback()
   }
 
-  findById (done) {
+  findById (hasDeletedAt=true, done) {
     Logger.debug(`base.${this.name}.findById`)
 
-    this.knex(this.name)
+    if (!done) {
+      done = hasDeletedAt
+      hasDeletedAt = true
+    }
+
+    let query = this.knex(this.name)
+
+    if (hasDeletedAt) {
+      query.whereNull('deleted_at')
+    }
+
+    query
       .where('id', Number(this.payload.id))
-      .whereNull('deleted_at')
       .transacting(this.trx)
       .first()
       .asCallback((err, found) => {
