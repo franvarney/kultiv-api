@@ -13,6 +13,8 @@ const ImporterSchema = require('../schemas/importer')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
 const RecipeSchema = require('../schemas/recipe')
+const Units = require('./handlers/units')
+const UnitSchema = require('../schemas/unit')
 const User = require('../handlers/user')
 const UserSchema = require('../schemas/user')
 
@@ -39,7 +41,7 @@ module.exports = [
   },
   { method: 'DELETE', path: '/auth', handler: Auth.logout },
 
-  // Cookbook
+  // Cookbooks
   { method: 'GET', path: '/users/{id}/cookbooks', handler: Cookbook.allByUser },
   { method: 'GET', path: '/cookbooks/{id}', handler: Cookbook.get },
   {
@@ -113,7 +115,7 @@ module.exports = [
     }
   },
 
-  // Recipe
+  // Recipes
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
   { method: 'GET', path: '/cookbooks/{id}/recipes', handler: Recipe.allByCookbook },
   { method: 'GET', path: '/recipes/{id}', handler: Recipe.get },
@@ -132,7 +134,22 @@ module.exports = [
   { method: 'PUT', path: '/recipes/{id}', handler: Recipe.update },
   { method: 'DELETE', path: '/recipes/{id}', handler: Recipe.delete },
 
-  // User
+  // Units
+  {
+    method: 'POST',
+    path: '/units',
+    config: {
+      validate: {
+        payload: UnitSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Units.create
+    }
+  },
+  { method: 'GET', path: '/units/{id}', handler: Units.get },
+
+  // Users
   { method: 'GET', path: '/users/{id}', handler: User.get },
   {
     method: 'POST',
