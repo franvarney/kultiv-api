@@ -7,7 +7,6 @@
     "coverage": "NODE_ENV=coverage lab -r html -o coverage/index.html -r lcov -o coverage/lcov.info",
     "dev": "LOG_LEVEL=debug npm start",
     "lint": "standard",
-    "posttest": "npm run lint",
     "start": "node index",
     "test": "KNEX_DEBUG=false LOG_LEVEL=none NODE_ENV=test lab -cv -m 10000"
   },
