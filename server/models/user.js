@@ -60,12 +60,19 @@ class User extends Base {
 
     this.findById((err, user) => {
       if (err) return Logger.error(err), done(err)
+      if (!user) return done(['notFound', 'User not found'])
 
-      this.payload = Object.assign(user, this.payload)
+      user = Object.assign({}, user)
+      this.payload.username = user.username
+      this.payload.email = user.email
 
-      this.findByEmailOrUsername((err, user) => {
+      this.findByEmailOrUsername((err, found) => {
         if (err) return Logger.error(err), done(err)
-        if (user) return done(['conflict', 'Email Already Exists'])
+        if (found && found.id !== this.payload.id) {
+          return done(['conflict', 'Email Already Exists'])
+        }
+
+        this.payload = Object.assign(user, this.payload)
 
         if (this.payload.password) {
           return hashPassword(this.payload.password, (err, hashed) => {
@@ -74,7 +81,6 @@ class User extends Base {
             return super.update(done)
           })
         }
-
         return super.update(done)
       })
     })

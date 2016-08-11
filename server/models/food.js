@@ -32,7 +32,7 @@ class Food extends Base {
     Logger.debug('food.findOrCreate')
 
     this.knex(this.name)
-      .select('id', 'name')
+      .select('id')
       .where('name', this.payload.name)
       .first()
       .transacting(this.trx)
@@ -44,7 +44,7 @@ class Food extends Base {
 
         if (found) {
           if (this._commit()) this._trxComplete()
-          return done(null, found)
+          return done(null, found.id)
         }
 
         return super.create(done)
@@ -55,7 +55,7 @@ class Food extends Base {
     Logger.debug('food.batchFindOrCreate')
 
     this.knex(this.name)
-      .select('id')
+      .select('id', 'name')
       .whereIn('name', this.payload)
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -64,6 +64,7 @@ class Food extends Base {
           return this._errors(err, done)
         }
 
+        let ids = found.map((food) => food.id)
         let names = found.map((food) => food.name)
         let create = this.payload.filter((food) => {
           return names.indexOf(food) === -1 ? true : false
@@ -73,19 +74,14 @@ class Food extends Base {
 
         if (!create || !create.length) {
           if (this._commit()) this._trxComplete()
-          return done(null, found)
+          return done(null, ids)
         }
 
-        // TODO validate?
+        this.payload = create
 
-        this.batchInsert((err, created) => {
-          if (err) {
-            if (this._rollback()) this._trxRollback()
-            return this._errors(err, done)
-          }
-
-          if (this._commit()) this._trxComplete()
-          return done(null, created.concat(found))
+        this.create((err, created) => {
+          if (err) return this._errors(err, done)
+          return done(null, created.concat(ids))
         })
       })
   }

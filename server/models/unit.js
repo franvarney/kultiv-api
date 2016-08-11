@@ -14,7 +14,7 @@ class Unit extends Base {
     Logger.debug('unit.findOrCreate')
 
     this.knex(this.name)
-      .select('id', 'name')
+      .select('id')
       .where('name', this.payload.name)
       .first()
       .transacting(this.trx)
@@ -26,7 +26,7 @@ class Unit extends Base {
 
         if (found) {
           if (this._commit()) this._trxComplete()
-          return done(null, found)
+          return done(null, found.id)
         }
 
         return super.create(done)
@@ -37,7 +37,7 @@ class Unit extends Base {
     Logger.debug('unit.batchFindOrCreate')
 
     this.knex(this.name)
-      .select('id')
+      .select('id', 'name')
       .whereIn('name', this.payload)
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -46,6 +46,7 @@ class Unit extends Base {
           return this._errors(err, done)
         }
 
+        let ids = found.map((unit) => unit.id)
         let names = found.map((unit) => unit.name)
         let create = this.payload.filter((unit) => {
           return names.indexOf(unit) === -1 ? true : false
@@ -55,19 +56,14 @@ class Unit extends Base {
 
         if (!create || !create.length) {
           if (this._commit()) this._trxComplete()
-          return done(null, found)
+          return done(null, ids)
         }
 
-        // TODO validate?
+        this.payload = create
 
-        this.batchInsert((err, created) => {
-          if (err) {
-            if (this._rollback()) this._trxRollback()
-            return this._errors(err, done)
-          }
-
-          if (this._commit()) this._trxComplete()
-          return done(null, created.concat(found))
+        this.create((err, created) => {
+          if (err) return this._errors(err, done)
+          return done(null, created.concat(ids))
         })
       })
   }

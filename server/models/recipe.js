@@ -3,8 +3,6 @@ const Waterfall = require('run-waterfall')
 
 const Base = require('./base')
 const CookbookRecipeModel = require('./cookbook-recipe')
-const DirectionModel = require('./direction')
-const FoodModel = require('./food')
 const IngredientModel = require('./ingredient')
 const RecipeDirectionModel = require('./recipe-direction')
 const RecipeIngredientModel = require('./recipe-ingredient')
@@ -42,7 +40,7 @@ const ingredients = function (queryBuilder) {
 const directions = function (queryBuilder) {
   queryBuilder
     .select('D.id AS directions:id', 'D.direction AS directions:direction',
-             'D.order AS directions:order')
+            'D.order AS directions:order')
     .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
       .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
 }
@@ -59,159 +57,112 @@ class Recipe extends Base {
     super(TABLE_NAME, RecipeSchema.general, data)
   }
 
+  get Unit () {
+    return UnitModel
+  }
+
   create (done) {
-    const that = this
-
-    this.knex.transaction((trx) => {
-      let directions = this.payload.directions
-      let ingredients = this.payload.ingredients
-      let foods = ingredients.map((ingredient) => ingredient.food)
-      let units = ingredients.map((ingredient) => ingredient.unit)
-      let recipeId
-
-      // TODO add manual, source_value property
-
-      Waterfall([
-        // get unit id for yields
-        function (callback) {
-          const Unit = new UnitModel({
-            payload: { idOrName: that.payload.yield_unit, trx }
-          })
-
-          Unit.findOrCreate((err, yieldUnit) => {
-            if (err) return callback(err)
-            that.payload.yield_unit_id = yieldUnit.id
-            return callback()
-          })
-        },
-        // create the recipe
-        // TODO check if entire recipe exists first
-        super.create.bind(that),
-        // get unit ids for each ingredient
-        function (id, callback) {
-          recipeId = id
-
-          const Unit = new UnitModel({ payload: units, trx })
-
-          Unit.batchFindOrCreate((err, foundOrCreatedUnits) => {
-            if (err) return callback(err)
-
-            let unitMap = new Map()
-            foundOrCreatedUnits.forEach((unit) => {
-              if (!unitMap.get(unit.name)) {
-                unitMap.set(unit.name, { unit_id: unit.id, unit: unit.name })
-              }
-            })
-
-            ingredients = that.payload.ingredients.map((ingredient) =>{
-              return Object.assign(ingredient, unitMap.get(ingredient.unit))
-            })
-
-            return callback()
-          })
-        },
-        // get food ids for each food
-        function (callback) {
-          const Food = new FoodModel({ payload: foods, trx })
-
-          Food.batchFindOrCreate((err, foundOrCreatedFoods) => {
-            if (err) return callback(err)
-
-            let foodMap = new Map()
-            foundOrCreatedFoods.forEach((food) => {
-              if (!foodMap.get(food.name)) {
-                foodMap.set(food.name, { food_id: food.id, food: food.name })
-              }
-            })
-
-            ingredients = that.payload.ingredients.map((ingredient) =>{
-              return Object.assign(ingredient, foodMap.get(ingredient.food))
-            })
-
-            return callback()
-          })
-        },
-        // create ingredients
-        function (callback) {
-          const Ingredient = new IngredientModel({
-            payload: ingredients.map((ingredient) => {
-              let {amount, unit_id, food_id, optional} = ingredient
-              return { amount, unit_id, food_id, optional }
-            }),
-            trx
-          })
-
-          Ingredient.batchFindOrCreate((err, ingredientIds) => {
-            if (err) return callback(err)
-            return callback(null, ingredientIds)
-          })
-        },
-        // create recipe ingredients
-        function (ingredientIds, callback) {
-          const RecipeIngredient = new RecipeIngredientModel({
-            payload: ingredientIds.map((ingredientId) => {
-              return { recipe_id: recipeId, ingredient_id: ingredientId }
-            }),
-            trx
-          })
-
-          return RecipeIngredient.batchFindOrCreate((err) => {
-            if (err) return callback(err)
-            return callback()
-          })
-        },
-        // create directions
-        function (callback) {
-          const Direction = new DirectionModel({ payload: directions, trx })
-
-          Direction.batchFindOrCreate((err, directionIds) => {
-            if (err) return callback(err)
-            return callback(null, directionIds)
-          })
-        },
-        // create recipe directions
-        function (directionIds, callback) {
-          const RecipeDirection = new RecipeDirectionModel({
-            payload: directionIds.map((directionId) => {
-              return { recipe_id: recipeId, direction_id: directionId }
-            }),
-            trx
-          })
-
-          return RecipeDirection.batchFindOrCreate((err) => {
-            if (err) return callback(err)
-            return callback()
-          })
-        }
-       ], (err) => {
-        if (err) {
-          if (trx) Logger.error('Transaction Failed'), trx.rollback(err)
-          return Logger.error(err), done(err)
-        }
-
-        if (trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), this.trx.commit()
-        }
-
-        // attach to cookbook if cookbook is selected
-        if (that.payload.cookbook_id) {
-          const CookbookRecipe = new CookbookRecipeModel({
-            payload: {
-              cookbook_id: that.payload.cookbook_id,
-              recipe_id: recipeId
-            },
-            trx
-          })
-
-          return CookbookRecipe.findOrCreate((err) => {
-            if (err) return Logger.error(err), done(err)
-            return done(null, recipeId)
-          })
-        }
-
-        return done(null, recipeId)
-      })
+    const Unit = new this.Unit({
+      payload: { name: this.payload.yield_unit }
     })
+
+    Unit.findOrCreate((err, unit) => {
+      if (err) {
+        if (this._rollback()) this._trxRollback()
+        return this._errors(err, done)
+      }
+
+      this.payload.yield_unit_id = unit.id
+      return super.create(done)
+    })
+
+
+    //   let directions = this.payload.directions
+    //   let ingredients = this.payload.ingredients
+
+
+
+    //     // create ingredients
+    //     function (callback) {
+    //       const Ingredient = new IngredientModel({
+    //         payload: ingredients.map((ingredient) => {
+    //           let {amount, unit_id, food_id, optional} = ingredient
+    //           return { amount, unit_id, food_id, optional }
+    //         }),
+    //         trx
+    //       })
+
+    //       Ingredient.batchFindOrCreate((err, ingredientIds) => {
+    //         if (err) return callback(err)
+    //         return callback(null, ingredientIds)
+    //       })
+    //     },
+    //     // create recipe ingredients
+    //     function (ingredientIds, callback) {
+    //       const RecipeIngredient = new RecipeIngredientModel({
+    //         payload: ingredientIds.map((ingredientId) => {
+    //           return { recipe_id: recipeId, ingredient_id: ingredientId }
+    //         }),
+    //         trx
+    //       })
+
+    //       return RecipeIngredient.batchFindOrCreate((err) => {
+    //         if (err) return callback(err)
+    //         return callback()
+    //       })
+    //     },
+    //     // create directions
+    //     function (callback) {
+    //       const Direction = new DirectionModel({ payload: directions, trx })
+
+    //       Direction.batchFindOrCreate((err, directionIds) => {
+    //         if (err) return callback(err)
+    //         return callback(null, directionIds)
+    //       })
+    //     },
+    //     // create recipe directions
+    //     function (directionIds, callback) {
+    //       const RecipeDirection = new RecipeDirectionModel({
+    //         payload: directionIds.map((directionId) => {
+    //           return { recipe_id: recipeId, direction_id: directionId }
+    //         }),
+    //         trx
+    //       })
+
+    //       return RecipeDirection.batchFindOrCreate((err) => {
+    //         if (err) return callback(err)
+    //         return callback()
+    //       })
+    //     }
+    //    ], (err) => {
+    //     if (err) {
+    //       if (trx) Logger.error('Transaction Failed'), trx.rollback(err)
+    //       return Logger.error(err), done(err)
+    //     }
+
+    //     if (trx && this.willCommit) {
+    //       Logger.debug('Transaction Completed'), this.trx.commit()
+    //     }
+
+    //     // attach to cookbook if cookbook is selected
+    //     if (that.payload.cookbook_id) {
+    //       const CookbookRecipe = new CookbookRecipeModel({
+    //         payload: {
+    //           cookbook_id: that.payload.cookbook_id,
+    //           recipe_id: recipeId
+    //         },
+    //         trx
+    //       })
+
+    //       return CookbookRecipe.findOrCreate((err) => {
+    //         if (err) return Logger.error(err), done(err)
+    //         return done(null, recipeId)
+    //       })
+    //     }
+
+    //     return done(null, recipeId)
+    //   })
+    // })
   }
 
   findById (done) {

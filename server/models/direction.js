@@ -15,7 +15,7 @@ class Direction extends Base {
     Logger.debug('direction.findOrCreate')
 
     this.knex(this.name)
-      .select('id', 'direction')
+      .select('id')
       .where('direction', this.payload.direction)
       .first()
       .transacting(this.trx)
@@ -68,12 +68,7 @@ class Direction extends Base {
         // TODO validate?
 
         this.batchInsert((err, created) => {
-          if (err) {
-            if (this._rollback()) this._trxRollback()
-            return this._errors(err, done)
-          }
-
-          if (this._commit()) this._trxComplete()
+          if (err) return this._errors(err, done)
           return done(null, created.concat(found))
         })
       })
