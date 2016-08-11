@@ -66,29 +66,30 @@ class Base {
       query.whereNull('deleted_at')
     }
 
+    if (Array.isArray(this.payload)) query.whereIn('id', this.payload)
+    else query.where('id', Number(this.payload.id)).first()
+
     query
-      .where('id', Number(this.payload.id))
+      .select('*')
       .transacting(this.trx)
-      .first()
       .asCallback((err, found) => {
         if (err) {
-          if (this.trx) {
-            Logger.error('Transaction Failed'), this.trx.rollback()
-          }
-          return Logger.error(err), done(err)
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
-        if (!found) {
+        if (!found || Array.isArray(found) && !found.length) {
           let err = 'Not Found'
           return Logger.error(err), done(['notFound', err])
         }
 
-        if (this.trx && this.willCommit) {
-          Logger.debug('Transaction Completed'), this.trx.commit()
-        }
+        if (this._commit()) this._trxComplete()
 
-        delete found.deleted_at
-        return done(null, Object.assign({}, found))
+        if (hasDeletedAt && Array.isArray(found)) {
+          found.forEach((item) => delete item.deleted_at)
+        } else if (hasDeletedAt) delete found.deleted_at
+
+        return done(null, found)
       })
   }
 
@@ -139,7 +140,7 @@ class Base {
         .insert(validated)
         .transacting(this.trx)
         .returning(returning)
-        .asCallback((err, id) => {
+        .asCallback((err, created) => {
           if (err) {
             if (this.trx) {
               Logger.error('Transaction Failed'), this.trx.rollback()
@@ -150,7 +151,9 @@ class Base {
           if (this.trx && this.willCommit) {
             Logger.debug('Transaction Completed'), this.trx.commit()
           }
-          return done(null, id[0])
+
+          if (!Array.isArray(this.payload)) created = created[0]
+          return done(null, created)
         })
     })
   }
@@ -179,11 +182,11 @@ class Base {
         delete validated.email
 
         this.knex(this.name)
-          .where('id', id)
           .update(validated)
+          .where('id', id)
           .transacting(this.trx)
           .returning(returning)
-          .asCallback((err, id) => {
+          .asCallback((err, resource) => {
             if (err) {
               if (this.trx) {
                 Logger.error('Transaction Failed'), this.trx.rollback()
@@ -194,7 +197,7 @@ class Base {
             if (this.trx && this.willCommit) {
               Logger.debug('Transaction Completed'), this.trx.commit()
             }
-            return done(null, id)
+            return done(null, resource[0])
           })
       })
     })
