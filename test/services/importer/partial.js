@@ -23,12 +23,15 @@ let directions = [
   ''
 ].join('\n')
 
+
+// TODO add directions order
+
 describe('services/importer/partial', () => {
   describe('partially entered recipe', () => {
     it('yields a recipe with array of ingredients and directions', (done) => {
       PartialImporter({ recipe_id: 1, ingredients, directions }, (err, recipe) => {
         expect(err).to.be.null()
-        expect(Array.isArray(recipe.ingredients)).to.be.true()
+        expect(Array.isArray(recipe.ingredients)).to.be.true() // TODO use  array()
         expect(Array.isArray(recipe.directions)).to.be.true()
         return done()
       })

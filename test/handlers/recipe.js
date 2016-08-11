@@ -33,29 +33,6 @@ describe('handlers/recipe', () => {
             prep_time: 1232,
             description: 'The best pizza evar!1',
             is_private: false,
-            directions: [{
-              direction: 'Some directions 1.',
-              order: 1
-            }, {
-              direction: 'Some directions 2.',
-              order: 2
-            }],
-            ingredients: [{
-              amount: 3.2,
-              unit: 'cups',
-              food: 'flour',
-              optional: false
-            }, {
-              amount: 5.6,
-              unit: 'tablespoons',
-              food: 'tomato sauce',
-              optional: false
-            }, {
-              amount: 40,
-              unit: 'slices',
-              food: 'pepperoni',
-              optional: true
-            }],
             yield_amount: 8,
             yield_unit: 'servings'
           },

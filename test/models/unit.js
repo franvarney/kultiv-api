@@ -5,7 +5,7 @@ const lab = exports.lab = Lab.script()
 const {describe, it} = lab
 const {expect} = Code
 
-const Auth = require('../../server/models/unit')
+const Unit = require('../../server/models/unit')
 
 describe('models/unit', () => {
   // TODO

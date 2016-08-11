@@ -5,28 +5,30 @@ const Lab = require('lab')
 const lab = exports.lab = Lab.script()
 const {after, before, describe, it} = lab
 
-const Units = require('../../server/handlers/units')
+const Ingredients = require('../../server/handlers/ingredients')
 
 const server = new Server()
 
 let id
 let unique = Date.now()
 
-describe('handlers/units', () => {
+describe('handlers/ingredients', () => {
   describe('create', () => {
     before((done) => {
       server.connection()
-      server.route({ method: 'POST', path: '/units', handler: Units.create })
+      server.route({ method: 'POST', path: '/ingredients', handler: Ingredients.create })
       return done()
     })
 
-    describe('when successfully creates a unit', () => {
+    describe('when successfully creates a ingredient', () => {
       it('yields the id', (done) => {
         server.inject({
           method: 'POST',
-          url: '/units',
+          url: '/ingredients',
           payload: {
-            name: `Unit ${unique}`
+            amount: 1,
+            unit: 'cups',
+            food: `Food ${unique}`
           }
         }, (response) => {
           id = response.result.id
@@ -38,15 +40,18 @@ describe('handlers/units', () => {
       })
     })
 
-    describe('when successfully creates units', () => {
+    describe('when successfully creates ingredients', () => {
       it('yields the ids', (done) => {
         server.inject({
           method: 'POST',
-          url: '/units',
+          url: '/ingredients',
           payload: [{
-            name: `Unit ${unique} 1`
+            amount: 1.5,
+            unit: 'cups',
+            food: `sugar`
           }, {
-            name: `Unit ${unique} 2`
+            unit: 'Unit ${unique} 2',
+            food: `Food ${unique} 2`
           }]
         }, (response) => {
           expect(response.statusCode).to.equal(201)
@@ -61,20 +66,20 @@ describe('handlers/units', () => {
   describe('get', () => {
     before((done) => {
       server.connection()
-      server.route({ method: 'GET', path: '/units/{id}', handler: Units.get })
+      server.route({ method: 'GET', path: '/ingredients/{id}', handler: Ingredients.get })
       return done()
     })
 
-    describe('when successfully gets a units', () => {
-      it('yields the unit', (done) => {
+    describe('when successfully gets a ingredient', () => {
+      it('yields the ingredient', (done) => {
         server.inject({
           method: 'GET',
-          url: `/units/${id}`,
+          url: `/ingredients/${id}`,
           credentials: { user: 3 }
         }, (response) => {
           expect(response.statusCode).to.equal(200)
           expect(response.result.id).to.equal(id)
-          expect(response.result.name).to.equal(`Unit ${unique}`)
+          expect(response.result.food).to.equal(`Ingredient ${unique}`)
           return done()
         })
       })
