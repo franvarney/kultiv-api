@@ -32,8 +32,8 @@ exports.get = function (request, reply) {
     payload: { id: request.params.id }
   })
 
-  Unit.findById(false, (err, food) => {
+  Unit.findById(false, (err, unit) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(food), reply(food).code(200)
+    return Logger.debug(unit), reply(unit).code(200)
   })
 }
