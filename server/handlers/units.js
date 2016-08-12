@@ -18,7 +18,7 @@ exports.create = function (request, reply) {
 
     let output = {}
 
-    if (Array.isArray(created)) output = { ids: created }
+    if (Array.isArray(created)) output = created.map((id) => ({ id }))
     else output = { id: created }
 
     return Logger.debug(output), reply(output).code(201)

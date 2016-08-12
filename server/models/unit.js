@@ -36,9 +36,13 @@ class Unit extends Base {
   batchFindOrCreate(done) {
     Logger.debug('unit.batchFindOrCreate')
 
+    let {payload} = this
+
     this.knex(this.name)
       .select('id', 'name')
-      .whereIn('name', this.payload)
+      .where(function () {
+        payload.map((unit) => this.orWhere({ name: unit.name }))
+      })
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
@@ -49,10 +53,8 @@ class Unit extends Base {
         let ids = found.map((unit) => unit.id)
         let names = found.map((unit) => unit.name)
         let create = this.payload.filter((unit) => {
-          return names.indexOf(unit) === -1 ? true : false
-        }).map((unit) => {
-          return { name: unit }
-        })
+          return names.indexOf(unit.name) === -1 ? true : false
+        }).map((unit) => ({ name: unit.name }))
 
         if (!create || !create.length) {
           if (this._commit()) this._trxComplete()

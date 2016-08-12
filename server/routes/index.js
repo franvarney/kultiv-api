@@ -10,6 +10,8 @@ const FoodSchema = require('../schemas/food')
 const Errors = require('../utils/errors')
 const Importer = require('../handlers/importer')
 const ImporterSchema = require('../schemas/importer')
+const Ingredients = require('./handlers/ingredients')
+const IngredientSchema = require('../schemas/ingredient')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
 const RecipeSchema = require('../schemas/recipe')
@@ -114,6 +116,21 @@ module.exports = [
       handler: Importer.create
     }
   },
+
+  // Ingredients
+  {
+    method: 'POST',
+    path: '/ingredients',
+    config: {
+      validate: {
+        payload: IngredientSchema.createPayload,
+        failAction: Errors.validate,
+        options: { stripUnknown: true }
+      },
+      handler: Ingredients.create
+    }
+  },
+  { method: 'GET', path: '/ingredients/{id}', handler: Ingredients.get },
 
   // Recipes
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },

@@ -55,8 +55,7 @@ describe('handlers/ingredients', () => {
           }]
         }, (response) => {
           expect(response.statusCode).to.equal(201)
-          expect(Object.keys(response.result)).to.equal(['ids'])
-          expect(response.result.ids).to.be.array()
+          expect(response.result).to.be.array()
           return done()
         })
       })
@@ -79,7 +78,6 @@ describe('handlers/ingredients', () => {
         }, (response) => {
           expect(response.statusCode).to.equal(200)
           expect(response.result.id).to.equal(id)
-          expect(response.result.food).to.equal(`Ingredient ${unique}`)
           return done()
         })
       })

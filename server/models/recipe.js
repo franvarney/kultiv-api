@@ -66,13 +66,13 @@ class Recipe extends Base {
       payload: { name: this.payload.yield_unit }
     })
 
-    Unit.findOrCreate((err, unit) => {
+    Unit.findOrCreate((err, id) => {
       if (err) {
         if (this._rollback()) this._trxRollback()
         return this._errors(err, done)
       }
 
-      this.payload.yield_unit_id = unit.id
+      this.payload.yield_unit_id = id
       return super.create(done)
     })
   }

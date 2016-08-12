@@ -54,9 +54,13 @@ class Food extends Base {
   batchFindOrCreate(done) {
     Logger.debug('food.batchFindOrCreate')
 
+    let {payload} = this
+
     this.knex(this.name)
       .select('id', 'name')
-      .whereIn('name', this.payload)
+      .where(function () {
+        payload.map((food) => this.orWhere({ name: food.name }))
+      })
       .transacting(this.trx)
       .asCallback((err, found) => {
         if (err) {
@@ -67,10 +71,8 @@ class Food extends Base {
         let ids = found.map((food) => food.id)
         let names = found.map((food) => food.name)
         let create = this.payload.filter((food) => {
-          return names.indexOf(food) === -1 ? true : false
-        }).map((food) => {
-          return { name: food }
-        })
+          return names.indexOf(food.name) === -1 ? true : false
+        }).map((food) => ({ name: food.name }))
 
         if (!create || !create.length) {
           if (this._commit()) this._trxComplete()

@@ -50,8 +50,7 @@ describe('handlers/units', () => {
           }]
         }, (response) => {
           expect(response.statusCode).to.equal(201)
-          expect(Object.keys(response.result)).to.equal(['ids'])
-          expect(response.result.ids).to.be.array()
+          expect(response.result).to.be.array()
           return done()
         })
       })

@@ -49,7 +49,6 @@ describe('handlers/foods', () => {
             name: `Food ${unique} 2`
           }]
         }, (response) => {
-          console.log(response.result)
           expect(response.statusCode).to.equal(201)
           expect(response.result).to.be.array()
           return done()

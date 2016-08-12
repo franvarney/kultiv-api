@@ -72,18 +72,18 @@ class Ingredient extends Base {
     Logger.debug('ingredient.batchFindOrCreate')
 
     let {payload} = this
-    let foodSet = new Set()
-    let unitSet = new Set()
+    let foods = []
+    let units = []
 
-    payload.forEach((ingredient) => foodSet.add(ingredient.food))
-    payload.forEach((ingredient) => unitSet.add(ingredient.unit))
+    payload.forEach((ingredient) => foods.push({ name: ingredient.food }))
+    payload.forEach((ingredient) => units.push({ name: ingredient.unit }))
 
     const Food = new this.Food({
-      payload: [...foodSet.values()]
+      payload: foods
     })
 
     const Unit = new this.Unit({
-      payload: [...unitSet.values()]
+      payload: units
     })
 
     // TODO trx?
@@ -136,6 +136,7 @@ class Ingredient extends Base {
           delete ingredient.food
           ingredient.unit_id = unitMap.get(ingredient.unit)
           delete ingredient.unit
+          ingredient.optional = ingredient.optional || false
         })
 
         this.knex(this.name)
