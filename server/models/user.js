@@ -1,7 +1,7 @@
 const Bcrypt = require('bcryptjs')
 const Logger = require('franston')('server:models:user')
 
-const Base = require('./base')
+const Model = require('./base')
 const UserSchema = require('../schemas/user')
 
 const TABLE_NAME = 'users'
@@ -18,10 +18,9 @@ function hashPassword (password, done) {
   })
 }
 
-class User extends Base {
-  constructor (data) {
-    super(TABLE_NAME, UserSchema.general, data)
-  }
+const User = Model.createModel({
+  name: TABLE_NAME,
+  schema: UserSchema.general,
 
   create (done) {
     Logger.debug('user.create')
@@ -30,30 +29,32 @@ class User extends Base {
       if (err) return Logger.error(err), done(err)
       if (user) return done(['conflict', 'User Already Exists'])
 
-      hashPassword(this.payload.password, (err, hashed) => {
+      hashPassword(this.data.password, (err, hashed) => {
         if (err) return Logger.error(err), done(err)
-        this.payload.password = hashed
-        super.create(done)
+        this.data.password = hashed
+        this.create(done)
       })
     })
-  }
+  },
 
   findByEmailOrUsername (done) {
     Logger.debug('user.findByEmailOrUsername')
 
-    let {email=null, username=null} = this.payload
+    let {email, username} = this.data
 
-    this.knex(this.name)
-      .select('id', 'username', 'email', 'password')
-      .where('username', username)
-      .orWhere('email', email)
+    let query = this.knex(this.name)
+                    .select('id', 'username', 'email', 'password')
+    if (email) query.where('email', email)
+    else query.where('username', username)
+
+    query
       .whereNull('deleted_at')
       .first()
       .asCallback((err, user) => {
         if (err) return Logger.error(err), done(err)
         return done(null, user)
       })
-  }
+  },
 
   update (done) {
     Logger.debug('user.update')
@@ -63,28 +64,29 @@ class User extends Base {
       if (!user) return done(['notFound', 'User not found'])
 
       user = Object.assign({}, user)
-      this.payload.username = user.username
-      this.payload.email = user.email
+      this.data.username = user.username
+      this.data.email = user.email
 
       this.findByEmailOrUsername((err, found) => {
         if (err) return Logger.error(err), done(err)
-        if (found && found.id !== this.payload.id) {
+        if (found && found.id !== this.data.id) {
           return done(['conflict', 'Email Already Exists'])
         }
 
-        this.payload = Object.assign(user, this.payload)
+        this.data = Object.assign(user, this.data)
 
-        if (this.payload.password) {
-          return hashPassword(this.payload.password, (err, hashed) => {
+        if (this.data.password) {
+          return hashPassword(this.data.password, (err, hashed) => {
             if (err) return Logger.error(err), done(err)
-            this.payload.password = hashed
-            return super.update(done)
+            this.data.password = hashed
+            return this.update(done)
           })
         }
-        return super.update(done)
+        return this.update(done)
       })
     })
   }
-}
+
+})
 
 module.exports = User
