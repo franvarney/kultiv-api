@@ -1,18 +1,24 @@
+const Assert = require('assert')
 const Joi = require('joi')
 const Logger = require('franston')('server:models:base')
 const Treeize = require('treeize')
 
 const DB = require('../connections/postgres')
 
-class Base {
-  constructor (name, schema, data={}) {
-    this.name = name
-    this.schema = schema
-    this.knex = DB
-    this.trx = data.trx
-    this.willCommit = data.willCommit || false
-    this.payload = data.payload || {}
-  }
+const definition = Joi.object().keys({
+  name: Joi.string().required(),
+  trx: Joi.func(),
+  willCommit: Joi.boolean().default(false),
+  schema: Joi.object() // .schema()
+}).options({ allowUnknown: true })
+
+const methods = {
+  set (data, trx = undefined, willCommit = false) {
+    this.data = data || {}
+    this.trx = trx
+    this.willCommit = willCommit
+    return this
+  },
 
   _treeize (data, options, signature) {
     if (!data) return undefined
@@ -30,95 +36,35 @@ class Base {
     if (signature) tree.setSignature(signature)
 
     return tree.grow(data).getData()
-  }
+  },
 
   _errors (err, fn) {
     return Logger.error(err), fn(err)
-  }
+  },
 
   _commit () {
     return !!(this.trx && this.willCommit)
-  }
+  },
 
   _trxComplete () {
     return Logger.debug('Transaction Completed'), this.trx.commit()
-  }
+  },
 
   _rollback () {
     return !!this.trx
-  }
+  },
 
   _trxFailed() {
     return Logger.error('Transaction Failed'), this.trx.rollback()
-  }
+  },
 
-  findById (hasDeletedAt=true, done) {
-    Logger.debug(`base.${this.name}.findById`)
-
-    if (!done) {
-      done = hasDeletedAt
-      hasDeletedAt = true
-    }
-
-    let query = this.knex(this.name)
-
-    if (hasDeletedAt) {
-      query.whereNull('deleted_at')
-    }
-
-    if (Array.isArray(this.payload)) query.whereIn('id', this.payload)
-    else query.where('id', Number(this.payload.id)).first()
-
-    query
-      .select('*')
-      .transacting(this.trx)
-      .asCallback((err, found) => {
-        if (err) {
-          if (this._rollback()) this._trxRollback()
-          return this._errors(err, done)
-        }
-
-        if (!found || Array.isArray(found) && !found.length) {
-          let err = 'Not Found'
-          return Logger.error(err), done(['notFound', err])
-        }
-
-        if (this._commit()) this._trxComplete()
-
-        if (hasDeletedAt && Array.isArray(found)) {
-          found.forEach((item) => delete item.deleted_at)
-        } else if (hasDeletedAt) delete found.deleted_at
-
-        return done(null, found)
-      })
-  }
-
-  deleteById (done) {
-    Logger.debug(`base.${this.name}.deleteById`)
-
-    this.findById((err, result) => {
+  validate (done) {
+    Logger.debug(`base.${this.name}.validate`)
+    return Joi.validate(this.data, this.schema, (err, validated) => {
       if (err) return Logger.error(err), done(err)
-
-      this.knex(this.name)
-        .where('id', this.payload.id)
-        .whereNull('deleted_at')
-        .update('deleted_at', 'now()')
-        .transacting(this.trx)
-        .asCallback((err, count) => {
-          if (err) {
-            if (this.trx) {
-              Logger.error('Transaction Failed'), this.trx.rollback()
-            }
-            return Logger.error(err), done(err)
-          }
-
-          if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), this.trx.commit()
-          }
-          return done(null, count)
-        })
+      return done(null, validated)
     })
-  }
+  },
 
   create (returning = 'id', done) {
     Logger.debug(`base.${this.name}.create`)
@@ -152,11 +98,64 @@ class Base {
             Logger.debug('Transaction Completed'), this.trx.commit()
           }
 
-          if (!Array.isArray(this.payload)) created = created[0]
+
+          if (!Array.isArray(this.data)) created = created[0]
           return done(null, created)
         })
     })
-  }
+  },
+
+  deleteById (done) {
+    Logger.debug(`base.${this.name}.deleteById`)
+
+    this.findById((err, result) => {
+      if (err) return Logger.error(err), done(err)
+
+      this.knex(this.name)
+        .where('id', this.data.id)
+        .whereNull('deleted_at')
+        .update('deleted_at', 'now()')
+        .asCallback((err, count) => {
+          if (err) return Logger.error(err), done(err)
+          return done(null, count)
+        })
+    })
+  },
+
+  findById (hasDeletedAt=true, done) {
+    Logger.debug(`base.${this.name}.findById`)
+
+    if (!done) {
+      done = hasDeletedAt
+      hasDeletedAt = true
+    }
+
+    let query = this.knex(this.name)
+
+    if (hasDeletedAt) {
+      query.whereNull('deleted_at')
+    }
+
+    if (Array.isArray(this.data)) query.whereIn('id', this.data)
+    else query.where('id', Number(this.data.id)).first()
+
+    query
+      .select('*')
+      .asCallback((err, found) => {
+        if (err) return this._errors(err, done)
+
+        if (!found || Array.isArray(found) && !found.length) {
+          let err = 'Not Found'
+          return Logger.error(err), done(['notFound', err])
+        }
+
+        if (hasDeletedAt && Array.isArray(found)) {
+          found.forEach((item) => delete item.deleted_at)
+        } else if (hasDeletedAt) delete found.deleted_at
+
+        return done(null, found)
+      })
+  },
 
   update (returning = 'id', done) {
     Logger.debug(`base.${this.name}.update`)
@@ -168,13 +167,13 @@ class Base {
 
     this.findById((err, results) => {
       if (err) return Logger.error(err), done(err)
-      this.payload = Object.assign(results, this.payload)
+      this.data = Object.assign(results, this.data)
 
       // TODO review why this is needed
-      let id = this.payload.id
-      delete this.payload.id
-      delete this.payload.created_at
-      delete this.payload.updated_at
+      let id = this.data.id
+      delete this.data.id
+      delete this.data.created_at
+      delete this.data.updated_at
 
       this.validate((err, validated) => {
         if (err) return Logger.error(err), done(err)
@@ -202,60 +201,22 @@ class Base {
       })
     })
   }
-
-  batchInsert (returning = 'id', done) {
-    Logger.debug(`base.${this.name}.batchInsert`)
-
-    if (!done) {
-      done = returning
-      returning = 'id'
-    }
-
-    DB.batchInsert(this.name, this.payload)
-      .returning(returning)
-      .transacting(this.trx)
-      .then((created) => {
-        if (this.trx && this.willCommit) {
-          Logger.error('Transaction Completed'), this.trx.commit()
-        }
-        return done(null, created)
-      })
-      .catch((err) => {
-        if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-        return Logger.error(err), done(err)
-      })
-  }
-
-  toggleIsPrivate (done) {
-    Logger.debug(`base.${this.name}.toggleIsPrivate`)
-
-    this.findById((err, result) => {
-      if (err) return done(err)
-
-      this.knex(this.name)
-        .where('id', this.payload.id)
-        .transacting(this.trx)
-        .returning('id')
-        .asCallback((err) => {
-          if (err) {
-            if (this.trx) {
-              Logger.error('Transaction Failed'), this.trx.rollback()
-            }
-            return Logger.error(err), done(err)
-          }
-
-          if (this.trx && this.willCommit) {
-            Logger.debug('Transaction Completed'), this.trx.commit()
-          }
-          return done(null, true)
-        })
-    })
-  }
-
-  validate (done) {
-    Logger.debug(`base.${this.name}.validate`)
-    Joi.validate(this.payload, this.schema, done)
-  }
 }
 
-module.exports = Base
+function validateModel (model, done) {
+  return Joi.validate(model, definition, done)
+}
+
+function createResource (base, model) {
+  return validateModel(model, (err, validated) => {
+    Assert.equal(err, null, err)
+    return Object.assign({}, base, methods, validated)
+  })
+}
+
+function Model (base) {
+  Assert.equal(typeof base.knex, 'function', 'Must include knex connection object')
+  return { createModel: createResource.bind(this, base) }
+}
+
+module.exports = Model({ knex: DB })
