@@ -18,12 +18,12 @@ let userId
 
 describe('handlers/cookbook', () => {
   before((done) => {
-    let user = new UserModel({ payload: { username: 'samdoe' } })
-
-    user.findByEmailOrUsername((err, u) => {
-      userId = u.id
-      return done()
-    })
+    UserModel
+      .set({ username: 'samdoe' })
+      .findByEmailOrUsername((err, u) => {
+        userId = u.id
+        return done()
+      })
   })
 
   describe('create', () => {
@@ -93,14 +93,14 @@ describe('handlers/cookbook', () => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
 
-          let cookbook = new CookbookModel({ payload: { id } })
-
-          return cookbook.findById((err, found) => {
-            expect(err).to.be.null()
-            expect(found.description).to.equal('Test description')
-            expect(found.created_at).to.not.equal(found.updated_at)
-            return done()
-          })
+          return CookbookModel
+                  .set({ id })
+                  .findById((err, found) => {
+                    expect(err).to.be.null()
+                    expect(found.description).to.equal('Test description')
+                    expect(found.created_at).to.not.equal(found.updated_at)
+                    return done()
+                  })
         })
       })
     })
@@ -123,13 +123,13 @@ describe('handlers/cookbook', () => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
 
-          let cookbook = new CookbookModel({ payload: { id } })
-
-          return cookbook.findById((err, found) => {
-            expect(err[1]).to.equal('Not Found')
-            expect(found).to.be.undefined()
-            return done()
-          })
+          return CookbookModel
+                  .set({ id })
+                  .findById((err, found) => {
+                    expect(err[1]).to.equal('Not Found')
+                    expect(found).to.be.undefined()
+                    return done()
+                  })
         })
       })
     })
