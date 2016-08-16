@@ -115,13 +115,13 @@ describe('handlers/user', () => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
 
-          let user = new UserModel({ payload: { id } })
-
-          return user.findById((err, found) => {
-            expect(err[1]).to.equal('Not Found')
-            expect(found).to.be.undefined()
-            return done()
-          })
+          return UserModel
+                  .set({ id })
+                  .findById((err, found) => {
+                    expect(err[1]).to.equal('Not Found')
+                    expect(found).to.be.undefined()
+                    return done()
+                  })
         })
       })
     })

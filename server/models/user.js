@@ -7,32 +7,57 @@ const UserSchema = require('../schemas/user')
 const TABLE_NAME = 'users'
 const SALT_WORK_FACTOR = 10
 
-function hashPassword (password, done) {
-  Bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
-    if (err) return Logger.error(err), done(err)
-
-    Bcrypt.hash(password, salt, (err, hashed) => {
-      if (err) return Logger.error(err), done(err)
-      return done(null, hashed)
-    })
-  })
+function hashPassword (password) {
+  let salt = Bcrypt.genSaltSync(SALT_WORK_FACTOR)
+  return Bcrypt.hashSync(password, salt)
 }
 
 const User = Model.createModel({
   name: TABLE_NAME,
   schema: UserSchema.general,
 
-  create (done) {
+  create (returning = 'id', done) {
     Logger.debug('user.create')
+
+    if (!done) {
+      done = returning
+      returning = 'id'
+    }
 
     this.findByEmailOrUsername((err, user) => {
       if (err) return Logger.error(err), done(err)
       if (user) return done(['conflict', 'User Already Exists'])
 
-      hashPassword(this.data.password, (err, hashed) => {
-        if (err) return Logger.error(err), done(err)
-        this.data.password = hashed
-        this.create(done)
+      this.data.password = hashPassword(this.data.password)
+
+      this.validate((err, validated) => {
+        if (err) {
+          if (this.trx) {
+            Logger.error('Transaction Failed'), this.trx.rollback()
+          }
+          return Logger.error(err), done(err)
+        }
+
+        this.knex(this.name)
+          .insert(validated)
+          .transacting(this.trx)
+          .returning(returning)
+          .asCallback((err, created) => {
+            if (err) {
+              if (this.trx) {
+                Logger.error('Transaction Failed'), this.trx.rollback()
+              }
+              return Logger.error(err), done(err)
+            }
+
+            if (this.trx && this.willCommit) {
+              Logger.debug('Transaction Completed'), this.trx.commit()
+            }
+
+
+            if (!Array.isArray(this.data)) created = created[0]
+            return done(null, created)
+          })
       })
     })
   },
@@ -56,8 +81,13 @@ const User = Model.createModel({
       })
   },
 
-  update (done) {
+  update (returning = 'id', done) {
     Logger.debug('user.update')
+
+    if (!done) {
+      done = returning
+      returning = 'id'
+    }
 
     this.findById((err, user) => {
       if (err) return Logger.error(err), done(err)
@@ -76,17 +106,42 @@ const User = Model.createModel({
         this.data = Object.assign(user, this.data)
 
         if (this.data.password) {
-          return hashPassword(this.data.password, (err, hashed) => {
-            if (err) return Logger.error(err), done(err)
-            this.data.password = hashed
-            return this.update(done)
-          })
+          this.data.password = hashPassword(this.data.password)
         }
-        return this.update(done)
+
+        // TODO review why this is needed
+        let id = this.data.id
+        delete this.data.id
+        delete this.data.created_at
+        delete this.data.updated_at
+
+        this.validate((err, validated) => {
+          if (err) return Logger.error(err), done(err)
+
+          delete validated.email
+
+          this.knex(this.name)
+            .update(validated)
+            .where('id', id)
+            .transacting(this.trx)
+            .returning(returning)
+            .asCallback((err, resource) => {
+              if (err) {
+                if (this.trx) {
+                  Logger.error('Transaction Failed'), this.trx.rollback()
+                }
+                return Logger.error(err), done(err)
+              }
+
+              if (this.trx && this.willCommit) {
+                Logger.debug('Transaction Completed'), this.trx.commit()
+              }
+              return done(null, resource[0])
+            })
+        })
       })
     })
   }
-
 })
 
 module.exports = User
