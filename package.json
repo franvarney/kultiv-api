@@ -41,7 +41,7 @@
   "devDependencies": {
     "code": "3.0.1",
     "lab": "10.9.0",
-    "mock-knex": "0.3.2",
+    "mock-knex": "0.3.3",
     "proxyquire": "1.7.3",
     "standard": "7.0.1"
   }
