@@ -1,21 +1,20 @@
 const Logger = require('franston')('server:models:unit')
 
-const Base = require('./base')
+const Model = require('./base')
 const UnitSchema = require('../schemas/unit')
 
 const TABLE_NAME = 'units'
 
-class Unit extends Base {
-  constructor (data) {
-    super(TABLE_NAME, UnitSchema.general, data)
-  }
+const Unit = Model.createModel({
+  name: TABLE_NAME,
+  schema: UnitSchema.general,
 
   findOrCreate(done) {
     Logger.debug('unit.findOrCreate')
 
     this.knex(this.name)
       .select('id')
-      .where('name', this.payload.name)
+      .where('name', this.data.name)
       .first()
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -29,19 +28,19 @@ class Unit extends Base {
           return done(null, found.id)
         }
 
-        return super.create(done)
+        return this.create(done)
       })
-  }
+  },
 
   batchFindOrCreate(done) {
     Logger.debug('unit.batchFindOrCreate')
 
-    let {payload} = this
+    let {data} = this
 
     this.knex(this.name)
       .select('id', 'name')
       .where(function () {
-        payload.map((unit) => this.orWhere({ name: unit.name }))
+        data.map((unit) => this.orWhere({ name: unit.name }))
       })
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -52,7 +51,7 @@ class Unit extends Base {
 
         let ids = found.map((unit) => unit.id)
         let names = found.map((unit) => unit.name)
-        let create = this.payload.filter((unit) => {
+        let create = this.data.filter((unit) => {
           return names.indexOf(unit.name) === -1 ? true : false
         }).map((unit) => ({ name: unit.name }))
 
@@ -61,7 +60,7 @@ class Unit extends Base {
           return done(null, ids)
         }
 
-        this.payload = create
+        this.data = create
 
         this.create((err, created) => {
           if (err) return this._errors(err, done)
@@ -69,6 +68,6 @@ class Unit extends Base {
         })
       })
   }
-}
+})
 
 module.exports = Unit
