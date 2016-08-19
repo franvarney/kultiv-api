@@ -56,12 +56,12 @@ describe('handlers/auth', () => {
       let userId
 
       before((done) => {
-        let user = new UserModel({ payload: { username: 'samdoe' } })
-
-        user.findByEmailOrUsername((err, u) => {
-          userId = u.id
-          return done()
-        })
+        UserModel
+          .set({ username: 'samdoe' } )
+          .findByEmailOrUsername((err, u) => {
+            userId = u.id
+            return done()
+          })
       })
 
       it('yields the user', (done) => {
@@ -79,7 +79,7 @@ describe('handlers/auth', () => {
     })
 
     describe('when user does not exist', () => {
-      let user = new UserModel()
+      let user = UserModel
 
       before((done) => {
         Sinon.stub(user, 'findByEmailOrUsername').yields(null, undefined)
@@ -122,13 +122,13 @@ describe('handlers/auth', () => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
 
-          let auth = new AuthModel({ payload: { id: credentials.hawk_id } })
-
-          return auth.findById((err, found) => {
-            expect(err[1]).to.equal('Key Not Found')
-            expect(found).to.be.undefined()
-            return done()
-          })
+          return AuthModel
+                  .set({ id: credentials.hawk_id })
+                  .findById((err, found) => {
+                    expect(err[1]).to.equal('Key Not Found')
+                    expect(found).to.be.undefined()
+                    return done()
+                  })
         })
       })
     })
