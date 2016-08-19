@@ -56,6 +56,33 @@ describe('models/unit', () => {
             return done()
           })
       })
+
+      describe('when first query fails', () => {
+        before((done) => {
+          tracker.on('query', function (query, step) {
+            return [
+              function () {
+                return query.reject()
+              },
+              function () {
+                return query.response();
+              }
+            ][step - 1]()
+          })
+          return done()
+        })
+
+        it('yields an error', (done) => {
+          Unit
+            .set({ name: 'test' })
+            .create((err, unit) => {
+              expect(err).to.not.be.null()
+              expect(err).to.be.instanceof(Error)
+              expect(unit).to.be.undefined()
+              return done()
+            })
+        })
+      })
     })
 
     describe('when successfully finds a unit', () => {
