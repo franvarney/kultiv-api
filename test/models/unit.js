@@ -75,7 +75,7 @@ describe('models/unit', () => {
         it('yields an error', (done) => {
           Unit
             .set({ name: 'test' })
-            .create((err, unit) => {
+            .findOrCreate((err, unit) => {
               expect(err).to.not.be.null()
               expect(err).to.be.instanceof(Error)
               expect(unit).to.be.undefined()
@@ -142,7 +142,7 @@ describe('models/unit', () => {
       })
     })
 
-    describe('when successfully finds and creats units', () => {
+    describe('when successfully finds and creates units', () => {
       before((done) => {
        tracker.on('query', function (query, step) {
           return [

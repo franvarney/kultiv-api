@@ -66,7 +66,7 @@ const methods = {
     })
   },
 
-  create (returning = 'id', done) {
+  _create (returning = 'id', done) {
     Logger.debug(`base.${this.name}.create`)
 
     if (!done) {
@@ -103,6 +103,10 @@ const methods = {
           return done(null, created)
         })
     })
+  },
+
+  create (returning = 'id', done) {
+    return this._create(returning, done)
   },
 
   deleteById (done) {

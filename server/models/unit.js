@@ -28,7 +28,7 @@ const Unit = Model.createModel({
           return done(null, found.id)
         }
 
-        return this.create(done)
+        return this._create(done)
       })
   },
 
@@ -62,7 +62,7 @@ const Unit = Model.createModel({
 
         this.data = create
 
-        this.create((err, created) => {
+        this._create((err, created) => {
           if (err) return this._errors(err, done)
           return done(null, created.concat(ids))
         })
