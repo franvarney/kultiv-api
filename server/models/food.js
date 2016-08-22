@@ -1,39 +1,33 @@
 const Logger = require('franston')('server:models:food')
 
-const Base = require('./base')
+const Model = require('./base')
 const FoodSchema = require('../schemas/food')
 
 const TABLE_NAME = 'foods'
 
-class Food extends Base {
-  constructor (data) {
-    super(TABLE_NAME, FoodSchema.general, data)
-  }
+const Food = Model.createModel({
+  name: TABLE_NAME,
+  schema: FoodSchema.general,
 
   findByName (done) {
     Logger.debug('food.findByName')
 
     this.knex(this.name)
-      .where('name', 'LIKE', `%${this.payload.name}%`)
+      .select('id', 'name')
+      .where('name', 'LIKE', `%${this.data.name}%`)
       .whereNull('deleted_at')
-      .transacting(this.trx)
       .asCallback((err, foods) => {
-        if (err) {
-          if (this._rollback()) this._trxRollback()
-          return this._errors(err, done)
-        }
-
-        if (this._commit()) this._trxComplete()
+        if (err) return this._errors(err, done)
         return done(null, foods)
       })
-  }
+  },
 
   findOrCreate(done) {
     Logger.debug('food.findOrCreate')
 
     this.knex(this.name)
       .select('id')
-      .where('name', this.payload.name)
+      .where('name', this.data.name)
       .first()
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -47,19 +41,19 @@ class Food extends Base {
           return done(null, found.id)
         }
 
-        return super.create(done)
+        return this._create(done)
       })
-  }
+  },
 
   batchFindOrCreate(done) {
     Logger.debug('food.batchFindOrCreate')
 
-    let {payload} = this
+    let {data} = this
 
     this.knex(this.name)
       .select('id', 'name')
       .where(function () {
-        payload.map((food) => this.orWhere({ name: food.name }))
+        data.map((food) => this.orWhere({ name: food.name }))
       })
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -70,7 +64,7 @@ class Food extends Base {
 
         let ids = found.map((food) => food.id)
         let names = found.map((food) => food.name)
-        let create = this.payload.filter((food) => {
+        let create = data.filter((food) => {
           return names.indexOf(food.name) === -1 ? true : false
         }).map((food) => ({ name: food.name }))
 
@@ -79,14 +73,14 @@ class Food extends Base {
           return done(null, ids)
         }
 
-        this.payload = create
+        this.data = create
 
-        this.create((err, created) => {
+        this._create((err, created) => {
           if (err) return this._errors(err, done)
           return done(null, created.concat(ids))
         })
       })
   }
-}
+})
 
 module.exports = Food

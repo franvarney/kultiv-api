@@ -1,17 +1,22 @@
 const Logger = require('franston')('handlers:foods')
 
 const Errors = require('../utils/errors')
-const FoodModel = require('../models/food')
+const Food = require('../models/food')
 
 exports.create = function (request, reply) {
   Logger.debug('foods.create')
 
-  const Food = new FoodModel({ payload: request.payload })
-
   let create = Function.prototype
 
-  if (Array.isArray(request.payload)) create = Food.batchFindOrCreate.bind(Food)
-  else create = Food.findOrCreate.bind(Food)
+  if (Array.isArray(request.payload)) {
+    create = Food
+              .set(request.payload)
+              .batchFindOrCreate.bind(Food)
+  } else {
+    create = Food
+              .set(request.payload)
+              .findOrCreate.bind(Food)
+  }
 
   create((err, created) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
@@ -28,12 +33,10 @@ exports.create = function (request, reply) {
 exports.get = function (request, reply) {
   Logger.debug('foods.get')
 
-  const Food = new FoodModel({
-    payload: { id: request.params.id }
-  })
-
-  Food.findById(false, (err, food) => {
-    if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(food), reply(food).code(200)
-  })
+  Food
+    .set({ id: request.params.id })
+    .findById(false, (err, food) => {
+      if (err) return Logger.error(err), reply(Errors.get(err))
+      return Logger.debug(food), reply(food).code(200)
+    })
 }
