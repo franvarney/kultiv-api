@@ -1,55 +1,41 @@
-const IsEqual = require('lodash.isequal')
 const Logger = require('franston')('server:models:ingredient')
 const Parallel = require('run-parallel')
-const XorWith = require('lodash.xorwith')
-const Waterfall = require('run-waterfall')
 
-const Base = require('./base')
-const FoodModel = require('./food')
+const Model = require('./base')
+const Food = require('./food')
 const IngredientSchema = require('../schemas/ingredient')
-const UnitModel = require('./unit')
+const Lodash = require('../utils/lodash')
+const Unit = require('./unit')
 
 const TABLE_NAME = 'ingredients'
 
-class Ingredient extends Base {
-  constructor (data) {
-    super(TABLE_NAME, IngredientSchema.general, data)
-  }
-
-  get Food () {
-    return FoodModel
-  }
-
-  get Unit () {
-    return UnitModel
-  }
+const Ingredient = Model.createModel({
+  name: TABLE_NAME,
+  schema: IngredientSchema.general,
 
   findOrCreate(done) {
     Logger.debug('ingredient.findOrCreate')
 
-    let {food, unit} = this.payload
-
-    const Food = new this.Food({ payload: { name: food } })
-    const Unit = new this.Unit({ payload: { name: unit } })
+    let {food, unit} = this.data
 
     Parallel([
-      Food.findOrCreate.bind(Food),
-      Unit.findOrCreate.bind(Unit)
+      Food.set({ name: food }).findOrCreate.bind(Food),
+      Unit.set({ name: unit }).findOrCreate.bind(Unit)
     ], (err, results) => {
       if (err) {
         if (this._rollback()) this._trxRollback()
         return this._errors(err, done)
       }
 
-      delete this.payload.food
-      delete this.payload.unit
+      delete this.data.food
+      delete this.data.unit
 
-      this.payload.food_id = results[0]
-      this.payload.unit_id = results[1]
+      this.data.food_id = results[0]
+      this.data.unit_id = results[1]
 
       this.knex(this.name)
         .select('id')
-        .where(this.payload)
+        .where(this.data)
         .first()
         .transacting(this.trx)
         .asCallback((err, found) => {
@@ -63,65 +49,47 @@ class Ingredient extends Base {
             return done(null, found.id)
           }
 
-          return super.create(done)
+          return this._create(done)
         })
     })
-  }
+  },
 
   batchFindOrCreate(done) {
     Logger.debug('ingredient.batchFindOrCreate')
 
-    let {payload} = this
     let foods = []
     let units = []
 
-    payload.forEach((ingredient) => foods.push({ name: ingredient.food }))
-    payload.forEach((ingredient) => units.push({ name: ingredient.unit }))
-
-    const Food = new this.Food({
-      payload: foods
-    })
-
-    const Unit = new this.Unit({
-      payload: units
-    })
+    this.data.map((ingredient) => foods.push({ name: ingredient.food }))
+    this.data.map((ingredient) => units.push({ name: ingredient.unit || 'none' }))
 
     // TODO trx?
     Parallel([
-      Food.batchFindOrCreate.bind(Food),
-      Unit.batchFindOrCreate.bind(Unit)
+      Food.set(foods.filter((food) => true)).batchFindOrCreate.bind(Food),
+      Unit.set(units.filter((unit) => true)).batchFindOrCreate.bind(Unit)
     ], (err, results) => {
       if (err) {
         if (this._rollback()) this._trxRollback()
         return this._errors(err, done)
       }
 
-      const Food = new this.Food({ payload: results[0] })
-      const Unit = new this.Unit({ payload: results[1] })
-
       let foodMap = new Map()
       let unitMap = new Map()
 
       Parallel([
         function (callback) {
-          Food.findById(false, (err, foods) => {
+          Food.set(results[0]).findById(false, (err, foods) => {
             if (err) return callback(err)
 
-            foods.forEach((food) => {
-              foodMap.has(food.name) || foodMap.set(food.name, food.id)
-            })
-
+            foods.forEach((food) => foodMap.set(food.name, food.id))
             return callback()
           })
         },
         function (callback) {
-          Unit.findById(false, (err, units) => {
+          Unit.set(results[1]).findById(false, (err, units) => {
             if (err) return callback(err)
 
-            units.forEach((unit) => {
-              unitMap.has(unit.name) || unitMap.set(unit.name, unit.id)
-            })
-
+            units.forEach((unit) => unitMap.set(unit.name, unit.id))
             return callback()
           })
         },
@@ -131,10 +99,12 @@ class Ingredient extends Base {
           return this._errors(err, done)
         }
 
-        payload.forEach((ingredient) => {
+        let {data} = this
+
+        data.forEach((ingredient) => {
           ingredient.food_id = foodMap.get(ingredient.food)
           delete ingredient.food
-          ingredient.unit_id = unitMap.get(ingredient.unit)
+          ingredient.unit_id = unitMap.get(ingredient.unit || 'none')
           delete ingredient.unit
           ingredient.optional = ingredient.optional || false
         })
@@ -142,7 +112,7 @@ class Ingredient extends Base {
         this.knex(this.name)
           .select('id', 'amount', 'unit_id', 'food_id', 'optional')
           .where(function () {
-            payload.forEach((ingredient) => this.orWhere(ingredient))
+            data.forEach((ingredient) => this.orWhere(ingredient))
           })
           .transacting(this.trx)
           .asCallback((err, found) => {
@@ -152,21 +122,18 @@ class Ingredient extends Base {
             }
 
             let ids = []
-            let create = XorWith(payload, found.map((ingredient) => {
-              ids.push(ingredient.id)
-              delete ingredient.id
+            let create = Lodash.xorWith(data, found.map((ingredient) => {
+              ids.push(ingredient.id), delete ingredient.id
               ingredient.amount = Number(ingredient.amount)
               return ingredient
-            }), IsEqual)
+            }), Lodash.isEqual)
 
-            if (!create || !create.length) {
+            if (!create.length) {
               if (this._commit()) this._trxComplete()
               return done(null, ids)
             }
 
-            this.payload = create
-
-            this.create((err, created) => {
+            this.set(create)._create((err, created) => {
               if (err) return this._errors(err, done)
               return done(null, created.concat(ids))
             })
@@ -174,6 +141,6 @@ class Ingredient extends Base {
       })
     })
   }
-}
+})
 
 module.exports = Ingredient
