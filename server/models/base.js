@@ -98,7 +98,6 @@ const methods = {
             Logger.debug('Transaction Completed'), this.trx.commit()
           }
 
-
           if (!Array.isArray(this.data)) created = created[0]
           return done(null, created)
         })

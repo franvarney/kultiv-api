@@ -55,7 +55,6 @@ describe('models/cookbook', () => {
   describe('deleteById', () => {
     describe('when successfully deletes a cookbook', () => {
       before((done) => {
-        tracker.install()
         tracker.on('query', function (query, step) {
           return [
             function () {
@@ -89,7 +88,6 @@ describe('models/cookbook', () => {
 
     describe('when cookbook to delete does not exist', () => {
       before((done) => {
-        tracker.install()
         tracker.on('query', function (query, step) {
           return [
             function () {

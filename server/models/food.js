@@ -73,9 +73,7 @@ const Food = Model.createModel({
           return done(null, ids)
         }
 
-        this.data = create
-
-        this._create((err, created) => {
+        this.set(create)._create((err, created) => {
           if (err) return this._errors(err, done)
           return done(null, created.concat(ids))
         })

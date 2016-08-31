@@ -121,33 +121,6 @@ describe('models/food', () => {
             return done()
           })
       })
-
-      describe('when first query fails', () => {
-        before((done) => {
-          tracker.on('query', function (query, step) {
-            return [
-              function () {
-                return query.reject()
-              },
-              function () {
-                return query.response();
-              }
-            ][step - 1]()
-          })
-          return done()
-        })
-
-        it('yields an error', (done) => {
-          Food
-            .set({ name: 'test' })
-            .findOrCreate((err, food) => {
-              expect(err).to.not.be.null()
-              expect(err).to.be.instanceof(Error)
-              expect(food).to.be.undefined()
-              return done()
-            })
-        })
-      })
     })
 
     describe('when successfully finds a food', () => {
@@ -175,6 +148,33 @@ describe('models/food', () => {
           })
       })
     })
+
+    describe('when first query fails', () => {
+      before((done) => {
+        tracker.on('query', function (query, step) {
+          return [
+            function () {
+              return query.reject()
+            },
+            function () {
+              return query.response();
+            }
+          ][step - 1]()
+        })
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Food
+          .set({ name: 'test' })
+          .findOrCreate((err, food) => {
+            expect(err).to.not.be.null()
+            expect(err).to.be.instanceof(Error)
+            expect(food).to.be.undefined()
+            return done()
+          })
+      })
+    })
   })
 
   describe('batchFindOrCreate', () => {
@@ -193,7 +193,7 @@ describe('models/food', () => {
         return done()
       })
 
-      it('should yield the id', (done) => {
+      it('should yield the ids', (done) => {
         Food
           .set([
             { name: 'food1' },
@@ -225,7 +225,7 @@ describe('models/food', () => {
         return done()
       })
 
-      it('should yield the id', (done) => {
+      it('should yield the ids', (done) => {
         Food
           .set([
             { name: 'food1' },

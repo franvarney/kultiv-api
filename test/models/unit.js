@@ -56,32 +56,32 @@ describe('models/unit', () => {
             return done()
           })
       })
+    })
 
-      describe('when first query fails', () => {
-        before((done) => {
-          tracker.on('query', function (query, step) {
-            return [
-              function () {
-                return query.reject()
-              },
-              function () {
-                return query.response();
-              }
-            ][step - 1]()
+    describe('when first query fails', () => {
+      before((done) => {
+        tracker.on('query', function (query, step) {
+          return [
+            function () {
+              return query.reject()
+            },
+            function () {
+              return query.response();
+            }
+          ][step - 1]()
+        })
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Unit
+          .set({ name: 'test' })
+          .findOrCreate((err, unit) => {
+            expect(err).to.not.be.null()
+            expect(err).to.be.instanceof(Error)
+            expect(unit).to.be.undefined()
+            return done()
           })
-          return done()
-        })
-
-        it('yields an error', (done) => {
-          Unit
-            .set({ name: 'test' })
-            .findOrCreate((err, unit) => {
-              expect(err).to.not.be.null()
-              expect(err).to.be.instanceof(Error)
-              expect(unit).to.be.undefined()
-              return done()
-            })
-        })
       })
     })
 
@@ -128,7 +128,7 @@ describe('models/unit', () => {
         return done()
       })
 
-      it('should yield the id', (done) => {
+      it('should yield the ids', (done) => {
         Unit
           .set([
             { name: 'unit1' },
@@ -160,7 +160,7 @@ describe('models/unit', () => {
         return done()
       })
 
-      it('should yield the id', (done) => {
+      it('should yield the ids', (done) => {
         Unit
           .set([
             { name: 'unit1' },
