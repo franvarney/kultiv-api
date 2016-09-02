@@ -1,22 +1,23 @@
 const Logger = require('franston')('server:models:recipe')
 const Waterfall = require('run-waterfall')
 
-const Base = require('./base')
-const CookbookRecipeModel = require('./cookbook-recipe')
-const IngredientModel = require('./ingredient')
-const RecipeDirectionModel = require('./recipe-direction')
-const RecipeIngredientModel = require('./recipe-ingredient')
+const Model = require('./base')
+const CookbookRecipe = require('./cookbook-recipe')
+const Ingredient = require('./ingredient')
+const RecipeDirection = require('./recipe-direction')
+const RecipeIngredient = require('./recipe-ingredient')
 const RecipeSchema = require('../schemas/recipe')
-const UnitModel = require('./unit')
+const Unit = require('./unit')
 
 const TABLE_NAME = 'recipes'
 
 // TODO add transactions
 
-const baseRecipe = function (queryBuilder) {
+function baseRecipe (queryBuilder) {
   queryBuilder
     .select('recipes.id', 'recipes.title', 'recipes.cook_time',
             'recipes.prep_time', 'recipes.description', 'recipes.is_private',
+            'recipes.source_type AS source:type', 'recipes.source_value AS source:value',
             'recipes.created_at', 'recipes.updated_at',
             'recipes.user_id AS creator:id', 'U.username AS creator:username',
             'recipes.yield_amount AS yields-:amount', 'RU.name AS yields-:unit')
@@ -25,7 +26,7 @@ const baseRecipe = function (queryBuilder) {
     .whereNull('recipes.deleted_at')
 }
 
-const ingredients = function (queryBuilder) {
+function ingredients (queryBuilder) {
   queryBuilder
     .select('I.id AS ingredients:id', 'I.amount AS ingredients:amount',
             'IU.name AS ingredients:unit', 'F.name AS ingredients:food',
@@ -36,77 +37,95 @@ const ingredients = function (queryBuilder) {
         .innerJoin('units AS IU', 'I.unit_id', 'IU.id')
 }
 
-// TODO add order
-const directions = function (queryBuilder) {
+function directions (queryBuilder) {
   queryBuilder
-    .select('D.id AS directions:id', 'D.direction AS directions:direction',
-            'D.order AS directions:order')
+    .select('D.id AS directions:id', 'D.direction AS directions:direction')
     .innerJoin('recipes_directions AS RD', 'recipes.id', 'RD.recipe_id')
       .innerJoin('directions AS D', 'RD.direction_id', 'D.id')
 }
 
-const cookbook = function (cookbookId, queryBuilder) {
+function cookbook (cookbookId, queryBuilder) {
   queryBuilder
     .innerJoin('cookbooks_recipes AS CR', 'CR.recipe_id', 'recipes.id')
     .where('CR.cookbook_id', cookbookId)
     .whereNull('CR.deleted_at')
 }
 
-class Recipe extends Base {
-  constructor (data) {
-    super(TABLE_NAME, RecipeSchema.general, data)
-  }
+function loadRecipe (query, isLoaded, done) {
+  Logger.debug('recipe.loadRecipe')
 
-  get Unit () {
-    return UnitModel
+  query.modify(baseRecipe)
+
+  if (!isLoaded) {
+    query.asCallback((err, recipes) => {
+      if (err) return Logger.error(err), done(err)
+      return done(null, recipes)
+    })
+  } else {
+    query.modify(ingredients)
+         .modify(directions)
+         .asCallback((err, recipes) => {
+           if (err) return Logger.error(err), done(err)
+           return done(null, recipes)
+         })
   }
+}
+
+const Recipe = Model.createModel({
+  name: TABLE_NAME,
+  schema: RecipeSchema.general,
 
   create (done) {
-    const Unit = new this.Unit({
-      payload: { name: this.payload.yield_unit }
-    })
-
-    Unit.findOrCreate((err, id) => {
-      if (err) {
-        if (this._rollback()) this._trxRollback()
-        return this._errors(err, done)
-      }
-
-      this.payload.yield_unit_id = id
-      return super.create(done)
-    })
-  }
-
-  findById (done) {
-    Logger.debug('recipe.findById')
-
-    this.knex(this.name)
-      .select('recipes.id', 'recipes.title', 'recipes.cook_time',
-            'recipes.prep_time', 'recipes.description', 'recipes.is_private',
-            'recipes.created_at', 'recipes.updated_at',
-            'recipes.user_id AS creator_id', 'U.username AS creator_username',
-            'recipes.yield_amount', 'RU.name AS yields_unit')
-        .innerJoin('users AS U', 'U.id', 'recipes.user_id')
-        .innerJoin('units AS RU', 'RU.id', 'recipes.yield_unit_id')
-      .where('recipes.id', this.payload.id)
-      .whereNull('recipes.deleted_at')
-      .first()
-      .asCallback((err, found) => {
-        if (err) return Logger.error(err), done(err)
-
-        if (!found) {
-          let err = 'Recipe Not Found'
-          return Logger.error(err), done(['notFound', err])
+    Unit
+      .set({ name: this.data.yield_unit })
+      .findOrCreate((err, id) => {
+        if (err) {
+          if (this._rollback()) this._trxRollback()
+          return this._errors(err, done)
         }
 
-        return done(null, found)
+        this.data.yield_unit_id = id
+        return this._create(done)
       })
-  }
+  },
+
+  findById (isLoaded, done) {
+    Logger.debug('recipe.findById')
+
+    if (typeof isLoaded === 'function') {
+      done = isLoaded
+      isLoaded = false
+    }
+
+    let query = this.knex(this.name)
+                    .where('recipes.id', this.data.id)
+                    .first()
+
+    return loadRecipe(query, isLoaded, (err, recipe) => {
+      if (err) return Logger.error(err), done(err)
+
+      if (!recipe) {
+        let err = 'Recipe Not Found'
+        return Logger.error(err), done(['notFound', err])
+      }
+
+      return done(null, recipe)
+    })
+  },
 
   findByUserId (isLoaded, done) {
     Logger.debug('recipe.findByUserId')
-    this.loadRecipe(`recipes.user_id = ${this.payload.user_id}`, isLoaded, done)
-  }
+
+    if (typeof isLoaded === 'function') {
+      done = isLoaded
+      isLoaded = false
+    }
+
+    let query = this.knex(this.name)
+                    .whereRaw(`recipes.user_id = ${this.data.user_id}`)
+
+    return loadRecipe(query, isLoaded, done)
+  },
 
   findByCookbookId (isLoaded, done) { // TODO refactor this later
     Logger.debug('recipe.findByCookbookdId')
@@ -116,64 +135,25 @@ class Recipe extends Base {
       isLoaded = false
     }
 
-    if (!done) done = Function.prototype
+    let query = this.knex(this.name)
+                    .modify(cookbook.bind(null, this.data.cookbook_id))
 
-    if (!isLoaded) {
-      this.knex(this.name)
-        .modify(baseRecipe)
-        .modify(cookbook.bind(null, this.payload.cookbook_id))
-        .asCallback((err, recipes) => {
-          if (err) return Logger.error(err), done(err)
-          return done(null, recipes)
-        })
-    } else {
-      this.knex(this.name)
-        .modify(baseRecipe)
-        .modify(cookbook.bind(null, this.payload.cookbook_id))
-        .modify(ingredients)
-        .modify(directions)
-        .asCallback((err, recipes) => {
-          if (err) return Logger.error(err), done(err)
-          return done(null, recipes)
-        })
-    }
-  }
+    return loadRecipe(query, isLoaded, done)
+  },
 
   findByTitle (isLoaded, done) {
     Logger.debug('recipe.findByTitle')
-    this.loadRecipe(`recipes.title LIKE %${this.payload.title}%`, isLoaded, done)
-  }
-
-  loadRecipe (rawQuery, isLoaded, done) {
-    Logger.debug('recipe.loadRecipe')
 
     if (typeof isLoaded === 'function') {
       done = isLoaded
       isLoaded = false
     }
 
-    if (!done) done = Function.prototype
+    let query = this.knex(this.name)
+                    .whereRaw(`recipes.title LIKE %${this.data.title}%`)
 
-    if (!isLoaded) {
-      this.knex(this.name)
-        .whereRaw(rawQuery)
-        .modify(baseRecipe)
-        .asCallback((err, recipes) => {
-          if (err) return Logger.error(err), done(err)
-          return done(null, recipes)
-        })
-    } else {
-      this.knex(this.name)
-        .whereRaw(rawQuery)
-        .modify(baseRecipe)
-        .modify(ingredients)
-        .modify(directions)
-        .asCallback((err, recipes) => {
-          if (err) return Logger.error(err), done(err)
-          return done(null, recipes)
-        })
-    }
+    return loadRecipe(query, isLoaded, done)
   }
-}
+})
 
 module.exports = Recipe

@@ -89,9 +89,7 @@ describe('handlers/recipe', () => {
           expect(response.statusCode).to.equal(204)
           expect(response.result).to.be.null()
 
-          let recipe = new RecipeModel({ payload: { id } })
-
-          return recipe.findById((err, found) => {
+          return RecipeModel.set({ id }).findById((err, found) => {
             expect(err[1]).to.equal('Recipe Not Found')
             expect(found).to.be.undefined()
             return done()
