@@ -11,7 +11,7 @@ const RecipesData = require('../fixtures/recipes')
 const RecipesFullData = require('../fixtures/recipes-full')
 const TrackerHelper = require('../helpers/tracker')
 
-describe.only('models/recipe', () => {
+describe('models/recipe', () => {
   let tracker = MockKnex.getTracker()
   let queries = {}
 
