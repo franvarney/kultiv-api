@@ -43,6 +43,7 @@
     "lab": "10.9.0",
     "mock-knex": "0.3.3",
     "proxyquire": "1.7.3",
+    "sinon": "1.17.5",
     "standard": "7.0.1"
   }
 }
