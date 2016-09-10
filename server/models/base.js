@@ -20,22 +20,11 @@ const methods = {
     return this
   },
 
-  _treeize (data, options, signature) {
-    if (!data) return undefined
-
-    let tree = new Treeize()
-    let defaults = {
-      output: {
-        prune: false
-      }
-    }
-
-    if (options) tree.options(options)
-    else tree.options(defaults)
-
-    if (signature) tree.setSignature(signature)
-
-    return tree.grow(data).getData()
+  setSelect () {
+    let args = Array.prototype.slice.call(arguments)
+    if (args.length) this.select = args
+    else this.select = '*'
+    return this
   },
 
   _errors (err, fn) {
@@ -67,7 +56,7 @@ const methods = {
   },
 
   _create (returning = 'id', done) {
-    Logger.debug(`base.${this.name}.create`)
+    Logger.debug(`base.${this.name}._create`)
 
     if (!done) {
       done = returning
@@ -105,28 +94,25 @@ const methods = {
   },
 
   create (returning = 'id', done) {
+    Logger.debug(`base.${this.name}.create`)
     return this._create(returning, done)
   },
 
   deleteById (done) {
     Logger.debug(`base.${this.name}.deleteById`)
 
-    this.findById((err, result) => {
-      if (err) return Logger.error(err), done(err)
-
-      this.knex(this.name)
-        .where('id', this.data.id)
-        .whereNull('deleted_at')
-        .update('deleted_at', 'now()')
-        .asCallback((err, count) => {
-          if (err) return Logger.error(err), done(err)
-          return done(null, count)
-        })
-    })
+    this.knex(this.name)
+      .where('id', this.data.id)
+      .whereNull('deleted_at')
+      .update('deleted_at', 'now()')
+      .asCallback((err, count) => {
+        if (err) return Logger.error(err), done(err)
+        return done(null, count)
+      })
   },
 
-  findById (hasDeletedAt=true, done) {
-    Logger.debug(`base.${this.name}.findById`)
+  _findById (hasDeletedAt, done) {
+    Logger.debug(`base.${this.name}._findById`)
 
     if (!done) {
       done = hasDeletedAt
@@ -143,7 +129,7 @@ const methods = {
     else query.where('id', Number(this.data.id)).first()
 
     query
-      .select('*')
+      .select(this.select)
       .asCallback((err, found) => {
         if (err) return this._errors(err, done)
 
@@ -160,6 +146,11 @@ const methods = {
       })
   },
 
+  findById (hasDeletedAt=true, done) {
+    Logger.debug(`base.${this.name}.findById`)
+    return this._findById(hasDeletedAt, done)
+  },
+
   update (returning = 'id', done) {
     Logger.debug(`base.${this.name}.update`)
 
@@ -168,7 +159,7 @@ const methods = {
       returning = 'id'
     }
 
-    this.findById((err, results) => {
+    this._findById((err, results) => {
       if (err) return Logger.error(err), done(err)
       this.data = Object.assign(results, this.data)
 
