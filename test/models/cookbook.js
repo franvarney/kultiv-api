@@ -6,10 +6,14 @@ const lab = exports.lab = Lab.script()
 const {after, afterEach, before, beforeEach, describe, it} = lab
 
 const Cookbook = require('../../server/models/cookbook')
+const CookbookData = require('../fixtures/cookbooks')
+const CookbookUnformattedData = require('../fixtures/cookbook-unformatted')
 const DB = require('../../server/connections/postgres')
+const TrackerHelper = require('../helpers/tracker')
 
 describe('models/cookbook', () => {
   let tracker = MockKnex.getTracker()
+  let queries = {}
 
   before((done) => {
     MockKnex.mock(DB)
@@ -17,6 +21,22 @@ describe('models/cookbook', () => {
   })
 
   beforeEach((done) => {
+    queries = {
+      create: {
+        name: 'Test Cookbook',
+        description: 'A description',
+        owner_id: 3
+      },
+      deleteById: { id: 1 },
+      findByOwner: { owner_id: 3 },
+      findByCollaborator: { collaborator_id: 2 },
+      findById: { id: 2 },
+      update: {
+        id: 2,
+        name: 'Test Cookbook Updated'
+      }
+    }
+
     tracker.install()
     return done()
   })
@@ -32,20 +52,49 @@ describe('models/cookbook', () => {
   })
 
   describe('create', () => {
-    describe('when successfully creates a cookbook', () => {
+    describe('creates a cookbook', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response([1])
-        })
+        tracker.on('query', TrackerHelper.response.bind(null, [1]))
         return done()
       })
 
-      it('should yield the id', (done) => {
+      it('yields the id', (done) => {
         Cookbook
-          .set({ name: 'Test Cookbook', description: 'A description', owner_id: 3 })
+          .set(queries.create)
           .create((err, id) => {
             expect(err).to.be.null()
             expect(typeof id).to.equal('number')
+            expect(id).to.equal(1)
+            return done()
+          })
+      })
+    })
+
+    describe('bad cookbook data is submitted', () => {
+      it('yields an error', (done) => {
+        Cookbook
+          .set({})
+          .create((err, id) => {
+            expect(err).to.not.be.null()
+            expect(err).to.be.instanceof(Error)
+            expect(err.isJoi).to.be.true()
+            expect(id).to.be.undefined()
+            return done()
+          })
+      })
+    })
+
+    describe('query fails', () => {
+      before((done) => {
+        tracker.on('query', TrackerHelper.reject)
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Cookbook
+          .set(queries.create)
+          .create((err) => {
+            expect(err).to.not.be.null()
             return done()
           })
       })
@@ -53,31 +102,15 @@ describe('models/cookbook', () => {
   })
 
   describe('deleteById', () => {
-    describe('when successfully deletes a cookbook', () => {
+    describe('deletes a cookbook', () => {
       before((done) => {
-        tracker.on('query', function (query, step) {
-          return [
-            function () {
-              return query.response({
-                id: 1,
-                description: null,
-                is_private: false,
-                owner_id: 3,
-                created_at: Date.now(),
-                updated_at: Date.now()
-              })
-            },
-            function () {
-              return query.response(1);
-            }
-          ][step - 1]()
-        })
+        tracker.on('query', TrackerHelper.response.bind(null, 1))
         return done()
       })
 
-      it('should yield the the deleted count', (done) => {
+      it('yields the deleted count', (done) => {
         Cookbook
-          .set({ id: 1 })
+          .set(queries.deleteById)
           .deleteById((err, count) => {
             expect(err).to.be.null()
             expect(count).to.equal(1)
@@ -86,26 +119,34 @@ describe('models/cookbook', () => {
       })
     })
 
-    describe('when cookbook to delete does not exist', () => {
+    describe('cookbook does not exist', () => {
       before((done) => {
-        tracker.on('query', function (query, step) {
-          return [
-            function () {
-              return query.response()
-            },
-            function () {
-              return query.response(0);
-            }
-          ][step - 1]()
-        })
+        tracker.on('query', TrackerHelper.response.bind(null, 0))
         return done()
       })
 
-      it('should yield the the deleted count', (done) => {
+      it('yields an error', (done) => {
         Cookbook
-          .set({ id: 1 })
+          .set(queries.deleteById)
+          .deleteById((err, count) => {
+            expect(err).to.be.null()
+            expect(count).to.equal(0)
+            return done()
+          })
+      })
+    })
+
+    describe('query fails', () => {
+      before((done) => {
+        tracker.on('query', TrackerHelper.reject)
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Cookbook
+          .set(queries.deleteById)
           .deleteById((err) => {
-            expect(err).to.equal(['notFound', 'Not Found'])
+            expect(err).to.not.be.null()
             return done()
           })
       })
@@ -113,45 +154,34 @@ describe('models/cookbook', () => {
   })
 
   describe('findByCollaborator', () => {
-    describe('when successful and there are cookbooks', () => {
+    describe('collaborator has cookbooks', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response([{
-            id: 1,
-            description: null,
-            is_private: false,
-            'creator:id': 2,
-            'creator:username': 'samdoe',
-            created_at: Date.now(),
-            updated_at: Date.now()
-          }])
-        })
+        tracker.on('query', TrackerHelper.response.bind(null, [CookbookData[1]]))
         return done()
       })
 
-      it('should yield an array of cookbooks', (done) => {
+      it('yields an array of cookbooks', (done) => {
         Cookbook
-          .set({ owner_id: 2 })
-          .findByOwner((err, cookbooks) => {
+          .set(queries.findByCollaborator)
+          .findByCollaborator((err, cookbooks) => {
             expect(err).to.be.null()
             expect(cookbooks).to.be.array()
+            expect(cookbooks.length).to.equal(1)
             return done()
           })
       })
     })
 
-    describe('when successful but there are no cookbooks', () => {
+    describe('collaborator has no cookbooks', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response([])
-        })
+        tracker.on('query', TrackerHelper.emptySet)
         return done()
       })
 
-      it('should yield an empty array', (done) => {
+      it('yields an empty array', (done) => {
         Cookbook
-          .set({ owner_id: 2 })
-          .findByOwner((err, cookbooks) => {
+          .set(queries.findByCollaborator)
+          .findByCollaborator((err, cookbooks) => {
             expect(err).to.be.null()
             expect(cookbooks).to.be.array()
             expect(cookbooks.length).to.equal(0)
@@ -160,17 +190,15 @@ describe('models/cookbook', () => {
       })
     })
 
-    describe('when query fails', () => {
+    describe('query fails', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.reject('error')
-        })
+        tracker.on('query', TrackerHelper.reject)
         return done()
       })
 
-      it('should yield an error', (done) => {
+      it('yields an error', (done) => {
         Cookbook
-          .set({ owner_id: 2 })
+          .set(queries.findByCollaborator)
           .findByCollaborator((err) => {
             expect(err).to.not.be.null()
             return done()
@@ -180,44 +208,44 @@ describe('models/cookbook', () => {
   })
 
   describe('findById', () => {
-    describe('when successful and there is a cookbook', () => {
+    describe('cookbook exists', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response({
-            id: 1,
-            description: null,
-            is_private: false,
-            'creator:id': 2,
-            'creator:username': 'samdoe',
-            created_at: Date.now(),
-            updated_at: Date.now()
-          })
+        let userData = {
+          'creator:id': 2,
+          'creator:username': 'username'
+        }
+
+        tracker.on('query', function (query, step) {
+          return [
+            TrackerHelper.response.bind(null, CookbookUnformattedData, query),
+            TrackerHelper.response.bind(null, userData, query),
+          ][step - 1]()
         })
+        tracker.on('query', TrackerHelper.response.bind(null, CookbookData[0]))
         return done()
       })
 
-      it('should yield a cookbook', (done) => {
+      it('yields a cookbook', (done) => {
         Cookbook
-          .set({ id: 2 })
+          .set(queries.findById)
           .findById((err, cookbook) => {
             expect(err).to.be.null()
             expect(cookbook.id).to.be.equal(1)
+            expect(cookbook['creator:id']).to.be.equal(3)
             return done()
           })
       })
     })
 
-    describe('when cookbook does not exist', () => {
+    describe('cookbook does not exist', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response([])
-        })
+        tracker.on('query', TrackerHelper.noResults)
         return done()
       })
 
-      it('should yield an error', (done) => {
+      it('yields an error', (done) => {
         Cookbook
-          .set({ id: 2 })
+          .set(queries.findById)
           .findById((err) => {
             expect(err).to.not.be.null()
             expect(err).to.equal([ 'notFound', 'Not Found' ])
@@ -225,28 +253,55 @@ describe('models/cookbook', () => {
           })
       })
     })
-  })
 
-  describe('findByOwner', () => {
-    describe('when successful and cookbooks', () => {
+    describe('first query fails', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response([{
-            id: 1,
-            description: null,
-            is_private: false,
-            'creator:id': 3,
-            'creator:username': 'samdoe',
-            created_at: Date.now(),
-            updated_at: Date.now()
-          }])
+        tracker.on('query', TrackerHelper.reject)
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Cookbook
+          .set(queries.findById)
+          .findById((err, cookbook) => {
+            expect(err).to.not.be.null()
+            return done()
+          })
+      })
+    })
+
+    describe('second query fails', () => {
+      before((done) => {
+        tracker.on('query', function (query, step) {
+          return [
+            TrackerHelper.response.bind(null, CookbookUnformattedData, query),
+            TrackerHelper.reject
+          ][step - 1]()
         })
         return done()
       })
 
-      it('should yield an array of cookbooks', (done) => {
+      it('yields an error', (done) => {
         Cookbook
-          .set({ owner_id: 3 })
+          .set(queries.findById)
+          .findById((err, cookbook) => {
+            expect(err).to.not.be.null()
+            return done()
+          })
+      })
+    })
+  })
+
+  describe('findByOwner', () => {
+    describe('owner has cookbooks', () => {
+      before((done) => {
+        tracker.on('query', TrackerHelper.response.bind(null, [CookbookData[0]]))
+        return done()
+      })
+
+      it('yields an array of cookbooks', (done) => {
+        Cookbook
+          .set(queries.findByOwner)
           .findByOwner((err, cookbooks) => {
             expect(err).to.be.null()
             expect(cookbooks).to.be.array()
@@ -255,17 +310,15 @@ describe('models/cookbook', () => {
       })
     })
 
-    describe('when successful but no cookbooks', () => {
+    describe('owner has no cookbooks', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.response([])
-        })
+        tracker.on('query', TrackerHelper.emptySet)
         return done()
       })
 
-      it('should yield an empty array', (done) => {
+      it('yields an empty array', (done) => {
         Cookbook
-          .set({ owner_id: 3 })
+          .set(queries.findByOwner)
           .findByOwner((err, cookbooks) => {
             expect(err).to.be.null()
             expect(cookbooks).to.be.array()
@@ -275,17 +328,15 @@ describe('models/cookbook', () => {
       })
     })
 
-    describe('when query fails', () => {
+    describe('query fails', () => {
       before((done) => {
-        tracker.on('query', function (query) {
-          return query.reject('error')
-        })
+        tracker.on('query', TrackerHelper.reject)
         return done()
       })
 
-      it('should yield an error', (done) => {
+      it('yields an error', (done) => {
         Cookbook
-          .set({ owner_id: 2 })
+          .set(queries.findByOwner)
           .findByOwner((err) => {
             expect(err).to.not.be.null()
             return done()
@@ -295,60 +346,76 @@ describe('models/cookbook', () => {
   })
 
   describe('update', () => {
-    describe('when successful', () => {
+    describe('updates a cookbook', () => {
       before((done) => {
         tracker.on('query', function (query, step) {
           return [
-            function () {
-              return query.response({
-                id: 1,
-                description: null,
-                is_private: false,
-                owner_id: 3,
-                created_at: Date.now(),
-                updated_at: Date.now()
-              })
-            },
-            function () {
-              return query.response([1]);
-            }
+            TrackerHelper.response.bind(null, CookbookUnformattedData, query),
+            TrackerHelper.response.bind(null, [2], query)
           ][step - 1]()
         })
         return done()
       })
 
-      it('should yield the id', (done) => {
+      it('yields the id', (done) => {
         Cookbook
-          .set({ name: 'Test Cookbook Updated' })
+          .set(queries.update)
           .update((err, id) => {
             expect(err).to.be.null()
             expect(typeof id).to.equal('number')
+            expect(id).to.equal(2)
             return done()
           })
       })
     })
 
-    describe('when found', () => {
+    describe('no id is submitted', () => {
       before((done) => {
-        tracker.on('query', function (query, step) {
-          return [
-            function () {
-              return query.response([])
-            },
-            function () {
-              return query.response([2]);
-            }
-          ][step - 1]()
-        })
+        tracker.on('query', TrackerHelper.noResults)
         return done()
       })
 
-      it('should yield an error', (done) => {
+      it('yields an error', (done) => {
         Cookbook
-          .set({ id: 2, name: 'Test Cookbook Updated' })
+          .set({ test: false })
           .update((err) => {
             expect(err).to.not.be.null()
             expect(err).to.equal([ 'notFound', 'Not Found' ])
+            return done()
+          })
+      })
+    })
+
+    describe('bad data is submitted', () => {
+      before((done) => {
+        tracker.on('query', TrackerHelper.response.bind(null, CookbookData[1]))
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Cookbook
+          .set(Object.assign(queries.update, { name: 'no' }))
+          .update((err, id) => {
+            expect(err).to.not.be.null()
+            expect(err).to.be.instanceof(Error)
+            expect(err.isJoi).to.be.true()
+            expect(id).to.be.undefined()
+            return done()
+          })
+      })
+    })
+
+    describe('query fails', () => {
+      before((done) => {
+        tracker.on('query', TrackerHelper.reject)
+        return done()
+      })
+
+      it('yields an error', (done) => {
+        Cookbook
+          .set(queries.update)
+          .update((err) => {
+            expect(err).to.not.be.null()
             return done()
           })
       })

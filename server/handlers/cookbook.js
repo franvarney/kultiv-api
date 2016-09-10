@@ -39,9 +39,15 @@ exports.delete = function (request, reply) {
 
   Cookbook
     .set({ id: request.params.id })
-    .deleteById((err) => {
+    .findById((err) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return reply().code(204)
+
+      Cookbook
+        .set({ id: request.params.id })
+        .deleteById((err) => {
+          if (err) return Logger.error(err), reply(Errors.get(err))
+          return reply().code(204)
+        })
     })
 }
 
@@ -52,7 +58,7 @@ exports.get = function (request, reply) {
     .set({ id: request.params.id })
     .findById((err, cookbook) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return Logger.debug(cookbook), reply(cookbook).code(200)
+      return Logger.debug(cookbook), reply.treeize(cookbook, { singleResult: true }).code(200)
     })
 }
 
