@@ -1,0 +1,26 @@
+[
+  {
+    "id": 2,
+    "username": "username",
+    "email": "test@gmail.com",
+    "password": "secret",
+    "first_name": null,
+    "last_name": null,
+    "location": null,
+    "is_admin": false,
+    "created_at": 1472821146273,
+    "updated_at": 1472821146273
+  },
+  {
+    "id": 3,
+    "username": "username2",
+    "email": "test2@gmail.com",
+    "password": "secret",
+    "first_name": "first",
+    "last_name": "last",
+    "location": null,
+    "is_admin": false,
+    "created_at": 1472821201769,
+    "updated_at": 1472821201769
+  }
+]

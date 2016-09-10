@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "Test 1",
+    "description": null,
+    "is_private": false,
+    "creator:id": 3,
+    "creator:username": "username",
+    "created_at": 1472821146273,
+    "updated_at": 1472821146273
+  },
+  {
+    "id": 2,
+    "name": "Test 2",
+    "description": null,
+    "is_private": true,
+    "creator:id": 2,
+    "creator:username": "username2",
+    "created_at": 1472821201769,
+    "updated_at": 1472821201769
+  }
+]

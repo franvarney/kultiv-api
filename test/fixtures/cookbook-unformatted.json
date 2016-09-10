@@ -1,0 +1,9 @@
+{
+  "id": 2,
+  "name": "Test 2",
+  "description": null,
+  "is_private": true,
+  "owner_id": 2,
+  "created_at": 1472821201769,
+  "updated_at": 1472821201769
+}
