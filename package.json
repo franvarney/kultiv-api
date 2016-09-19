@@ -20,7 +20,7 @@
     "bcryptjs": "2.3.0",
     "boom": "2.9.0",
     "franston": "0.2.0",
-    "hapi": "10.1.0",
+    "hapi": "15.0.3",
     "hapi-auth-hawk": "3.0.1",
     "hapi-treeize": "0.2.0",
     "joi": "7.2.3",
