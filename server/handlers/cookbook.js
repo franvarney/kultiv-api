@@ -58,7 +58,19 @@ exports.get = function (request, reply) {
     .set({ id: request.params.id })
     .findById((err, cookbook) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return Logger.debug(cookbook), reply.treeize(cookbook, { singleResult: true }).code(200)
+
+      User
+        .set({ id: cookbook.owner_id })
+        .setSelect('users.id AS creator:id', 'users.username AS users:username')
+        .findById((err, user) => {
+          if (err) return this._errors(err, done)
+
+          delete cookbook.owner_id
+          cookbook = Object.assign(cookbook, user)
+
+          Logger.debug(cookbook)
+          return reply.treeize(cookbook, { singleResult: true }).code(200)
+        })
     })
 }
 

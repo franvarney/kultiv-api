@@ -2,7 +2,6 @@ const Logger = require('franston')('server:models:cookbook')
 
 const Model = require('./base')
 const CookbookSchema = require('../schemas/cookbook')
-const User = require('./user')
 
 const TABLE_NAME = 'cookbooks'
 
@@ -34,15 +33,7 @@ const Cookbook = Model.createModel({
                  'cookbooks.created_at', 'cookbooks.updated_at')
       ._findById((err, cookbook) => {
         if (err) return this._errors(err, done)
-
-        User
-          .set({ id: cookbook.owner_id })
-          .setSelect('users.id AS creator:id', 'users.username AS users:username')
-          .findById((err, user) => {
-            if (err) return this._errors(err, done)
-            delete cookbook.owner_id
-            return done(null, Object.assign(cookbook, user))
-          })
+        return done(null, cookbook)
       })
   },
 
