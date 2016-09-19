@@ -16,8 +16,7 @@ const Recipe = require('../handlers/recipe')
 const RecipeSchema = require('../schemas/recipe')
 const Units = require('./handlers/units')
 const UnitSchema = require('../schemas/unit')
-const User = require('../handlers/user')
-const UserSchema = require('../schemas/user')
+const UserRoutes = require('./user')
 
 module.exports = [
   // Test
@@ -136,32 +135,4 @@ module.exports = [
   },
   { method: 'GET', path: '/units/{id}', handler: Units.get },
 
-  // Users
-  { method: 'GET', path: '/users/{id}', handler: User.get },
-  {
-    method: 'POST',
-    path: '/users',
-    config: {
-      auth: false,
-      validate: {
-        payload: UserSchema.createPayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: User.create
-    }
-  },
-  {
-    method: 'PUT',
-    path: '/users/{id}',
-    config: {
-      validate: {
-        payload: UserSchema.updatePayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: User.update
-    }
-  },
-  { method: 'DELETE', path: '/users/{id}', handler: User.delete }
-].concat(CookbookRoutes)
+].concat(CookbookRoutes, UserRoutes)
