@@ -1,5 +1,5 @@
 const Errors = require('../utils/errors')
-const Ingredients = require('./handlers/ingredients')
+const Ingredients = require('../handlers/ingredients')
 const IngredientSchema = require('../schemas/ingredient')
 
 module.exports = [

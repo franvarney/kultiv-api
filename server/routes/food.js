@@ -1,5 +1,5 @@
 const Errors = require('../utils/errors')
-const Foods = require('./handlers/foods')
+const Foods = require('../handlers/foods')
 const FoodSchema = require('../schemas/food')
 
 module.exports = [

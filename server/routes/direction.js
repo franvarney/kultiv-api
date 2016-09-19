@@ -1,4 +1,4 @@
-const Directions = require('./handlers/directions')
+const Directions = require('../handlers/directions')
 const DirectionSchema = require('../schemas/direction')
 const Errors = require('../utils/errors')
 
