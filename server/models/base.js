@@ -151,8 +151,8 @@ const methods = {
     return this._findById(hasDeletedAt, done)
   },
 
-  update (returning = 'id', done) {
-    Logger.debug(`base.${this.name}.update`)
+  _update (returning = 'id', done) {
+    Logger.debug(`base.${this.name}._update`)
 
     if (!done) {
       done = returning
@@ -194,6 +194,11 @@ const methods = {
           })
       })
     })
+  },
+
+  update (returning = 'id', done) {
+    Logger.debug(`base.${this.name}.update`)
+    return this._update(returning, done)
   }
 }
 
