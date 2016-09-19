@@ -1,7 +1,6 @@
 const Logger = require('franston')('server:models:recipe-direction')
 
-const Base = require('./base')
-const DB = require('../connections/postgres')
+const Model = require('./base')
 const Lodash = require('../utils/lodash')
 const RecipeDirectionSchema = require('../schemas/recipe-direction')
 

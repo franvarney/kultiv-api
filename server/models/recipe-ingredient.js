@@ -1,13 +1,12 @@
 const Logger = require('franston')('server:models:recipe-ingredient')
 
 const Model = require('./base')
-const DB = require('../connections/postgres')
 const Lodash = require('../utils/lodash')
 const RecipeIngredientSchema = require('../schemas/recipe-ingredient')
 
 const TABLE_NAME = 'recipes_ingredients'
 
-const CookbookRecipe = Model.createModel({
+const RecipeIngredient = Model.createModel({
   name: TABLE_NAME,
   schema: RecipeIngredientSchema.general,
 
