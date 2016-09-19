@@ -24,42 +24,8 @@ const User = Model.createModel({
       returning = 'id'
     }
 
-    this.findByEmailOrUsername((err, user) => {
-      if (err) return Logger.error(err), done(err)
-      if (user) return done(['conflict', 'User Already Exists'])
-
-      this.data.password = hashPassword(this.data.password)
-
-      this.validate((err, validated) => {
-        if (err) {
-          if (this.trx) {
-            Logger.error('Transaction Failed'), this.trx.rollback()
-          }
-          return Logger.error(err), done(err)
-        }
-
-        this.knex(this.name)
-          .insert(validated)
-          .transacting(this.trx)
-          .returning(returning)
-          .asCallback((err, created) => {
-            if (err) {
-              if (this.trx) {
-                Logger.error('Transaction Failed'), this.trx.rollback()
-              }
-              return Logger.error(err), done(err)
-            }
-
-            if (this.trx && this.willCommit) {
-              Logger.debug('Transaction Completed'), this.trx.commit()
-            }
-
-
-            if (!Array.isArray(this.data)) created = created[0]
-            return done(null, created)
-          })
-      })
-    })
+    this.data.password = hashPassword(this.data.password)
+    return this._create(done)
   },
 
   findByEmailOrUsername (done) {
@@ -69,6 +35,7 @@ const User = Model.createModel({
 
     let query = this.knex(this.name)
                     .select('id', 'username', 'email', 'password')
+
     if (email) query.where('email', email)
     else query.where('username', username)
 
@@ -81,6 +48,20 @@ const User = Model.createModel({
       })
   },
 
+  findById (done) {
+    Logger.debug('user.findById')
+
+    this
+      .setSelect('users.id', 'users.username', 'users.email',
+                 'users.first_name','users.last_name',
+                 'users.location', 'users.is_admin',
+                 'users.created_at', 'users.updated_at')
+      ._findById((err, user) => {
+        if (err) return this._errors(err, done)
+        return done(null, user)
+      })
+  },
+
   update (returning = 'id', done) {
     Logger.debug('user.update')
 
@@ -89,58 +70,11 @@ const User = Model.createModel({
       returning = 'id'
     }
 
-    this.findById((err, user) => {
-      if (err) return Logger.error(err), done(err)
-      if (!user) return done(['notFound', 'User not found'])
+    if (this.data.password) {
+      this.data.password = hashPassword(this.data.password)
+    }
 
-      user = Object.assign({}, user)
-      this.data.username = user.username
-      this.data.email = user.email
-
-      this.findByEmailOrUsername((err, found) => {
-        if (err) return Logger.error(err), done(err)
-        if (found && found.id !== this.data.id) {
-          return done(['conflict', 'Email Already Exists'])
-        }
-
-        this.data = Object.assign(user, this.data)
-
-        if (this.data.password) {
-          this.data.password = hashPassword(this.data.password)
-        }
-
-        // TODO review why this is needed
-        let id = this.data.id
-        delete this.data.id
-        delete this.data.created_at
-        delete this.data.updated_at
-
-        this.validate((err, validated) => {
-          if (err) return Logger.error(err), done(err)
-
-          delete validated.email
-
-          this.knex(this.name)
-            .update(validated)
-            .where('id', id)
-            .transacting(this.trx)
-            .returning(returning)
-            .asCallback((err, resource) => {
-              if (err) {
-                if (this.trx) {
-                  Logger.error('Transaction Failed'), this.trx.rollback()
-                }
-                return Logger.error(err), done(err)
-              }
-
-              if (this.trx && this.willCommit) {
-                Logger.debug('Transaction Completed'), this.trx.commit()
-              }
-              return done(null, resource[0])
-            })
-        })
-      })
-    })
+    return this._update(done)
   }
 })
 

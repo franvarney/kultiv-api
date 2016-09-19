@@ -9,10 +9,23 @@ exports.create = function (request, reply) {
   Logger.debug('users.create')
 
   User
-    .set(request.payload)
-    .create((err, id) => {
+    .set({
+      email: request.payload.email,
+      username: request.payload.username
+    })
+    .findByUsernameOrEmail((err, user) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return Logger.debug({ id }), reply({ id }).code(201)
+      if (user) {
+        Logger.debug(user)
+        return reply(Errors.get(['badRequest', 'Invalid username/email']))
+      }
+
+      User
+        .set(request.payload)
+        .create((err, id) => {
+          if (err) return Logger.error(err), reply(Errors.get(err))
+          return Logger.debug({ id }), reply({ id }).code(201)
+        })
     })
 }
 
@@ -21,9 +34,15 @@ exports.delete = function (request, reply) {
 
   User
     .set({ id: request.params.id })
-    .deleteById((err) => {
+    .findById((err) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return reply().code(204)
+
+      User
+        .set({ id: request.params.id })
+        .deleteById((err) => {
+          if (err) return Logger.error(err), reply(Errors.get(err))
+          return reply().code(204)
+        })
     })
 }
 
@@ -34,11 +53,7 @@ exports.get = function (request, reply) {
     .set({ id: request.params.id })
     .findById((err, user) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-
-      Joi.validate(user, UserSchema.sanitize, (err, sanitized) => {
-        if (err) return Logger.error(err), reply(Errors.get(err))
-        return Logger.debug(sanitized), reply(sanitized).code(200)
-      })
+      return Logger.debug(user), reply(user).code(200)
     })
 }
 
