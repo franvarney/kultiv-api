@@ -133,7 +133,7 @@ const methods = {
       .asCallback((err, found) => {
         if (err) return this._errors(err, done)
 
-        if (!found || Array.isArray(found) && !found.length) {
+        if (!found || (Array.isArray(found) && !found.length)) {
           let err = 'Not Found'
           return Logger.error(err), done(['notFound', err])
         }
