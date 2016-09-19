@@ -1,8 +1,7 @@
 const Admin = require('../handlers/admin')
 const Auth = require('../handlers/auth')
 const AuthSchema = require('../schemas/auth')
-const Cookbook = require('../handlers/cookbook')
-const CookbookSchema = require('../schemas/cookbook')
+const CookbookRoutes = require('./cookbook')
 const Directions = require('./handlers/directions')
 const DirectionSchema = require('../schemas/direction')
 const Foods = require('./handlers/foods')
@@ -42,35 +41,6 @@ module.exports = [
     }
   },
   { method: 'DELETE', path: '/auth', handler: Auth.logout },
-
-  // Cookbooks
-  { method: 'GET', path: '/users/{id}/cookbooks', handler: Cookbook.allByUser },
-  { method: 'GET', path: '/cookbooks/{id}', handler: Cookbook.get },
-  {
-    method: 'POST',
-    path: '/cookbooks',
-    config: {
-      validate: {
-        payload: CookbookSchema.createPayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: Cookbook.create
-    }
-  },
-  {
-    method: 'PUT',
-    path: '/cookbooks/{id}',
-    config: {
-      validate: {
-        payload: CookbookSchema.updatePayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: Cookbook.update
-    }
-  },
-  { method: 'DELETE', path: '/cookbooks/{id}', handler: Cookbook.delete },
 
   // Directions
   {
@@ -194,4 +164,4 @@ module.exports = [
     }
   },
   { method: 'DELETE', path: '/users/{id}', handler: User.delete }
-]
+].concat(CookbookRoutes)
