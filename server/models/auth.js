@@ -35,39 +35,11 @@ const Auth = Model.createModel({
           return Logger.error(err), done(['unauthorized', err])
         }
 
-        this.data = {
+        return this.set({
           user_id: user.id,
           hawk_id: Uuid(),
           hawk_key: Uuid()
-        }
-
-        this.validate((err, validated) => {
-          if (err) {
-            if (this.trx) {
-              Logger.error('Transaction Failed'), this.trx.rollback()
-            }
-            return Logger.error(err), done(err)
-          }
-
-          this.knex(this.name)
-            .insert(validated)
-            .transacting(this.trx)
-            .returning('id')
-            .asCallback((err, created) => {
-              if (err) {
-                if (this.trx) {
-                  Logger.error('Transaction Failed'), this.trx.rollback()
-                }
-                return Logger.error(err), done(err)
-              }
-
-              if (this.trx && this.willCommit) {
-                Logger.debug('Transaction Completed'), this.trx.commit()
-              }
-
-              return done(null, this.data)
-            })
-        })
+        })._create(done)
     })
   },
 
