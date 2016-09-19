@@ -4,7 +4,7 @@
     "username": "username",
     "email": "test@gmail.com",
     "password": "secret",
-    "first_name": null,
+    "first_name": "First",
     "last_name": null,
     "location": null,
     "is_admin": false,
