@@ -2,8 +2,7 @@ const Admin = require('../handlers/admin')
 const Auth = require('../handlers/auth')
 const AuthSchema = require('../schemas/auth')
 const CookbookRoutes = require('./cookbook')
-const Directions = require('./handlers/directions')
-const DirectionSchema = require('../schemas/direction')
+const DirectionRoutes = require('./direction')
 const Foods = require('./handlers/foods')
 const FoodSchema = require('../schemas/food')
 const Errors = require('../utils/errors')
@@ -40,21 +39,6 @@ module.exports = [
     }
   },
   { method: 'DELETE', path: '/auth', handler: Auth.logout },
-
-  // Directions
-  {
-    method: 'POST',
-    path: '/directions',
-    config: {
-      validate: {
-        payload: DirectionSchema.createPayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: Directions.create
-    }
-  },
-  { method: 'GET', path: '/directions/{id}', handler: Directions.get },
 
   // Foods
   {
@@ -133,6 +117,5 @@ module.exports = [
       handler: Units.create
     }
   },
-  { method: 'GET', path: '/units/{id}', handler: Units.get },
-
-].concat(CookbookRoutes, UserRoutes)
+  { method: 'GET', path: '/units/{id}', handler: Units.get }
+].concat(CookbookRoutes, DirectionRoutes, UserRoutes)
