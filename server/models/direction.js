@@ -1,15 +1,14 @@
 const Logger = require('franston')('server:models:direction')
 
-const Base = require('./base')
+const Model = require('./base')
 const DirectionSchema = require('../schemas/direction')
 const Lodash = require('../utils/lodash')
 
 const TABLE_NAME = 'directions'
 
-class Direction extends Base {
-  constructor (data) {
-    super(TABLE_NAME, DirectionSchema.createPayload, data)
-  }
+const Direction = Model.createModel({
+  name: TABLE_NAME,
+  schema: DirectionSchema.general,
 
   findOrCreate(done) {
     Logger.debug('direction.findOrCreate')
@@ -30,9 +29,9 @@ class Direction extends Base {
           return done(null, found)
         }
 
-        return super.create(done)
+        return this._create(done)
       })
-  }
+  },
 
   batchFindOrCreate(done) {
     Logger.debug('direction.batchFindOrCreate')
@@ -65,14 +64,12 @@ class Direction extends Base {
           return done(null, ids)
         }
 
-        // TODO validate?
-
-        this.batchInsert((err, created) => {
+        this.set(create)._create((err, created) => {
           if (err) return this._errors(err, done)
-          return done(null, created.concat(found))
+          return done(null, created.concat(ids))
         })
       })
   }
-}
+})
 
 module.exports = Direction

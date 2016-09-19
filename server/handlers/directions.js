@@ -1,17 +1,22 @@
 const Logger = require('franston')('handlers:directions')
 
+const Direction = require('../models/direction')
 const Errors = require('../utils/errors')
-const DirectionModel = require('../models/direction')
 
 exports.create = function (request, reply) {
   Logger.debug('directions.create')
 
-  const Direction = new DirectionModel({ payload: request.payload })
-
   let create = Function.prototype
 
-  if (Array.isArray(request.payload)) create = Direction.batchFindOrCreate.bind(Direction)
-  else create = Direction.findOrCreate.bind(Direction)
+  if (Array.isArray(request.payload)) {
+    create = Direction
+              .set(request.payload)
+              .batchFindOrCreate.bind(Direction)
+  } else {
+    create = Direction
+              .set(request.payload)
+              .findOrCreate.bind(Direction)
+  }
 
   create((err, created) => {
     if (err) return Logger.error(err), reply(Errors.get(err))
@@ -28,12 +33,10 @@ exports.create = function (request, reply) {
 exports.get = function (request, reply) {
   Logger.debug('directions.get')
 
-  const Direction = new DirectionModel({
-    payload: { id: request.params.id }
-  })
-
-  Direction.findById(false, (err, direction) => {
-    if (err) return Logger.error(err), reply(Errors.get(err))
-    return Logger.debug(direction), reply(direction).code(200)
-  })
+  Direction
+    .set({ id: request.params.id })
+    .findById(false, (err, direction) => {
+      if (err) return Logger.error(err), reply(Errors.get(err))
+      return Logger.debug(direction), reply(direction).code(200)
+    })
 }
