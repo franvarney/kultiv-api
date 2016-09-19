@@ -13,8 +13,6 @@ const Cookbook = Model.createModel({
   findByCollaborator (done) {
     Logger.debug('cookbook.findByCollaborator')
 
-    // TODO find collaborator first?
-
     this.knex(this.name)
       .innerJoin('cookbooks-collaborators AS CC', 'cookbooks.id',
                  'CC.collaborator_id')
@@ -32,8 +30,8 @@ const Cookbook = Model.createModel({
 
     this
       .setSelect('cookbooks.id', 'cookbooks.name', 'cookbooks.description',
-                 'cookbooks.is_private','cookbooks.created_at',
-                 'cookbooks.updated_at')
+                 'cookbooks.owner_id', 'cookbooks.is_private',
+                 'cookbooks.created_at', 'cookbooks.updated_at')
       ._findById((err, cookbook) => {
         if (err) return this._errors(err, done)
 
