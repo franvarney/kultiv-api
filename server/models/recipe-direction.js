@@ -7,20 +7,19 @@ const RecipeDirectionSchema = require('../schemas/recipe-direction')
 
 const TABLE_NAME = 'recipes_directions'
 
-class RecipeDirection extends Base {
-  constructor (data) {
-    super(TABLE_NAME, RecipeDirectionSchema.general, data)
-  }
+const RecipeDirection = Model.createModel({
+  name: TABLE_NAME,
+  schema: RecipeDirectionSchema.general,
 
   batchFindOrCreate(done) {
     Logger.debug('recipe-direction.batchFindOrCreate')
 
-    let that = this
+    let {data} = this
 
     this.knex(this.name)
       .select('id', 'recipe_id', 'direction_id')
       .where(function () {
-        that.payload.forEach((recipeDirection) => {
+        data.forEach((recipeDirection) => {
           return this.orWhere(recipeDirection)
         })
       })
@@ -33,7 +32,7 @@ class RecipeDirection extends Base {
 
         let ids = []
         let create = Lodash.xorWith(
-          that.payload,
+          data,
           found.map((recipeDirection) => {
             ids.push(Lodash.pick(found, 'id'))
             return {
@@ -49,23 +48,12 @@ class RecipeDirection extends Base {
           return done(null, found)
         }
 
-        // TODO validate?
-
-        DB.batchInsert(this.name, create)
-          .returning('id')
-          .transacting(this.trx)
-          .then((created) => {
-            if (this.trx && this.willCommit) {
-              Logger.debug('Transaction Completed'), this.trx.commit()
-            }
-            return done(null, ids.concat(created))
-          })
-          .catch((err) => {
-            if (this.trx) Logger.error('Transaction Failed'), this.trx.rollback()
-            return Logger.error(err), done(err)
-          })
+        this.set(create)._create((err, created) => {
+          if (err) return this._errors(err, done)
+          return done(null, created.concat(ids))
+        })
       })
   }
-}
+})
 
 module.exports = RecipeDirection
