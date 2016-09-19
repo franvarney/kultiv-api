@@ -15,7 +15,7 @@ const Direction = Model.createModel({
 
     this.knex(this.name)
       .select('id')
-      .where('direction', this.payload.direction)
+      .where('direction', this.data.direction)
       .first()
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -36,12 +36,12 @@ const Direction = Model.createModel({
   batchFindOrCreate(done) {
     Logger.debug('direction.batchFindOrCreate')
 
-    let {payload} = this
+    let {data} = this
 
     this.knex(this.name)
       .select('id')
       .where(function () {
-        payload.forEach((direction) => this.orWhere(direction))
+        data.forEach((direction) => this.orWhere(direction))
       })
       .transacting(this.trx)
       .asCallback((err, found) => {
@@ -52,7 +52,7 @@ const Direction = Model.createModel({
 
         let ids = []
         let create = Lodash.xorWith(
-          payload,
+          data,
           found.map((direction) => {
             ids.push(direction.id)
             delete direction.id
