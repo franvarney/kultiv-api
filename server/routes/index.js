@@ -2,9 +2,7 @@ const Admin = require('../handlers/admin')
 const AuthRoutes = require('./auth')
 const CookbookRoutes = require('./cookbook')
 const DirectionRoutes = require('./direction')
-const Foods = require('./handlers/foods')
-const FoodSchema = require('../schemas/food')
-const Errors = require('../utils/errors')
+const FoodRoutes = require('./food')
 const Importer = require('../handlers/importer')
 const ImporterSchema = require('../schemas/importer')
 const Ingredients = require('./handlers/ingredients')
@@ -22,21 +20,6 @@ module.exports = [
 
   // Admin
   { method: 'GET', path: '/admin/users', handler: Admin.users },
-
-  // Foods
-  {
-    method: 'POST',
-    path: '/foods',
-    config: {
-      validate: {
-        payload: FoodSchema.createPayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: Foods.create
-    }
-  },
-  { method: 'GET', path: '/foods/{id}', handler: Foods.get },
 
   // Importer
   {
@@ -101,4 +84,4 @@ module.exports = [
     }
   },
   { method: 'GET', path: '/units/{id}', handler: Units.get }
-].concat(AuthRoutes, CookbookRoutes, DirectionRoutes, UserRoutes)
+].concat(AuthRoutes, CookbookRoutes, DirectionRoutes, FoodRoutes, UserRoutes)
