@@ -5,8 +5,7 @@ const DirectionRoutes = require('./direction')
 const Errors = require('../utils/errors')
 const FoodRoutes = require('./food')
 const ImporterRoutes = require('./importer')
-const Ingredients = require('./handlers/ingredients')
-const IngredientSchema = require('../schemas/ingredient')
+const IngredientRoutes = require('./ingredient')
 const Ping = require('../handlers/ping')
 const Recipe = require('../handlers/recipe')
 const RecipeSchema = require('../schemas/recipe')
@@ -20,21 +19,6 @@ module.exports = [
 
   // Admin
   { method: 'GET', path: '/admin/users', handler: Admin.users },
-
-  // Ingredients
-  {
-    method: 'POST',
-    path: '/ingredients',
-    config: {
-      validate: {
-        payload: IngredientSchema.createPayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: Ingredients.create
-    }
-  },
-  { method: 'GET', path: '/ingredients/{id}', handler: Ingredients.get },
 
   // Recipes
   { method: 'GET', path: '/users/{id}/recipes', handler: Recipe.allByUser },
@@ -70,4 +54,4 @@ module.exports = [
   },
   { method: 'GET', path: '/units/{id}', handler: Units.get }
 ].concat(AuthRoutes, CookbookRoutes, DirectionRoutes, FoodRoutes,
-         ImporterRoutes, UserRoutes)
+         ImporterRoutes, IngredientRoutes, UserRoutes)
