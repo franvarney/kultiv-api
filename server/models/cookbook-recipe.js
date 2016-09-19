@@ -1,14 +1,13 @@
 const Logger = require('franston')('server:models:cookbook-recipe')
 
-const Base = require('./base')
+const Model = require('./base')
 const CookbookRecipeSchema = require('../schemas/cookbook-recipe')
 
 const TABLE_NAME = 'cookbooks_recipes'
 
-class CookbookRecipe extends Base {
-  constructor (data) {
-    super(TABLE_NAME, CookbookRecipeSchema.general, data)
-  }
+const CookbookRecipe = Model.createModel({
+  name: TABLE_NAME,
+  schema: CookbookRecipeSchema.general,
 
   findOrCreate(done) {
     Logger.debug('cookbook-recipe.findOrCreate')
@@ -31,9 +30,9 @@ class CookbookRecipe extends Base {
           return done(null, Object.assign({}, found))
         }
 
-        return super.create(done)
+        return this._create(done)
       })
   }
-}
+})
 
 module.exports = CookbookRecipe
