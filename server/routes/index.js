@@ -1,6 +1,5 @@
 const Admin = require('../handlers/admin')
-const Auth = require('../handlers/auth')
-const AuthSchema = require('../schemas/auth')
+const AuthRoutes = require('./auth')
 const CookbookRoutes = require('./cookbook')
 const DirectionRoutes = require('./direction')
 const Foods = require('./handlers/foods')
@@ -23,22 +22,6 @@ module.exports = [
 
   // Admin
   { method: 'GET', path: '/admin/users', handler: Admin.users },
-
-  // Auth
-  {
-    method: 'POST',
-    path: '/auth',
-    config: {
-      auth: false,
-      validate: {
-        payload: AuthSchema.loginPayload,
-        failAction: Errors.validate,
-        options: { stripUnknown: true }
-      },
-      handler: Auth.login
-    }
-  },
-  { method: 'DELETE', path: '/auth', handler: Auth.logout },
 
   // Foods
   {
@@ -118,4 +101,4 @@ module.exports = [
     }
   },
   { method: 'GET', path: '/units/{id}', handler: Units.get }
-].concat(CookbookRoutes, DirectionRoutes, UserRoutes)
+].concat(AuthRoutes, CookbookRoutes, DirectionRoutes, UserRoutes)
