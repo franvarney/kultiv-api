@@ -1,5 +1,5 @@
 const Cookbook = require('../handlers/cookbook')
-const CookbookPolicy = require('../policies/cookbook')
+// const CookbookPolicy = require('../policies/cookbook')
 const CookbookSchema = require('../schemas/cookbook')
 const Errors = require('../utils/errors')
 
@@ -30,12 +30,12 @@ module.exports = [
     config: {
       auth: SCOPE,
       handler: Cookbook.get,
-      pre: [
-        {
-          method: CookbookPolicy.authorizeUser,
-          assign: 'user'
-        }
-      ]
+      // pre: [
+      //   {
+      //     method: CookbookPolicy.authorizeUser,
+      //     assign: 'user'
+      //   }
+      // ]
     }
   },
   {
@@ -44,12 +44,12 @@ module.exports = [
     config: {
       auth: SCOPE,
       handler: Cookbook.update,
-      pre: [
-        {
-          method: CookbookPolicy.authorizeUser,
-          assign: 'user'
-        }
-      ],
+      // pre: [
+      //   {
+      //     method: CookbookPolicy.authorizeUser,
+      //     assign: 'user'
+      //   }
+      // ],
       validate: {
         payload: CookbookSchema.updatePayload,
         failAction: Errors.validate,

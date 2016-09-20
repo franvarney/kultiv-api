@@ -7,7 +7,6 @@ const {after, afterEach, before, beforeEach, describe, it} = lab
 
 const Cookbook = require('../../server/models/cookbook')
 const CookbookData = require('../fixtures/cookbooks')
-const CookbookUnformattedData = require('../fixtures/cookbook-unformatted')
 const DB = require('../../server/connections/postgres')
 const TrackerHelper = require('../helpers/tracker')
 
@@ -217,7 +216,7 @@ describe('models/cookbook', () => {
 
         tracker.on('query', function (query, step) {
           return [
-            TrackerHelper.response.bind(null, CookbookUnformattedData, query),
+            TrackerHelper.response.bind(null, CookbookData, query),
             TrackerHelper.response.bind(null, userData, query),
           ][step - 1]()
         })
@@ -230,7 +229,7 @@ describe('models/cookbook', () => {
           .set(queries.findById)
           .findById((err, cookbook) => {
             expect(err).to.be.null()
-            expect(cookbook.id).to.be.equal(1)
+            expect(cookbook.id).to.be.equal(2)
             expect(cookbook['creator:id']).to.be.equal(3)
             return done()
           })
@@ -246,9 +245,9 @@ describe('models/cookbook', () => {
       it('yields an error', (done) => {
         Cookbook
           .set(queries.findById)
-          .findById((err) => {
-            expect(err).to.not.be.null()
-            expect(err).to.equal([ 'notFound', 'Not Found' ])
+          .findById((err, cookbook) => {
+            expect(err).to.be.null()
+            expect(cookbook).to.be.undefined()
             return done()
           })
       })
@@ -257,27 +256,6 @@ describe('models/cookbook', () => {
     describe('first query fails', () => {
       before((done) => {
         tracker.on('query', TrackerHelper.reject)
-        return done()
-      })
-
-      it('yields an error', (done) => {
-        Cookbook
-          .set(queries.findById)
-          .findById((err, cookbook) => {
-            expect(err).to.not.be.null()
-            return done()
-          })
-      })
-    })
-
-    describe('second query fails', () => {
-      before((done) => {
-        tracker.on('query', function (query, step) {
-          return [
-            TrackerHelper.response.bind(null, CookbookUnformattedData, query),
-            TrackerHelper.reject
-          ][step - 1]()
-        })
         return done()
       })
 
@@ -348,12 +326,7 @@ describe('models/cookbook', () => {
   describe('update', () => {
     describe('updates a cookbook', () => {
       before((done) => {
-        tracker.on('query', function (query, step) {
-          return [
-            TrackerHelper.response.bind(null, CookbookUnformattedData, query),
-            TrackerHelper.response.bind(null, [2], query)
-          ][step - 1]()
-        })
+        tracker.on('query', TrackerHelper.response.bind(null, [2]))
         return done()
       })
 
@@ -380,7 +353,6 @@ describe('models/cookbook', () => {
           .set({ test: false })
           .update((err) => {
             expect(err).to.not.be.null()
-            expect(err).to.equal([ 'notFound', 'Not Found' ])
             return done()
           })
       })

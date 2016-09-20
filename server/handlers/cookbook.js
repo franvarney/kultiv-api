@@ -58,12 +58,13 @@ exports.get = function (request, reply) {
     .set({ id: request.params.id })
     .findById((err, cookbook) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
+      if (!cookbook) return Logger.error('Cookbook Not Found'), reply(Errors.get(['notFound', 'Cookbook Not Found']))
 
       User
         .set({ id: cookbook.owner_id })
         .setSelect('users.id AS creator:id', 'users.username AS users:username')
         .findById((err, user) => {
-          if (err) return this._errors(err, done)
+          if (err) return Logger.error(err), reply(Errors.get(err))
 
           delete cookbook.owner_id
           cookbook = Object.assign(cookbook, user)
@@ -78,9 +79,16 @@ exports.update = function (request, reply) {
   Logger.debug('cookbooks.update')
 
   Cookbook
-    .set(Object.assign({}, { id: request.params.id }, request.payload))
-    .update((err) => {
+    .set({ id: request.params.id })
+    .findById((err, cookbook) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return reply().code(204)
+      if (!cookbook) return Logger.error('Cookbook Not Found'), reply(Errors.get(['notFound', 'Cookbook Not Found']))
+
+      Cookbook
+        .set(Object.assign({}, { id: request.params.id }, request.payload))
+        .update((err) => {
+          if (err) return Logger.error(err), reply(Errors.get(err))
+          return reply().code(204)
+        })
     })
 }

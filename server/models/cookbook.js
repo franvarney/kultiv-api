@@ -7,7 +7,10 @@ const TABLE_NAME = 'cookbooks'
 
 const Cookbook = Model.createModel({
   name: TABLE_NAME,
-  schema: CookbookSchema.general,
+  schema: {
+    create: CookbookSchema.create,
+    update: CookbookSchema.update
+  },
 
   findByCollaborator (done) {
     Logger.debug('cookbook.findByCollaborator')
