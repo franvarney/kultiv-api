@@ -14,7 +14,10 @@ function hashPassword (password) {
 
 const User = Model.createModel({
   name: TABLE_NAME,
-  schema: UserSchema.general,
+  schema: {
+    create: UserSchema.create,
+    update: UserSchema.update
+  },
 
   create (returning = 'id', done) {
     Logger.debug('user.create')
@@ -25,21 +28,24 @@ const User = Model.createModel({
     }
 
     this.data.password = hashPassword(this.data.password)
-    return this._create(done)
+    return this._create(returning, done)
   },
 
   findByEmailOrUsername (done) {
     Logger.debug('user.findByEmailOrUsername')
 
-    let {email, username} = this.data
+    let {email=null, username=null} = this.data
+
+    if (!email && !username) return done()
 
     let query = this.knex(this.name)
-                    .select('id', 'username', 'email', 'password')
 
-    if (email) query.where('email', email)
-    else query.where('username', username)
+    if (email && username) query.where('email', email).orWhere('username', username)
+    else if (!email && username) query.where('username', username)
+    else query.where('email', email)
 
     query
+      .select('id', 'username', 'email', 'password')
       .whereNull('deleted_at')
       .first()
       .asCallback((err, user) => {
@@ -74,7 +80,7 @@ const User = Model.createModel({
       this.data.password = hashPassword(this.data.password)
     }
 
-    return this._update(done)
+    return this._update(returning, done)
   }
 })
 

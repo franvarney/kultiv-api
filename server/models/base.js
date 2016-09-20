@@ -47,9 +47,18 @@ const methods = {
     return Logger.error('Transaction Failed'), this.trx.rollback()
   },
 
-  validate (done) {
+  validate (schema = {}, done) {
     Logger.debug(`base.${this.name}.validate`)
-    return Joi.validate(this.data, this.schema, (err, validated) => {
+
+     if (!done) {
+      done = schema
+      schema = {}
+    }
+
+    if (this.schema.isJoi) schema = this.schema
+    else schema = this.schema[schema]
+
+    return Joi.validate(this.data, schema, (err, validated) => {
       if (err) return Logger.error(err), done(err)
       return done(null, validated)
     })
@@ -63,7 +72,7 @@ const methods = {
       returning = 'id'
     }
 
-    this.validate((err, validated) => {
+    this.validate('create', (err, validated) => {
       if (err) {
         if (this.trx) {
           Logger.error('Transaction Failed'), this.trx.rollback()
@@ -87,7 +96,7 @@ const methods = {
             Logger.debug('Transaction Completed'), this.trx.commit()
           }
 
-          if (!Array.isArray(this.data)) created = created[0]
+          if (!Array.isArray(this.data)) created = created[0] || created
           return done(null, created)
         })
     })
@@ -134,8 +143,7 @@ const methods = {
         if (err) return this._errors(err, done)
 
         if (!found || (Array.isArray(found) && !found.length)) {
-          let err = 'Not Found'
-          return Logger.error(err), done(['notFound', err])
+          return Logger.error('Not Found'), done()
         }
 
         if (hasDeletedAt && Array.isArray(found)) {
@@ -146,7 +154,7 @@ const methods = {
       })
   },
 
-  findById (hasDeletedAt=true, done) {
+  findById (hasDeletedAt = true, done) {
     Logger.debug(`base.${this.name}.findById`)
     return this._findById(hasDeletedAt, done)
   },
@@ -159,40 +167,30 @@ const methods = {
       returning = 'id'
     }
 
-    this._findById((err, results) => {
+    let id = this.data.id
+    delete this.data.id
+
+    this.validate('update', (err, validated) => {
       if (err) return Logger.error(err), done(err)
-      this.data = Object.assign(results, this.data)
 
-      // TODO review why this is needed
-      let id = this.data.id
-      delete this.data.id
-      delete this.data.created_at
-      delete this.data.updated_at
-
-      this.validate((err, validated) => {
-        if (err) return Logger.error(err), done(err)
-
-        delete validated.email
-
-        this.knex(this.name)
-          .update(validated)
-          .where('id', id)
-          .transacting(this.trx)
-          .returning(returning)
-          .asCallback((err, resource) => {
-            if (err) {
-              if (this.trx) {
-                Logger.error('Transaction Failed'), this.trx.rollback()
-              }
-              return Logger.error(err), done(err)
+      this.knex(this.name)
+        .update(validated)
+        .where('id', id)
+        .transacting(this.trx)
+        .returning(returning)
+        .asCallback((err, resource) => {
+          if (err) {
+            if (this.trx) {
+              Logger.error('Transaction Failed'), this.trx.rollback()
             }
+            return Logger.error(err), done(err)
+          }
 
-            if (this.trx && this.willCommit) {
-              Logger.debug('Transaction Completed'), this.trx.commit()
-            }
-            return done(null, resource[0])
-          })
-      })
+          if (this.trx && this.willCommit) {
+            Logger.debug('Transaction Completed'), this.trx.commit()
+          }
+          return done(null, resource[0] || resource)
+        })
     })
   },
 

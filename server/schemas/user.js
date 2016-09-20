@@ -1,6 +1,6 @@
 const Joi = require('joi')
 
-exports.general = Joi.object({
+exports.create = Joi.object({
   username: Joi.string().alphanum().min(3).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().required(),
@@ -8,8 +8,7 @@ exports.general = Joi.object({
   last_name: Joi.string().min(2).max(50).allow(null),
   location: Joi.string().min(2).max(50).allow(null),
   is_admin: Joi.boolean(),
-  updated_at: Joi.string().default('now()').allow(null),
-  deleted_at: Joi.string().allow(null)
+  updated_at: Joi.date().timestamp('unix').allow('now()').default('now()')
 })
 
 exports.createPayload = Joi.object({
@@ -33,6 +32,17 @@ exports.sanitize = Joi.object({
   updated_at: Joi.date().timestamp('unix').required()
 })
   .options({ stripUnknown: true })
+
+exports.update = Joi.object({
+  email: Joi.string().email(),
+  password: Joi.string(),
+  first_name: Joi.string().min(2).max(50).allow(null),
+  last_name: Joi.string().min(2).max(50).allow(null),
+  location: Joi.string().min(2).max(50).allow(null),
+  is_admin: Joi.boolean(),
+  updated_at: Joi.date().timestamp('unix').allow('now()').default('now()'),
+  deleted_at: Joi.date().timestamp('unix').allow(null)
+})
 
 exports.updatePayload = Joi.object({
   email: Joi.string().email(),

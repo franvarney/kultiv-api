@@ -1,3 +1,4 @@
+const Bcrypt = require('bcryptjs')
 const Joi = require('joi')
 const Logger = require('franston')('server:handlers:user')
 
@@ -13,11 +14,10 @@ exports.create = function (request, reply) {
       email: request.payload.email,
       username: request.payload.username
     })
-    .findByUsernameOrEmail((err, user) => {
+    .findByEmailOrUsername((err, user) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
       if (user) {
-        Logger.debug(user)
-        return reply(Errors.get(['badRequest', 'Invalid username/email']))
+        return Logger.debug(user), reply(Errors.get(['badRequest', 'Invalid username/email']))
       }
 
       User
@@ -61,9 +61,27 @@ exports.update = function (request, reply) {
   Logger.debug('users.update')
 
   User
-    .set(Object.assign({}, { id: request.params.id }, request.payload))
-    .update((err) => {
+    .set({ id: request.params.id })
+    .findById((err, found) => {
       if (err) return Logger.error(err), reply(Errors.get(err))
-      return reply().code(204)
+      if (!found) {
+        return Logger.error('User Not Found'), reply(Errors.get(['badRequest', 'User Not Found']))
+      }
+
+      User
+        .set({ email: request.payload.email })
+        .findByEmailOrUsername((err, user) => {
+          if (err) return Logger.error(err), reply(Errors.get(err))
+          if (user && user.id !== Number(request.params.id)) {
+            return Logger.debug(user), reply(Errors.get(['badRequest', 'Invalid email']))
+          }
+
+          User
+            .set(Object.assign({ id: request.params.id }, request.payload))
+            .update((err) => {
+              if (err) return Logger.error(err), reply(Errors.get(err))
+              return reply().code(204)
+            })
+        })
     })
 }
